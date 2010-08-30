@@ -667,6 +667,16 @@ x.z = function(a, b, c) {
   return false;
 };
 
+// +3: JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER
+/**
+ * @param {string} a Should still be missing valid punctuation ending even
+ *     even though next line is missing the standard '*'
+
+ * NOTE: This good punctuation shouldn't help.
+ */
+x.a = function(a) {
+};
+
 /**
  * Regression test for braces in description invalidly being matched as types.
  * This caused a false error for missing punctuation because the bad token
@@ -1030,3 +1040,8 @@ CanvasRenderingContext2D.prototype.fillStyle;
 /**
  * When there are multiple asteriks. In the failure case we would get an
  * error that the file ended mid comment, with no end comment token***/
+/**
+ * Was a separate bug 2950646 when the closing bit was on it's own line
+ * because the ending star was being put into a different token type: DOC_PREFIX
+ * rather than DOC_COMMENT.
+ **/

@@ -92,6 +92,12 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
   # like in email addresses in the @author tag.
   DOC_COMMENT_TEXT = re.compile(r'([^*{}\s]@|[^*{}@]|\*(?!/))+')
   DOC_COMMENT_NO_SPACES_TEXT = re.compile(r'([^*{}\s]@|[^*{}@\s]|\*(?!/))+')
+
+  # Match the prefix ' * ' that starts every line of jsdoc. Want to include
+  # spaces after the '*', but nothing else that occurs after a '*', and don't
+  # want to match the '*' in '*/'.
+  DOC_PREFIX = re.compile(r'\s*\*(\s+|(?!/))')
+
   START_BLOCK = re.compile('{')
   END_BLOCK = re.compile('}')
 
@@ -158,7 +164,6 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
   OPERATOR = re.compile('|'.join(OPERATOR_LIST))
 
   WHITESPACE = re.compile(r'\s+')
-  DOC_PREFIX = re.compile(r'\s*\*[^/]\s*')
   SEMICOLON = re.compile(r';')
   # Technically JavaScript identifiers can't contain '.', but we treat a set of
   # nested identifiers as a single identifier.

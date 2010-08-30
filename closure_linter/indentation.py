@@ -113,6 +113,9 @@ class IndentationRules(object):
   def __init__(self):
     """Initializes the IndentationRules checker."""
     self._stack = []
+    
+    # Map from line number to number of characters it is off in indentation.
+    self._start_index_offset = {}
 
   def Finalize(self):
     if self._stack:
@@ -191,11 +194,14 @@ class IndentationRules(object):
           expected |= self._AddToEach(expected, -2)
 
       if actual >= 0 and actual not in expected:
+        expected = sorted(expected)
         indentation_errors.append([
             errors.WRONG_INDENTATION,
             'Wrong indentation: expected any of {%s} but got %d' % (
                 ', '.join(
-                    ['%d' % x for x in sorted(expected)]), actual), token])
+                    ['%d' % x for x in expected]), actual), token])
+      
+        self._start_index_offset[token.line_number] = expected[0] - actual
 
     # Add tokens that could increase indentation.
     if token_type == Type.START_BRACKET:
@@ -269,8 +275,6 @@ class IndentationRules(object):
     Returns:
       A new set containing each element of the original set added to the amount.
     """
-    if not original:
-      original = set([0])
     return set([x + amount for x in original])
 
   _HARD_STOP_TYPES = (Type.START_PAREN, Type.START_PARAMETERS,
@@ -327,21 +331,24 @@ class IndentationRules(object):
         override_is_hard_stop = (token_info.overridden_by and
             self._IsHardStop(token_info.overridden_by.token))
         if not override_is_hard_stop:
+          start_index = token.start_index
+          if token.line_number in self._start_index_offset:
+            start_index += self._start_index_offset[token.line_number]
           if (token.type in (Type.START_PAREN, Type.START_PARAMETERS) and
               not token_info.overridden_by):
-            hard_stops.add(token.start_index + 1)
+            hard_stops.add(start_index + 1)
 
           elif token.string == 'return' and not token_info.overridden_by:
-            hard_stops.add(token.start_index + 7)
+            hard_stops.add(start_index + 7)
 
           elif (token.type == Type.START_BRACKET):
-            hard_stops.add(token.start_index + 1)
+            hard_stops.add(start_index + 1)
 
           elif token.IsAssignment():
-            hard_stops.add(token.start_index + len(token.string) + 1)
+            hard_stops.add(start_index + len(token.string) + 1)
 
           elif token.IsOperator('?') and not token_info.overridden_by:
-            hard_stops.add(token.start_index + 2)
+            hard_stops.add(start_index + 2)
 
     return (expected | hard_stops) or set([0])
 

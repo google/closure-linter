@@ -310,3 +310,18 @@ function abc() {
 
 abcdefg('p', {x: 10},
         'Para 1');
+
+function bar1() {
+  return 3 +
+  4; // WRONG_INDENTATION
+}
+
+function bar2() {
+   return 3 + // WRONG_INDENTATION
+          4; // WRONG_INDENTATION
+}
+
+function bar3() {
+   return 3 + // WRONG_INDENTATION
+         4;
+}

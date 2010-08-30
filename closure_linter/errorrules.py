@@ -28,7 +28,12 @@ flags.DEFINE_boolean('jsdoc', True,
 
 
 def ShouldReportError(error):
-  """Whether the given error should be reported.  For GJsLint, this is True."""
+  """Whether the given error should be reported.
+  
+  Returns:
+    True for all errors except missing documentation errors.  For these,
+    it returns the value of the jsdoc flag.
+  """
   return FLAGS.jsdoc or error not in (
       errors.MISSING_PARAMETER_DOCUMENTATION,
       errors.MISSING_RETURN_DOCUMENTATION,

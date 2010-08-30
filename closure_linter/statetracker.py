@@ -100,7 +100,7 @@ class DocFlag(object):
 
   HAS_NAME = frozenset(['param'])
 
-  EMPTY_COMMENT_LINE = re.compile(r'^\s*\*\s*$')
+  EMPTY_COMMENT_LINE = re.compile(r'^\s*\*?\s*$')
   EMPTY_STRING = re.compile(r'^\s*$')
 
   def __init__(self, flag_token):
@@ -436,26 +436,29 @@ def _GetEndTokenAndContents(start_token):
   last_token = None
   contents = ''
   while not iterator.type in Type.FLAG_ENDING_TYPES:
+    if (iterator.IsFirstInLine() and
+        DocFlag.EMPTY_COMMENT_LINE.match(iterator.line)):
+      # If we have a blank comment line, consider that an implicit
+      # ending of the description. This handles a case like:
+      #
+      # * @return {boolean} True
+      # *
+      # * Note: This is a sentence.
+      #
+      # The note is not part of the @return description, but there was
+      # no definitive ending token. Rather there was a line containing
+      # only a doc comment prefix or whitespace.
+      break
+
     if iterator.type in Type.FLAG_DESCRIPTION_TYPES:
-      if DocFlag.EMPTY_COMMENT_LINE.match(iterator.line):
-        # If we have a blank comment line, consider that an implicit
-        # ending of the description. This handles a case like:
-        #
-        # * @return {boolean} True
-        # *
-        # * Note: This is a sentence.
-        #
-        # The note is not part of the @return description, but there was
-        # no definitive ending token. Rather there was a line containing
-        # only a doc comment prefix.
-        break
-      elif iterator.type != Type.DOC_PREFIX:
-        contents += iterator.string
-        last_token = iterator
+      contents += iterator.string
+      last_token = iterator
+
     iterator = iterator.next
     if iterator.line_number != last_line:
       contents += '\n'
       last_line = iterator.line_number
+
   end_token = last_token
   if DocFlag.EMPTY_STRING.match(contents):
     contents = None
