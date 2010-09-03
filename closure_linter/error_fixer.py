@@ -239,6 +239,24 @@ class ErrorFixer(errorhandler.ErrorHandler):
         tokenutil.DeleteToken(token.next)
         self._AddFix([token])
 
+    elif code == errors.WRONG_INDENTATION:
+      token = tokenutil.GetFirstTokenInSameLine(token)
+      actual = error.position.start
+      expected = error.position.length
+
+      if token.type in (Type.WHITESPACE, Type.PARAMETERS):
+        token.string = token.string.lstrip() + (' ' * expected)
+        self._AddFix([token])
+      else:
+        # We need to add indentation.
+        new_token = Token(' ' * expected, Type.WHITESPACE,
+                          token.line, token.line_number)
+        # Note that we'll never need to add indentation at the first line,
+        # since it will always not be indented.  Therefore it's safe to assume
+        # token.previous exists.
+        tokenutil.InsertTokenAfter(new_token, token.previous)
+        self._AddFix([token])
+
   def FinishFile(self):
     """Called when the current file has finished style checking.
 

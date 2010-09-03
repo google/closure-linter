@@ -199,8 +199,9 @@ class IndentationRules(object):
             errors.WRONG_INDENTATION,
             'Wrong indentation: expected any of {%s} but got %d' % (
                 ', '.join(
-                    ['%d' % x for x in expected]), actual), token])
-      
+                    ['%d' % x for x in expected]), actual),
+            token,
+            Position(actual, expected[0])])
         self._start_index_offset[token.line_number] = expected[0] - actual
 
     # Add tokens that could increase indentation.
@@ -363,10 +364,7 @@ class IndentationRules(object):
       -1 if this line should be ignored due to the presence of tabs.
     """
     # Move to the first token in the line
-    while (not token.IsFirstInLine() and
-           token.previous and
-           token.previous.line_number == token.line_number):
-      token = token.previous
+    token = tokenutil.GetFirstTokenInSameLine(token)
 
     # If it is whitespace, it is the indentation.
     if token.type == Type.WHITESPACE:

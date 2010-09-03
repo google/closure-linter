@@ -170,6 +170,16 @@ for (i = 0; i < 10; i++) {
 var x = 10;
 var y = 100;
 
+var indent = 'correct';
+indent = 'too far';
+if (indent) {
+  indent = 'too short';
+}
+indent = function() {
+  return a +
+      b;
+};
+
 // Previously, when auto-fixing the below line there would not be a space
 // between the . and the */
 /** @desc Single line description. */

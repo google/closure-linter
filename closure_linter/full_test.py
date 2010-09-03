@@ -45,6 +45,7 @@ flags.FLAGS.limited_doc_files = ('externs.js', 'dummy.js')
 # List of files under testdata to test.
 # We need to list files explicitly since pyglib can't list directories.
 _TEST_FILES = [
+    'all_js_wrapped.js',
     'ends_with_block.js',
     'externs.js',
     'html_parse_error.html',

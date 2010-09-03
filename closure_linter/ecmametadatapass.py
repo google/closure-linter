@@ -288,7 +288,10 @@ class EcmaMetaDataPass(object):
       result = self._PopContextType(EcmaContext.GROUP,
                                     EcmaContext.FOR_GROUP_BLOCK)
       keyword_token = result.start_token.metadata.last_code
-      if keyword_token.string in ('if', 'for', 'while'):
+      # keyword_token will not exist if the open paren is the first line of the
+      # file, for example if all code is wrapped in an immediately executed
+      # annonymous function.
+      if keyword_token and keyword_token.string in ('if', 'for', 'while'):
         next_code = tokenutil.SearchExcept(token, TokenType.NON_CODE_TYPES)
         if next_code.type != TokenType.START_BLOCK:
           # Check for do-while.

@@ -28,6 +28,20 @@ import copy
 JavaScriptToken = javascripttokens.JavaScriptToken
 Type = tokens.TokenType
 
+def GetFirstTokenInSameLine(token):
+  """Returns the first token in the same line as token.
+  
+  Args:
+    token: Any token in the line.
+
+  Returns:
+    The first token in the same line as token.
+  """
+  while not token.IsFirstInLine():
+    token = token.previous
+  return token
+
+
 def CustomSearch(start_token, func, end_func=None, distance=None,
                  reverse=False):
   """Returns the first token where func is True within distance of this token.

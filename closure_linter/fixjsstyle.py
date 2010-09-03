@@ -33,8 +33,8 @@ def main(argv = None):
     argv: Sequence of command line arguments.
   """
   if argv is None:
-    argf = flags.FLAGS(sys.argv)
-    
+    argv = flags.FLAGS(sys.argv)
+
   files = fileflags.GetFileList(argv, 'JavaScript', ['.js'])
 
   style_checker = checker.JavaScriptStyleChecker(error_fixer.ErrorFixer())
