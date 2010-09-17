@@ -309,6 +309,15 @@ class EcmaMetaDataPass(object):
 
       return result
 
+    # else with no open brace after it should be considered the start of an
+    # implied block, similar to the case with if, for, and while above.
+    elif (token_type == TokenType.KEYWORD and
+          token.string == 'else'):
+      next_code = tokenutil.SearchExcept(token, TokenType.NON_CODE_TYPES)
+      if next_code.type != TokenType.START_BLOCK:
+        self._AddContext(EcmaContext.IMPLIED_BLOCK)
+        token.metadata.is_implied_block = True
+
     elif token_type == TokenType.START_PARAMETERS:
       self._AddContext(EcmaContext.PARAMETERS)
 
@@ -369,6 +378,16 @@ class EcmaMetaDataPass(object):
         self._PopContext()
         self._AddContext(EcmaContext.TERNARY_FALSE)
 
+      # Handle nested ternary statements like:
+      # foo = bar ? baz ? 1 : 2 : 3
+      # When we encounter the second ":" the context is
+      # ternary_false > ternary_true > statement > root
+      elif (self._context.type == EcmaContext.TERNARY_FALSE and
+            self._context.parent.type == EcmaContext.TERNARY_TRUE):
+           self._PopContext() # Leave current ternary false context.
+           self._PopContext() # Leave current parent ternary true
+           self._AddContext(EcmaContext.TERNARY_FALSE)
+
       elif self._context.parent.type == EcmaContext.SWITCH:
         self._AddContext(EcmaContext.CASE_BLOCK)
 
@@ -422,7 +441,7 @@ class EcmaMetaDataPass(object):
 
     # Determine if there is an implied semicolon after the token.
     if token.type != TokenType.SEMICOLON:
-      next_code = tokenutil.SearchExcept(token, TokenType.NON_CODE_TYPES)      
+      next_code = tokenutil.SearchExcept(token, TokenType.NON_CODE_TYPES)
       # A statement like if (x) does not need a semicolon after it
       is_implied_block = self._context == EcmaContext.IMPLIED_BLOCK
       is_last_code_in_line = token.IsCode() and (
@@ -439,8 +458,7 @@ class EcmaMetaDataPass(object):
       is_multiline_string = token.type == TokenType.STRING_TEXT
       next_code_is_block = next_code and next_code.type == TokenType.START_BLOCK
       if (is_last_code_in_line and
-          self._context.type in (EcmaContext.STATEMENT,
-                                 EcmaContext.VAR) and
+          self._StatementCouldEndInContext() and
           not is_multiline_string and
           not is_end_of_block and
           not is_continued_identifier and
@@ -452,6 +470,26 @@ class EcmaMetaDataPass(object):
           not next_code_is_block):
         token.metadata.is_implied_semicolon = True
         self._EndStatement()
+
+  def _StatementCouldEndInContext(self):
+    """Returns whether the current statement (if any) may end in this context."""
+    # In the basic statement or variable declaration context, statement can
+    # always end in this context.
+    if self._context.type in (EcmaContext.STATEMENT, EcmaContext.VAR):
+      return True
+
+    # End of a ternary false branch inside a statement can also be the
+    # end of the statement, for example:
+    # var x = foo ? foo.bar() : null
+    # In this case the statement ends after the null, when the context stack
+    # looks like ternary_false > var > statement > root.
+    if (self._context.type == EcmaContext.TERNARY_FALSE and
+        self._context.parent.type in (EcmaContext.STATEMENT, EcmaContext.VAR)):
+      return True
+
+    # In all other contexts like object and array literals, ternary true, etc.
+    # the statement can't yet end.
+    return False
 
   def _GetOperatorType(self, token):
     """Returns the operator type of the given operator token.

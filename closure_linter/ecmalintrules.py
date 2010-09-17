@@ -607,7 +607,9 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
               self._HandleError(errors.INVALID_OVERRIDE_PRIVATE,
                   '%s should not override a private member.' % identifier,
                   jsdoc.GetFlag('override').flag_token)
-            if jsdoc.HasFlag('inheritDoc'):
+            # Can have a private class which inherits documentation from a
+            # public superclass.
+            if jsdoc.HasFlag('inheritDoc') and not jsdoc.HasFlag('constructor'):
               self._HandleError(errors.INVALID_INHERIT_DOC_PRIVATE,
                   '%s should not inherit from a private member.' % identifier,
                   jsdoc.GetFlag('inheritDoc').flag_token)

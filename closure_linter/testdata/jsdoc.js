@@ -41,6 +41,11 @@ goog.require('goog.math.Matrix');
 goog.require('goog.math.Vec2');
 
 /**
+ * Test the "no compilation should be done after annotation processing" tag.
+ * @nocompile
+ */
+
+/**
  * @returns // INVALID_JSDOC_TAG
  * @params  // INVALID_JSDOC_TAG
  * @defines // INVALID_JSDOC_TAG
@@ -1035,6 +1040,17 @@ goog.NumberLike;
  * @implicitCast
  */
 CanvasRenderingContext2D.prototype.fillStyle;
+
+/**
+ * Regression test.
+ * @bug 2994247
+ * @inheritDoc
+ * @extends {Bar}
+ * @constructor
+ * @private
+ */
+Foo_ = function() {
+};
 
 /* Regression tests for not ending block comments. Keep at end of file! **/
 /**

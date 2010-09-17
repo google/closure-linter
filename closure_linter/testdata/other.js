@@ -298,6 +298,13 @@ if (x)
 if (x)
   y = 8 // MISSING_SEMICOLON
 
+// Regression test for bug 2973408, bad missing semi-colon error when else
+// is not followed by an opening brace.
+if (x)
+  y = 3;
+else
+  z = 4;
+
 // We used to erroneously report a missing semicolon error.
 if (x)
 {
@@ -311,5 +318,16 @@ for (x = 0; x < 10; x++)
   z += 10; // WRONG_INDENTATION
 
 var x = 100 // MISSING_SEMICOLON
+
+// Also regression test for bug 2973407 Parse error on nested ternary statments.
+foo = bar ? baz ? 1 : 2 : 3 // MISSING_SEMICOLON
+foo = bar ? 1 : baz ? 2 : 3;
+bar ? 1 : baz ? 2 : bat ? 3 : 4;
+bar ? 1 : baz ? bat ? 3 : 4 : baq ? 5 : 6;
+foo = bar ? 1 : 2;
+
+foo = {
+  str: bar ? baz ? blah ? 1 : 2 : 3 : 4
+} // MISSING_SEMICOLON
 
 /* comment not closed  // FILE_MISSING_NEWLINE, FILE_IN_BLOCK
