@@ -21,7 +21,6 @@ __author__ = 'robbyw@google.com (Robby Walker)'
 import StringIO
 
 import gflags as flags
-
 import unittest as googletest
 from closure_linter import checker
 from closure_linter import error_fixer
@@ -30,6 +29,7 @@ _RESOURCE_PREFIX = 'closure_linter/testdata'
 
 flags.FLAGS.strict = True
 flags.FLAGS.limited_doc_files = ('dummy.js', 'externs.js')
+flags.FLAGS.closurized_namespaces = ('goog', 'dummy')
 
 class FixJsStyleTest(googletest.TestCase):
   """Test case to for gjslint auto-fixing."""
@@ -38,10 +38,8 @@ class FixJsStyleTest(googletest.TestCase):
     input_filename = None
     try:
       input_filename = '%s/fixjsstyle.in.js' % (_RESOURCE_PREFIX)
-      
 
       golden_filename = '%s/fixjsstyle.out.js' % (_RESOURCE_PREFIX)
-      
     except IOError, ex:
       raise IOError('Could not find testdata resource for %s: %s' %
                     (self._filename, ex))

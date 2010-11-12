@@ -13,12 +13,23 @@
 // limitations under the License.
 
 // -14: MISSING_GOOG_REQUIRE
+// Missing requires are reporteed on line 1.  We are missing a require for
+// goog.SomeInterface.
 
 /**
- * @fileoverview Description of this file.
+ * @fileoverview Contains a test to verify that interfaces implemented in a file
+ * are goog.require'd.
+ *
  */
 
+goog.provide('goog.something.SomeClass');
 
 
-goog.mobile.paging.getPage();
-goog.mobile.paging.getOtherPage();
+
+/**
+ * Constructor for SomeClass.
+ * @constructor
+ * @implements {goog.something.SomeInterface}
+ */
+goog.something.SomeClass = function() {};
+

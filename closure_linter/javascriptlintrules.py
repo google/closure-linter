@@ -37,6 +37,9 @@ FLAGS = flags.FLAGS
 flags.DEFINE_list('closurized_namespaces', '',
                   'Namespace prefixes, used for testing of'
                   'goog.provide/require')
+flags.DEFINE_list('ignored_extra_namespaces', '',
+                  'Fully qualified namespaces that should be not be reported '
+                  'as extra by the linter.')
 
 # Shorthand
 Error = error.Error
@@ -122,6 +125,66 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
             'Single-quoted string preferred over double-quoted string.',
             token,
             Position.All(token.string))
+
+    elif type == Type.END_DOC_COMMENT:
+      if (FLAGS.strict and not self._is_html and state.InTopLevel() and
+          not state.InBlock()):
+
+        # Check if we're in a fileoverview or constructor JsDoc.
+        doc_comment = state.GetDocComment()
+        is_constructor = (doc_comment.HasFlag('constructor') or
+            doc_comment.HasFlag('interface'))
+        is_file_overview = doc_comment.HasFlag('fileoverview')
+
+        # If the comment is not a file overview, and it does not immediately
+        # precede some code, skip it.
+        # NOTE: The tokenutil methods are not used here because of their
+        # behavior at the top of a file.
+        next = token.next
+        if (not next or
+            (not is_file_overview and next.type in Type.NON_CODE_TYPES)):
+          return
+
+        # Find the start of this block (include comments above the block, unless
+        # this is a file overview).
+        block_start = doc_comment.start_token
+        if not is_file_overview:
+          token = block_start.previous
+          while token and token.type in Type.COMMENT_TYPES:
+            block_start = token
+            token = token.previous
+
+        # Count the number of blank lines before this block.
+        blank_lines = 0
+        token = block_start.previous
+        while token and token.type in [Type.WHITESPACE, Type.BLANK_LINE]:
+          if token.type == Type.BLANK_LINE:
+            # A blank line.
+            blank_lines += 1
+          elif token.type == Type.WHITESPACE and not token.line.strip():
+            # A line with only whitespace on it.
+            blank_lines += 1
+          token = token.previous
+
+        # Log errors.
+        error_message = False
+        expected_blank_lines = 0
+
+        if is_file_overview and blank_lines == 0:
+          error_message = 'Should have a blank line before a file overview.'
+          expected_blank_lines = 1
+        elif is_constructor and blank_lines != 3:
+          error_message = ('Should have 3 blank lines before a constructor/'
+              'interface.')
+          expected_blank_lines = 3
+        elif not is_file_overview and not is_constructor and blank_lines != 2:
+          error_message = 'Should have 2 blank lines between top-level blocks.'
+          expected_blank_lines = 2
+
+        if error_message:
+          self._HandleError(errors.WRONG_BLANK_LINE_COUNT, error_message,
+              block_start, Position.AtBeginning(),
+              expected_blank_lines - blank_lines)
 
     elif type == Type.END_BLOCK:
       if state.InFunction() and state.IsFunctionClose():
@@ -305,3 +368,28 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
                           sorted(missing_requires))),
             state.GetFirstToken(), position=Position.AtBeginning(),
             fix_data=missing_requires)
+
+      # Check that we don't require things we don't actually use.
+      namespace_variants = state.GetUsedNamespaces()
+      used_namespaces = set()
+      for a, b in namespace_variants:
+        used_namespaces.add(a)
+        used_namespaces.add(b)
+
+      extra_requires = set()
+      for i in requires:
+        baseNamespace = i.split('.')[0]
+        if (i not in used_namespaces and
+            baseNamespace in FLAGS.closurized_namespaces and
+            i not in FLAGS.ignored_extra_namespaces):
+          extra_requires.add(i)
+
+      if extra_requires:
+        self._HandleError(
+            errors.EXTRA_GOOG_REQUIRE,
+            'The following goog.require statements appear unnecessary:\n' +
+            '\n'.join(map(lambda x: 'goog.require(\'%s\');' % x,
+                          sorted(extra_requires))),
+            state.GetFirstToken(), position=Position.AtBeginning(),
+            fix_data=extra_requires)
+

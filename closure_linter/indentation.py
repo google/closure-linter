@@ -72,7 +72,7 @@ class TokenInfo(object):
         1],
       2);
       needs this to be set so the last line is not required to be a continuation
-      indent.      
+      indent.
     line_number: The effective line number of this token.  Will either be the
       actual line number or the one before it in the case of a mis-wrapped
       operator.
@@ -113,7 +113,7 @@ class IndentationRules(object):
   def __init__(self):
     """Initializes the IndentationRules checker."""
     self._stack = []
-    
+
     # Map from line number to number of characters it is off in indentation.
     self._start_index_offset = {}
 
@@ -218,9 +218,6 @@ class IndentationRules(object):
     elif token_type == Type.KEYWORD and token.string == 'return':
       self._Add(TokenInfo(token))
 
-    elif token_type == Type.KEYWORD and token.string in ('case', 'default'):
-      self._Add(TokenInfo(token=token, is_block=True))
-
     elif not token.IsLastInLine() and (
         token.IsAssignment() or token.IsOperator('?')):
       self._Add(TokenInfo(token=token))
@@ -234,16 +231,30 @@ class IndentationRules(object):
     if is_last:
       if token_type == Type.OPERATOR:
         if token.string == ':':
-          if (stack and stack[-1].token.string == '?' and
-              token.line_number != stack[-1].token.line_number):
+          if (stack and stack[-1].token.string == '?'):
             # When a ternary : is on a different line than its '?', it doesn't
             # add indentation.
-            pass
-          elif stack and stack[-1].token.string in ('case', 'default'):
-            # Ignore colons when used in a case block.
+            if (token.line_number == stack[-1].token.line_number):
+              self._Add(TokenInfo(token))
+          elif token.metadata.context.type == Context.CASE_BLOCK:
+            # Pop transient tokens from say, line continuations, e.g.,
+            # case x.
+            #     y:
+            # Want to pop the transient 4 space continuation indent.
+            self._PopTransient()
+            # Starting the body of the case statement, which is a type of
+            # block.
+            self._Add(TokenInfo(token=token, is_block=True))
+          elif token.metadata.context.type == Context.LITERAL_ELEMENT:
+            # When in an object literal, acts as operator indicating line
+            # continuations.
+            self._Add(TokenInfo(token))
             pass
           else:
-            self._Add(TokenInfo(token))
+            # ':' might also be a statement label, no effect on indentation in
+            # this case.
+            pass
+
         elif token.string != ',':
           self._Add(TokenInfo(token))
         else:

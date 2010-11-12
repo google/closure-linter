@@ -52,7 +52,7 @@ class ScriptExtractor(htmllib.HTMLParser):
 
   def end_script(self):
     """Internal handler for the end of a script tag."""
-    self.in_script = False
+    self._in_script = False
 
   def handle_data(self, data):
     """Internal handler for character data.

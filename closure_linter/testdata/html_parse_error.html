@@ -19,11 +19,14 @@
   <title>GJsLint HTML JavaScript extraction tests</title>
 </head>
 <body>
+  Text outside the script tag should not be linted as JavaScript.
+  Stray closing brace: }
   <script type="text/javascript">
     /**
      * @type {!Array.<!Array.<string>>}
      */
     var badParse = [['a']];
   </script>
+  <div>Some more non-JavaScript text with missing whitespace: (a+b).</div>
 </body>
 </html>

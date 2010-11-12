@@ -39,13 +39,14 @@ _RESOURCE_PREFIX = 'closure_linter/testdata'
 
 flags.FLAGS.strict = True
 flags.FLAGS.custom_jsdoc_tags = ('customtag', 'requires')
-flags.FLAGS.closurized_namespaces = ('goog')
+flags.FLAGS.closurized_namespaces = ('goog', 'dummy')
 flags.FLAGS.limited_doc_files = ('externs.js', 'dummy.js')
 
 # List of files under testdata to test.
 # We need to list files explicitly since pyglib can't list directories.
 _TEST_FILES = [
     'all_js_wrapped.js',
+    'blank_lines.js',
     'ends_with_block.js',
     'externs.js',
     'html_parse_error.html',
@@ -55,10 +56,12 @@ _TEST_FILES = [
     'minimal.js',
     'other.js',
     'require_all_caps.js',
+    'require_extra.js',
     'require_function.js',
     'require_function_missing.js',
     'require_function_through_both.js',
     'require_function_through_namespace.js',
+    'require_interface.js',
     'require_lower_case.js',
     'require_numeric.js',
     'require_provide_ok.js',

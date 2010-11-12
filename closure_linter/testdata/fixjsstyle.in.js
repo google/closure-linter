@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 /**
  * @fileoverview Autofix test script.
  *
@@ -25,10 +24,14 @@ goog.provide('Y');
 goog.provide('X');
 goog.provide('Z');
 
-goog.require('a');
-goog.require('C');
-goog.require('B');
-goog.require('D');
+goog.require('dummy.aa');
+goog.require('dummy.Cc');
+goog.require('dummy.Bb');
+goog.require('dummy.Dd');
+
+var x = new dummy.Bb();
+dummy.Cc.someMethod();
+dummy.aa.someMethod();
 
 
 /**
@@ -107,7 +110,7 @@ goog.inherits(x.y.z, a.b.c);
 // Whitespace at end of comment. 
 var removeWhiteSpaceAtEndOfLine;
 
-/* 
+/**
  * Whitespace at EOL (here and the line of code and the one below it).   
  * @type {string}  
  * @param {string} Description with whitespace at EOL. 
@@ -179,6 +182,40 @@ indent = function() {
    return a +
           b;
 };
+
+
+
+
+/**
+ * This is to test the ability to remove multiple extra lines before a top-level
+ * block.
+ */
+function someFunction() {}
+/**
+ * This is to test the ability to add multiple extra lines before a top-level
+ * block.
+ */
+function someFunction() {}
+
+
+/**
+ * This is to test punctuation mark injection in comments with HTML tags.
+ * @param {string} v A value to be <a><code>ignored</code></a>
+ */
+function someFunction(v) {}
+
+// This is a comment.
+/**
+ * This is to test that blank lines removed before a top level block skips any
+ * comments above the block.
+ */
+function someFunction() {}
+// This is a comment.
+/**
+ * This is to test that blank lines added before a top level block skips any
+ * comments above the block.
+ */
+function someFunction() {}
 
 // Previously, when auto-fixing the below line there would not be a space
 // between the . and the */

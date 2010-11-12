@@ -309,12 +309,14 @@ class EcmaMetaDataPass(object):
 
       return result
 
-    # else with no open brace after it should be considered the start of an
-    # implied block, similar to the case with if, for, and while above.
+    # else (not else if) with no open brace after it should be considered the
+    # start of an implied block, similar to the case with if, for, and while
+    # above.
     elif (token_type == TokenType.KEYWORD and
           token.string == 'else'):
       next_code = tokenutil.SearchExcept(token, TokenType.NON_CODE_TYPES)
-      if next_code.type != TokenType.START_BLOCK:
+      if (next_code.type != TokenType.START_BLOCK and
+          (next_code.type != TokenType.KEYWORD or next_code.string != 'if')):
         self._AddContext(EcmaContext.IMPLIED_BLOCK)
         token.metadata.is_implied_block = True
 
@@ -390,10 +392,6 @@ class EcmaMetaDataPass(object):
 
       elif self._context.parent.type == EcmaContext.SWITCH:
         self._AddContext(EcmaContext.CASE_BLOCK)
-
-      else:
-        raise ParseError(token,
-                         'Found a : in a %s context' % self._context)
 
     elif token.IsKeyword('var'):
       self._AddContext(EcmaContext.VAR)

@@ -15,13 +15,16 @@
 /**
  * @fileoverview A should come before B.
  *
- *
  */
 
-goog.provide('X');
-goog.provide('Z'); // GOOG_PROVIDES_NOT_ALPHABETIZED
-goog.provide('Y');
+goog.provide('XX');
+goog.provide('ZZ'); // GOOG_PROVIDES_NOT_ALPHABETIZED
+goog.provide('YY');
 
-goog.require('A');
-goog.require('C'); // GOOG_REQUIRES_NOT_ALPHABETIZED
-goog.require('B');
+goog.require('dummy.AA');
+goog.require('dummy.CC'); // GOOG_REQUIRES_NOT_ALPHABETIZED
+goog.require('dummy.BB');
+
+dummy.AA();
+dummy.CC();
+dummy.BB();

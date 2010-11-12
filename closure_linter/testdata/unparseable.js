@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
+
 /**
  * Constructs and initializes a new good object.
  * @constructor
  */
 goog.good = function() {
 };
+
 
 /**
  * Makes this good object go bad.
@@ -29,6 +32,7 @@ goog.good.prototype.goBad = function() { // EXTRA_PARAMETER_DOCUMENTATION
 if (x)
   // Cannot parse ending block because beginning block is missing.
 } // FILE_DOES_NOT_PARSE
+
 
 /**
  * Unecessary return documentation error is not reported because file checking

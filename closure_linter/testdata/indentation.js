@@ -19,7 +19,6 @@
 
 goog.provide('goog.something');
 
-goog.require('goog.Timer');
 goog.require('goog.events.KeyCodes');
 goog.require('goog.userAgent');
 
@@ -70,6 +69,7 @@ callAFunction('abc' +
 x.reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongName.
     someMember = 10;
 
+
 /**
  * Some function.
  * @return {number} The number ten.
@@ -78,6 +78,7 @@ goog.something.x = function() {
   return 10 +
          20;
 };
+
 
 /**
  * Some function.
@@ -90,6 +91,7 @@ goog.something.y = function(longParameterName1, longParameterName2,
     longParameterName3) {
   return longParameterName1 + longParameterName2 + longParameterName3;
 };
+
 
 /**
  * Some function.
@@ -108,6 +110,7 @@ if (opt_rootTagName) {
                                  opt_rootTagName,
                                  opt_namespaceUri || ''));
 }
+
 
 /**
  * For a while this errored because the function call parens were overriding
@@ -143,6 +146,13 @@ switch (x) {
     }
     break;
 
+  case SadThatYouSwitch.
+      onSomethingLikeThis:
+    z = 10;
+
+  case 40:
+    z = 20;
+
   default:
     break;
 }
@@ -155,6 +165,7 @@ if (x) {
 } else {
 
 }
+
 
 /** @inheritDoc */
 goog.editor.SeamlessField.prototype.setupMutationEventHandlersGecko =
@@ -170,6 +181,42 @@ var someReallyReallyLongVariableName =
 var somethingOrOther = z ?
                        a :
                        b;
+
+var z = x ? y :
+    'bar';
+
+var z = x ?
+    y :
+    a;
+
+var z = z ?
+    a ? b : c :
+    d ? e : f;
+
+var z = z ?
+    a ? b :
+        c :
+    d ? e : f;
+
+var z = z ?
+    a ?
+        b :
+        c :
+    d ? e : f;
+
+var z = z ?
+    a ? b : c :
+    d ? e :
+        f ? g : h;
+
+var z = z ?
+    a +
+        i ?
+            b +
+                j : c :
+    d ? e :
+        f ? g : h;
+
 
 if (x) {
   var block =
@@ -194,6 +241,12 @@ var somethingElse = {
 
   // A reasonably placed comment.
   SOME_KEY: goog.userAgent.IE
+};
+
+var x = {
+  ySomethingReallyReallyLong:
+      'foo',
+  z: 'bar'
 };
 
 // Some bad indentation.
@@ -274,6 +327,12 @@ x = {
   y: function() {}
 };
 
+x = {
+  y: foo,
+  z: bar +
+  baz // WRONG_INDENTATION
+};
+
 x({
   a: b
 },
@@ -324,4 +383,13 @@ function bar2() {
 function bar3() {
    return 3 + // WRONG_INDENTATION
          4;
+}
+
+// Regression test for unfiled bug. Wrongly going into implied block after else
+// when there was an explicit block (was an else if) caused false positive
+// indentation errors.
+if (true) {
+} else if (doc.foo(
+    doc.getBar(baz))) {
+  var x = 3;
 }

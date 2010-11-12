@@ -15,13 +15,17 @@
 /**
  * @fileoverview The B should come before the b.
  *
- *
  */
 
 goog.provide('x'); // GOOG_PROVIDES_NOT_ALPHABETIZED
 goog.provide('X');
 goog.provide('Y');
 
-goog.require('b'); // GOOG_REQUIRES_NOT_ALPHABETIZED
-goog.require('B');
-goog.require('C');
+goog.require('dummy.bb'); // GOOG_REQUIRES_NOT_ALPHABETIZED
+goog.require('dummy.Bb');
+goog.require('dummy.Cc');
+
+var x = dummy.bb.a();
+var y = dummy.Bb.a();
+var z = dummy.Cc.a();
+

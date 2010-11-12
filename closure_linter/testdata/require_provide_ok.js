@@ -15,21 +15,28 @@
 /**
  * @fileoverview There is nothing wrong w/ this javascript.
  *
- *
  */
 
 goog.provide('goog.something');
 goog.provide('goog.something.Else');
 
+goog.require('dummy.foo');
+goog.require('dummy.foo.someSpecificallyRequiredMethod');
 goog.require('goog.Class');
 goog.require('goog.Class.Enum');
 goog.require('goog.package');
+goog.require('notInClosurizedNamespacesSoNotExtra');
+
+
+dummy.foo.someMethod();
+dummy.foo.someSpecificallyRequiredMethod();
 
 
 var x = new goog.Class();
 goog.package.staticFunction();
 
 var y = goog.Class.Enum.VALUE;
+
 
 /**
  * Private variable.
@@ -38,11 +45,18 @@ var y = goog.Class.Enum.VALUE;
  */
 goog.something.private_ = 10;
 
+
 /**
  * Static function.
  */
 goog.something.staticFunction = function() {
+  // Tests that namespace usages are identified using 'namespace.' not just
+  // 'namespace'.
+  googSomething.property;
+  dummySomething.property;
 };
+
+
 
 /**
  * Constructor for Else.

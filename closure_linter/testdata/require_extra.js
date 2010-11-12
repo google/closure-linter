@@ -12,13 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// -14: MISSING_GOOG_REQUIRE
+// -14: EXTRA_GOOG_REQUIRE
+
+// Extra goog.requires are reported on line 1. dummy.Ff, dummy.Gg, and dummy.hh
+// are extra.
 
 /**
- * @fileoverview Description of this file.
+ * @fileoverview Checks for missing and extra goog.requires.
+ *
  */
 
+goog.require('dummy.Aa');
+goog.require('dummy.Bb');
+goog.require('dummy.Ff');
+goog.require('dummy.Gg');
+goog.require('dummy.cc');
+goog.require('dummy.hh');
 
+new dummy.Aa();
+dummy.Bb.someMethod();
+dummy.cc();
 
-goog.mobile.paging.getPage();
-goog.mobile.paging.getOtherPage();

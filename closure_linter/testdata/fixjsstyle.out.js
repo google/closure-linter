@@ -25,10 +25,13 @@ goog.provide('Y');
 goog.provide('Z');
 goog.provide('w');
 
-goog.require('B');
-goog.require('C');
-goog.require('D');
-goog.require('a');
+goog.require('dummy.Bb');
+goog.require('dummy.Cc');
+goog.require('dummy.aa');
+
+var x = new dummy.Bb();
+dummy.Cc.someMethod();
+dummy.aa.someMethod();
 
 
 /**
@@ -65,6 +68,7 @@ reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongName = 100
 x = function() {
 };
 
+
 /**
  * @param {string} a <code>Add a period before tag code.</code>
  * @param {Object} b An object with the following properties:
@@ -77,6 +81,8 @@ x = function() {
 function xyz(a, b) {
 }
 
+
+
 /**
  * Missing a newline.
  * @constructor
@@ -86,6 +92,8 @@ x.y.z = function() {
 };
 goog.inherits(x.y.z, a.b.c);
 
+
+
 /**
  * Extra blank line.
  * @constructor
@@ -94,6 +102,8 @@ goog.inherits(x.y.z, a.b.c);
 x.y.z = function() {
 };
 goog.inherits(x.y.z, a.b.c);
+
+
 
 /**
  * Perfect!
@@ -107,32 +117,38 @@ goog.inherits(x.y.z, a.b.c);
 // Whitespace at end of comment.
 var removeWhiteSpaceAtEndOfLine;
 
-/*
+
+/**
  * Whitespace at EOL (here and the line of code and the one below it).
  * @type {string}
  * @param {string} Description with whitespace at EOL.
  */
 x = 10;
 
+
 /**
  * @type {number}
  */
 foo.bar = 3;
+
 
 /**
  * @enum {boolean}
  */
 bar.baz = true;
 
+
 /**
  * @extends {Object}
  */
 bar.foo = x;
 
+
 /**
  * @type {function(string, boolean) : void}
  */
 baz.bar = goog.nullFunction;
+
 
 /** @inheritDoc */
 baz.baz = function() {
@@ -179,6 +195,43 @@ indent = function() {
   return a +
       b;
 };
+
+
+/**
+ * This is to test the ability to remove multiple extra lines before a top-level
+ * block.
+ */
+function someFunction() {}
+
+
+/**
+ * This is to test the ability to add multiple extra lines before a top-level
+ * block.
+ */
+function someFunction() {}
+
+
+/**
+ * This is to test punctuation mark injection in comments with HTML tags.
+ * @param {string} v A value to be <a><code>ignored.</code></a>
+ */
+function someFunction(v) {}
+
+
+// This is a comment.
+/**
+ * This is to test that blank lines removed before a top level block skips any
+ * comments above the block.
+ */
+function someFunction() {}
+
+
+// This is a comment.
+/**
+ * This is to test that blank lines added before a top level block skips any
+ * comments above the block.
+ */
+function someFunction() {}
 
 // Previously, when auto-fixing the below line there would not be a space
 // between the . and the */

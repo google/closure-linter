@@ -26,7 +26,6 @@ __author__ = ('robbyw@google.com (Robert Walker)',
 
 import re
 
-
 import unittest as googletest
 from closure_linter.common import erroraccumulator
 
@@ -65,7 +64,6 @@ class AnnotatedFileTestCase(googletest.TestCase):
     """Runs the test."""
     try:
       filename = self._filename
-      
       stream = open(filename)
     except IOError, ex:
       raise IOError('Could not find testdata resource for %s: %s' %

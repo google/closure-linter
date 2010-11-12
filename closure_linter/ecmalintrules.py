@@ -220,9 +220,13 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
     if token.string == ',' or token.metadata.IsUnaryPostOperator():
       return False
 
+    # Colons should appear in labels, object literals, the case of a switch
+    # statement, and ternary operator. Only want a space in the case of the
+    # ternary operator.
     if (token.string == ':' and
         token.metadata.context.type in (Context.LITERAL_ELEMENT,
-                                        Context.CASE_BLOCK)):
+                                        Context.CASE_BLOCK,
+                                        Context.STATEMENT)):
       return False
 
     if token.metadata.IsUnaryOperator() and token.IsFirstInLine():
@@ -538,21 +542,13 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
               end_string.endswith('!')):
             # Find the position for the missing punctuation, inside of any html
             # tags.
-            end_position = None
             desc_str = end_token.string.rstrip()
-            if end_string == desc_str:
-              end_position = Position(len(desc_str), 0)
-
-            else:
-              while not end_position and desc_str != '':
-                start_tag_index = desc_str.rfind('<')
-                end_tag_index = desc_str.rfind('>')
-                endchar_index = desc_str.rfind(end_string[-1])
-                if (endchar_index > end_tag_index
-                    or endchar_index < start_tag_index):
-                  end_position = Position(endchar_index + 1, 0)
-                else:
-                  desc_str = desc_str[:start_tag_index].rstrip()
+            while desc_str.endswith('>'):
+              start_tag_index = desc_str.rfind('<')
+              if start_tag_index < 0:
+                break              
+              desc_str = desc_str[:start_tag_index].rstrip()
+            end_position = Position(len(desc_str), 0)
 
             self._HandleError(
                 errors.JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER,

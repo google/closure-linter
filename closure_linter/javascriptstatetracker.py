@@ -156,20 +156,36 @@ class JavaScriptStateTracker(statetracker.StateTracker):
         self.__goog_provide_tokens.append(class_token)
 
       elif self.__closurized_namespaces:
-        namespace = self.__GetClosurizedNamespace(token.string)
-        if namespace:
-          # We add token.string as a 'namespace' as it is something that could
-          # potentially be provided to satisfy this dependency.
-          self.__used_namespaces.append([namespace, token.string])
+        self.__AddUsedNamespace(token.string)
     if token.IsType(Type.SIMPLE_LVALUE) and not self.InFunction():
       identifier = token.values['identifier']
 
       if self.__closurized_namespaces:
-        namespace = self.__GetClosurizedNamespace(identifier)
+        namespace = self.GetClosurizedNamespace(identifier)
         if namespace and identifier == namespace:
           self.__provided_namespaces.add(namespace)
+    if (self.__closurized_namespaces and
+        token.IsType(Type.DOC_FLAG) and
+        token.attached_object.flag_type == 'implements'):
+      # Interfaces should be goog.require'd.
+      doc_start = tokenutil.Search(token, Type.DOC_START_BRACE)
+      interface = tokenutil.Search(doc_start, Type.COMMENT)
+      self.__AddUsedNamespace(interface.string)
 
-  def __GetClosurizedNamespace(self, identifier):
+  def __AddUsedNamespace(self, identifier):
+    """Adds the namespace of an identifier to the list of used namespaces.
+    
+    Args:
+      identifier: An identifier which has been used.
+    """
+    namespace = self.GetClosurizedNamespace(identifier)
+
+    if namespace:
+      # We add token.string as a 'namespace' as it is something that could
+      # potentially be provided to satisfy this dependency.
+      self.__used_namespaces.append([namespace, identifier])
+
+  def GetClosurizedNamespace(self, identifier):
     """Given an identifier, returns the namespace that identifier is from.
 
     Args:
@@ -185,33 +201,38 @@ class JavaScriptStateTracker(statetracker.StateTracker):
         # Ignore private variables / inner classes.
         return None
 
-    for part in parts[:-1]:
-      if part.isupper():
-        # If any part other than the last one appears to be a constant,
-        # ignore this.
-        return None
-
-    if (not identifier.startswith('goog.global') and
-        identifier.find('.prototype.') == -1):
-      # Ignore prototyep entries and goog.global.
-
-      for namespace in self.__closurized_namespaces:
-        if identifier.startswith(namespace):
-          last_part = parts[-1]
-          if not last_part:
-            # TODO(robbyw): Handle this: it's a multi-line identifier.
-            return None
-
-          if last_part in ('apply', 'inherits', 'call'):
-            # Calling one of Function's methods usually indicates use of a
-            # superclass.
-            parts.pop()
-            last_part = parts[-1]
-
-          if last_part.isupper() or not last_part[0].isupper():
-            # Strip off the last part of an enum or constant reference.
-            parts.pop()
-
-          return '.'.join(parts)
-
+    if identifier.startswith('goog.global'):
+      # Ignore goog.global, since it is, by definition, global.
       return None
+
+    for namespace in self.__closurized_namespaces:
+      if identifier.startswith(namespace + '.'):
+        last_part = parts[-1]
+        if not last_part:
+          # TODO(robbyw): Handle this: it's a multi-line identifier.
+          return None
+
+        if last_part in ('apply', 'inherits', 'call'):
+          # Calling one of Function's methods usually indicates use of a
+          # superclass.
+          parts.pop()
+          last_part = parts[-1]
+
+        for i in xrange(1, len(parts)):
+          part = parts[i]
+          if part.isupper():
+            # If an identifier is of the form foo.bar.BAZ.x or foo.bar.BAZ,
+            # the namespace is foo.bar.
+            return '.'.join(parts[:i])
+          if part == 'prototype':
+            # If an identifier is of the form foo.bar.prototype.x, the
+            # namespace is foo.bar.
+            return '.'.join(parts[:i])
+
+        if last_part.isupper() or not last_part[0].isupper():
+          # Strip off the last part of an enum or constant reference.
+          parts.pop()
+
+        return '.'.join(parts)
+
+    return None

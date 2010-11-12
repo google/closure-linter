@@ -20,10 +20,10 @@
  * @author  robbyw@google.com  (Robby Walker) // EXTRA_SPACE, EXTRA_SPACE
  * @author robbyw@google.com(Robby Walker) // MISSING_SPACE
  *
- *
+ * @author // INVALID_AUTHOR_TAG_DESCRIPTION
  * @author robbyw@google.com () // INVALID_AUTHOR_TAG_DESCRIPTION
  * @author robbyw@google.com  // INVALID_AUTHOR_TAG_DESCRIPTION
- *
+ * @author Robby Walker (robbyw@google.com) // INVALID_AUTHOR_TAG_DESCRIPTION
  *
  * @owner  ajp@google.com (Andy Perelson)
  * @badtag   // INVALID_JSDOC_TAG
@@ -40,10 +40,12 @@ goog.require('goog.dom.Range');
 goog.require('goog.math.Matrix');
 goog.require('goog.math.Vec2');
 
+
 /**
  * Test the "no compilation should be done after annotation processing" tag.
  * @nocompile
  */
+
 
 /**
  * @returns // INVALID_JSDOC_TAG
@@ -52,6 +54,7 @@ goog.require('goog.math.Vec2');
  */
 function badTags() {
 }
+
 
 // +4: JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER
 // +4: MISSING_JSDOC_TAG_DESCRIPTION
@@ -71,6 +74,7 @@ function goodTags() {
   }
 }
 
+
 /**
  * Some documentation goes here.
  *
@@ -79,6 +83,7 @@ function goodTags() {
 function good(object) {
 }
 
+
 /**
  * Some documentation goes here.
  * @param {function(string, string) : string} f A function.
@@ -86,11 +91,13 @@ function good(object) {
 function setConcatFunc(f) {
 }
 
+
 /**
  * Some docs.
  */
 function missingParam(object) { // MISSING_PARAMETER_DOCUMENTATION
 }
+
 
 /**
  * @return {number} Hiya.
@@ -100,11 +107,13 @@ function missingParamButInherit(object) { // MISSING_PARAMETER_DOCUMENTATION
   return 3;
 }
 
+
 /**
  * @inheritDoc
  */
 function missingParamButInherit(object) {
 }
+
 
 /**
  * @override
@@ -112,12 +121,14 @@ function missingParamButInherit(object) {
 function missingParamButOverride(object) {
 }
 
+
 // +2: UNNECESSARY_BRACES_AROUND_INHERIT_DOC
 /**
  * {@inheritDoc}
  */
 function missingParamButInherit(object) {
 }
+
 
 /**
  * Some docs.
@@ -127,12 +138,14 @@ function missingParamButInherit(object) {
 function mismatchedParam(elem) { // WRONG_PARAMETER_DOCUMENTATION
 }
 
+
 /**
  * @return {boolean} A boolean primitive.
  */
 function goodReturn() {
   return something;
 }
+
 
 /**
  * @return {some.long.type.that.will.make.the.description.start.on.next.line}
@@ -142,6 +155,7 @@ function anotherGoodReturn() {
   return something;
 }
 
+
 // +2: MISSING_JSDOC_TAG_TYPE
 /**
  * @return false.
@@ -150,6 +164,7 @@ function missingReturnType() {
   return something;
 }
 
+
 // +2: MISSING_JSDOC_TAG_DESCRIPTION, MISSING_SPACE
 /**
  * @return{type}
@@ -157,6 +172,7 @@ function missingReturnType() {
 function missingSpaceAndReturnDescription() {
   return something;
 }
+
 
 // +2: MISSING_JSDOC_TAG_TYPE, MISSING_JSDOC_TAG_DESCRIPTION
 /**
@@ -169,6 +185,7 @@ function missingReturnTypeAndDescription() {
 class.missingDocs = function() { // MISSING_MEMBER_DOCUMENTATION
 };
 
+
 /**
  * No return doc needed.
  */
@@ -176,12 +193,14 @@ function okMissingReturnDoc() {
   return;
 }
 
+
 // +2: UNNECESSARY_RETURN_DOCUMENTATION
 /**
  * @return {number} Unnecessary return doc.
  */
 function unnecessaryMissingReturnDoc() {
 }
+
 
 // +3: MISSING_JSDOC_TAG_TYPE, MISSING_JSDOC_TAG_DESCRIPTION
 // +2: UNNECESSARY_RETURN_DOCUMENTATION
@@ -191,11 +210,13 @@ function unnecessaryMissingReturnDoc() {
 function unnecessaryMissingReturnDocNoType() {
 }
 
+
 /**
  * @return {undefined} Ok unnecessary return doc.
  */
 function okUnnecessaryMissingReturnDoc() {
 }
+
 
 /**
  * @return {*} Ok unnecessary return doc.
@@ -203,11 +224,13 @@ function okUnnecessaryMissingReturnDoc() {
 function okUnnecessaryMissingReturnDoc2() {
 }
 
+
 /**
  * @return {void} Ok unnecessary return doc.
  */
 function okUnnecessaryMissingReturnDoc3() {
 }
+
 
 /**
  * This function doesn't return anything, but it does contain the string return.
@@ -216,21 +239,25 @@ function makeSureReturnTokenizesRight() {
   fn(returnIsNotSomethingHappeningHere);
 }
 
+
 /**
  * @return {number|undefined} Ok unnecessary return doc.
  */
 function okUnnecessaryMissingReturnDoc3() {
 }
 
+
 /** @inheritDoc */
 function okNoReturnWithInheritDoc() {
   return 10;
 }
 
+
 /** @override */
 function okNoReturnWithOverride() {
   return 10;
 }
+
 
 /**
  * No return doc.
@@ -239,6 +266,8 @@ function badMissingReturnDoc() {
   return 10;
 }
 
+
+
 /**
  * Constructor so we should not have a return jsdoc tag.
  * @constructor
@@ -246,6 +275,8 @@ function badMissingReturnDoc() {
 function OkNoReturnWithConstructor() {
   return this;
 }
+
+
 
 /**
  * Check definition of fields in constructors.
@@ -280,10 +311,12 @@ function AConstructor() {
   }
 }
 
+
 /**
  * @desc This message description is allowed.
  */
 var MSG_YADDA_YADDA_YADDA = 'A great message!';
+
 
 /**
  * @desc So is this one.
@@ -291,16 +324,19 @@ var MSG_YADDA_YADDA_YADDA = 'A great message!';
  */
 x.y.z.MSG_YADDA_YADDA_YADDA = 'A great message!';
 
+
 /**
  * @desc But desc can only apply to messages.
  */
 var x = 10; // INVALID_USE_OF_DESC_TAG
+
 
 /**
  * Same with hidden.
  * @hidden
  */
 var x = 10; // INVALID_USE_OF_DESC_TAG
+
 
 // +9: MISSING_JSDOC_TAG_DESCRIPTION, MISSING_SPACE
 // +9: MISSING_JSDOC_TAG_TYPE, MISSING_JSDOC_TAG_DESCRIPTION
@@ -323,6 +359,7 @@ function manyProblems(a, b, c, d, x, z, y, alpha) {
   // -2: WRONG_PARAMETER_DOCUMENTATION
 }
 
+
 /**
  * Good docs
  *
@@ -337,6 +374,7 @@ function manyProblems(a, b, c, d, x, z, y, alpha) {
 function wrappedParams(good, okay, fine) {
 }
 
+
 // +4: MISSING_JSDOC_TAG_TYPE, MISSING_JSDOC_TAG_DESCRIPTION
 // +3: MISSING_JSDOC_PARAM_NAME
 /**
@@ -346,6 +384,7 @@ function wrappedParams(good, okay, fine) {
 function reallyBadParam(a) { // MISSING_PARAMETER_DOCUMENTATION
 }
 
+
 /**
  * Some docs.
  *
@@ -354,11 +393,13 @@ function reallyBadParam(a) { // MISSING_PARAMETER_DOCUMENTATION
 class.goodPrivate_ = function() {
 };
 
+
 /**
  * Some docs.
  */
 class.missingPrivate_ = function() { // MISSING_PRIVATE
 };
+
 
 /**
  * Some docs.
@@ -375,6 +416,7 @@ class.extraPrivate = function() { // EXTRA_PRIVATE
 class.__iterator__ = function() {
 };
 
+
 /**
  * Some docs.
  * @protected
@@ -382,12 +424,14 @@ class.__iterator__ = function() {
 class.goodProtected = function() {
 };
 
+
 /**
  * Some docs.
  * @protected
  */
 class.badProtected_ = function() { // MISSING_PRIVATE
 };
+
 
 /**
  * Example of a legacy name.
@@ -399,12 +443,14 @@ class.dom_ = function() {
   with ({}) {}
 };
 
+
 /**
  * Legacy names must be protected.
  * @suppress {underscore}
  */
 class.dom_ = function() {
 };
+
 
 // +4: UNNECESSARY_SUPPRESS
 /**
@@ -414,6 +460,7 @@ class.dom_ = function() {
  */
 class.unnecessarySuppress_ = function() {
 };
+
 
 // +7: JSDOC_PREFER_QUESTION_TO_PIPE_NULL
 // +7: JSDOC_ILLEGAL_QUESTION_WITH_PIPE
@@ -434,12 +481,14 @@ class.sampleFunction = function(good, bad, ugly, ok, bad2, ugly2,
     complicated) {
 };
 
+
 /**
  * @return {Object?} A good return.
  */
 class.goodReturn = function() {
   return something;
 };
+
 
 // +2: JSDOC_PREFER_QUESTION_TO_PIPE_NULL
 /**
@@ -449,6 +498,7 @@ class.badReturn = function() {
   return something;
 };
 
+
 // +2: JSDOC_ILLEGAL_QUESTION_WITH_PIPE
 /**
  * @return {Object|Element?} An ugly return.
@@ -457,12 +507,14 @@ class.uglyReturn = function() {
   return something;
 };
 
+
 /**
  * @return {Object|Element|null} The right way to do the above.
  */
 class.okReturn = function() {
   return something;
 };
+
 
 // +2: MISSING_SPACE, MISSING_SPACE
 /**
@@ -472,11 +524,13 @@ class.missingSpacesReturn = function() {
   return something;
 };
 
+
 /**
  * A good type in the new notation.
  * @type {Object?}
  */
 class.otherGoodType = null;
+
 
 /**
  * A complex type that should allow both ? and |.
@@ -485,11 +539,13 @@ class.otherGoodType = null;
  */
 class.complexGoodType = goog.nullFunction;
 
+
 /**
  * A complex bad type that we can catch, though there are many we can't.
  * @type {Array.<string>|string?} // JSDOC_ILLEGAL_QUESTION_WITH_PIPE
  */
 class.complexBadType = x || 'foo';
+
 
 /**
  * A strange good type that caught a bad version of type checking from
@@ -498,11 +554,13 @@ class.complexBadType = x || 'foo';
  */
 class.aStrangeGoodType = null;
 
+
 /**
  * A type that includes spaces.
  * @type {function() : void}
  */
 class.assignedFunc = goog.nullFunction;
+
 
 // +4: JSDOC_PREFER_QUESTION_TO_PIPE_NULL
 // +3: MISSING_BRACES_AROUND_TYPE
@@ -512,12 +570,14 @@ class.assignedFunc = goog.nullFunction;
  */
 class.badType = null;
 
+
 // +3: JSDOC_PREFER_QUESTION_TO_PIPE_NULL
 /**
  * A bad type, in the new notation.
  * @type {Object|null}
  */
 class.badType = null;
+
 
 // +3: JSDOC_ILLEGAL_QUESTION_WITH_PIPE
 /**
@@ -526,16 +586,19 @@ class.badType = null;
  */
 class.uglyType = null;
 
+
 /**
  * The right way to do the above.
  * @type {Object|Element|null}
  */
 class.okType = null;
 
+
 /**
  * @type {boolean} Is it okay to have a description here?
  */
 class.maybeOkType = null;
+
 
 /**
  * A property whose type will be infered from the right hand side since it is
@@ -543,6 +606,7 @@ class.maybeOkType = null;
  * @const
  */
 class.okWithoutType = 'stout';
+
 
 /**
  * Another constant property, but we should use the type tag if the type can't
@@ -552,16 +616,19 @@ class.okWithoutType = 'stout';
  */
 class.useTypeWithConst = functionWithUntypedReturnValue();
 
+
 /**
  * @define {boolean} A define.
  */
 var COMPILED = false;
+
 
 // +2: MISSING_JSDOC_TAG_TYPE
 /**
  * @define A define without type info.
  */
 var UNTYPED_DEFINE = false;
+
 
 // +4: MISSING_JSDOC_TAG_DESCRIPTION, MISSING_SPACE
 /**
@@ -593,6 +660,7 @@ if (test) {
   };
 }
 
+
 /**
  * Checking that @notypecheck is allowed flag.
  * @notypecheck
@@ -600,6 +668,7 @@ if (test) {
  */
 function jscompilerWontTypeCheck(b) {
 }
+
 
 // +4: MISSING_JSDOC_TAG_DESCRIPTION
 // +4: MISSING_JSDOC_TAG_DESCRIPTION
@@ -613,6 +682,7 @@ goog.math.Vec2.sum = function(a, b) {
   return new goog.math.Vec2(a.x + b.x, a.y + b.y);
 };
 
+
 /**
  * Good documentation!
  *
@@ -620,6 +690,7 @@ goog.math.Vec2.sum = function(a, b) {
  */
 class.goodOverrideDocs = function() {
 };
+
 
 // +6: JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER
 // +9: JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER
@@ -651,6 +722,7 @@ class.goodOverrideDocs = function() {
 x.y = function(a, b, c, d, e, f, g, h, i) {
 };
 
+
 // +7: JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER
 /**
  * More tests for ending descriptions with proper punctuation.
@@ -672,6 +744,7 @@ x.z = function(a, b, c) {
   return false;
 };
 
+
 // +3: JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER
 /**
  * @param {string} a Should still be missing valid punctuation ending even
@@ -681,6 +754,7 @@ x.z = function(a, b, c) {
  */
 x.a = function(a) {
 };
+
 
 /**
  * Regression test for braces in description invalidly being matched as types.
@@ -695,6 +769,7 @@ x.z.a = function() {
   return a;
 };
 
+
 // +4: JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER
 /**
  * @bug 1492606 HTML parse error for JSDoc descriptions grashed gjslint.
@@ -704,6 +779,7 @@ x.z.a = function() {
 function calendar(description) {
 }
 
+
 /**
  * @bug 1492606 HTML parse error for JSDoc descriptions grashed gjslint.
  * @param {string} description a long email or common name, e.g.,
@@ -711,6 +787,7 @@ function calendar(description) {
  */
 function calendar(description) {
 }
+
 
 /**
  * Regression test for invoked functions, this code used to report missing
@@ -721,6 +798,7 @@ x.y.z = (function(x) {
   return x + 1;
 })();
 
+
 /**
  * Test for invoked function as part of an expression.  It should not return
  * an error for missing docs for x.
@@ -729,24 +807,29 @@ goog.currentTime = something.Else || (function(x) {
   //...
 })(10);
 
+
 /**
  * @type boolean //MISSING_BRACES_AROUND_TYPE
  */
 foo.bar = true;
+
 
 /**
  * @enum {null //MISSING_BRACES_AROUND_TYPE
  */
 bar.foo = null;
 
+
 /**
  * @extends Object} //MISSING_BRACES_AROUND_TYPE
  */
 bar.baz = x;
 
+
 /** @inheritDoc */ // INVALID_INHERIT_DOC_PRIVATE
 x.privateFoo_ = function() { // MISSING_PRIVATE
 };
+
 
 /**
  * Does bar.
@@ -754,6 +837,7 @@ x.privateFoo_ = function() { // MISSING_PRIVATE
  */
 x.privateBar_ = function() { // MISSING_PRIVATE
 };
+
 
 /**
  * This looks like a function but it's a function call.
@@ -763,12 +847,14 @@ test.x = function() {
   return 3;
 }();
 
+
 /**
  * Invalid reference to this.
  */ // MISSING_JSDOC_TAG_THIS
 test.x.y = function() {
   var x = this.x;
 };
+
 
 /**
  * Invalid write to this.
@@ -777,12 +863,14 @@ test.x.y = function() {
   this.x = 10;
 };
 
+
 /**
  * Invalid standalone this.
  */ // MISSING_JSDOC_TAG_THIS
 test.x.y = function() {
   some.func.call(this);
 };
+
 
 /**
  * Invalid reference to this.
@@ -791,6 +879,7 @@ function a() {
   var x = this.x;
 }
 
+
 /**
  * Invalid write to this.
  */ // MISSING_JSDOC_TAG_THIS
@@ -798,12 +887,14 @@ function b() {
   this.x = 10;
 }
 
+
 /**
  * Invalid standalone this.
  */ // MISSING_JSDOC_TAG_THIS
 function c() {
   some.func.call(this);
 }
+
 
 /**
  * Ok to do any in a prototype.
@@ -814,6 +905,7 @@ test.prototype.x = function() {
   some.func.call(this);
 };
 
+
 /**
  * Ok to do any in a prototype that ends in a hex-like number.
  */
@@ -822,6 +914,7 @@ test.prototype.getColorX2 = function() {
   this.y = x;
   some.func.call(this);
 };
+
 
 /**
  * Ok to do any in a function with documented this usage.
@@ -832,6 +925,7 @@ function a() {
   this.y = x;
   some.func.call(this);
 }
+
 
 /**
  * Ok to do any in a function with documented this usage.
@@ -856,6 +950,7 @@ detroit.commands.ChangeOwnerCommand.
 };
 
 
+
 /**
  * Ok to do any in a constructor.
  * @constructor
@@ -871,17 +966,20 @@ window.setTimeout(function() {
   var x = 10;
 }, 0);
 
+
 /**
  * @bug 1234567
  */
 function testGoodBug() {
 }
 
+
 /**
  * @bug 1234567 Descriptions are allowed.
  */
 function testGoodBugWithDescription() {
 }
+
 
 // +2: NO_BUG_NUMBER_AFTER_BUG_TAG
 /**
@@ -890,6 +988,7 @@ function testGoodBugWithDescription() {
 function testBadBugNumber() {
 }
 
+
 // +2: NO_BUG_NUMBER_AFTER_BUG_TAG
 /**
  * @bug Wrong
@@ -897,11 +996,15 @@ function testBadBugNumber() {
 function testMissingBugNumber() {
 }
 
+
+
 /**
  * @interface
  */
 function testInterface() {
 }
+
+
 
 /**
  * @implements {testInterface}
@@ -910,12 +1013,14 @@ function testInterface() {
 function testImplements() {
 }
 
+
 /**
  * Function that has an export jsdoc tag.
  * @export
  */
 function testExport() {
 }
+
 
 /**
  * Declare and doc this member here, without assigning to it.
@@ -928,6 +1033,7 @@ if (!someCondition) {
   x.declareOnly = 10;
 }
 
+
 /**
  * JsDoc describing array x.y as an array of function(arg).  The missing
  * semicolon caused the original bug.
@@ -936,6 +1042,7 @@ if (!someCondition) {
 x.y = [] // MISSING_SEMICOLON
 x.y[0] = function(arg) {};
 x.y[1] = function(arg) {};
+
 
 /**
  * Regression test for unfiled bug where descriptions didn't properly exclude
@@ -977,12 +1084,14 @@ window['goog']['forms']['Validation'].prototype.form_ = null;
 function testMultiline(multiline) {
 }
 
+
 /**
  * Check JsDoc nosideeffects annotations.
  * @nosideeffects
  */
 function testNoSideEffects() {
 }
+
 
 /**
  * @enum {google.visualization.DateFormat|google.visualization.NumberFormat|
@@ -994,6 +1103,7 @@ MultiLineEnumTypeTest = {
   BAZ: 3
 };
 
+
 /**
  * @enum {google.visualization.DateFormat|google.visualization.NumberFormat|google.visualization.PatternFormat}
  */
@@ -1002,6 +1112,7 @@ AllowedLongLineEnum = {
   DOG: 2,
   RAT: 3
 };
+
 
 /**
  * Typeless enum test
@@ -1031,8 +1142,10 @@ x.prototype.y = 5; // MISSING_MEMBER_DOCUMENTATION
 x.prototype.
     y.z = {}; // MISSING_MEMBER_DOCUMENTATION
 
+
 /** @typedef {(string|number)} */
 goog.NumberLike;
+
 
 /**
  * Something from the html5 externs file.
@@ -1040,6 +1153,8 @@ goog.NumberLike;
  * @implicitCast
  */
 CanvasRenderingContext2D.prototype.fillStyle;
+
+
 
 /**
  * Regression test.
@@ -1051,6 +1166,15 @@ CanvasRenderingContext2D.prototype.fillStyle;
  */
 Foo_ = function() {
 };
+
+
+/**
+ * @param {function(this:T,...)} fn The function.
+ * @param {T} obj The object.
+ * @template T
+ */
+function bind(fn, obj) {
+}
 
 /* Regression tests for not ending block comments. Keep at end of file! **/
 /**

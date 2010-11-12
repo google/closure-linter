@@ -24,11 +24,13 @@ var this_is_a_really_long_line = 10000000000000000000000000000000000000000000000
 
 // http://this.comment.should.be.allowed/because/it/is/a/URL/that/can't/be/broken/up
 
+
 /**
  * Types are allowed to be long even though they contain spaces.
  * @type {function(ReallyReallyReallyReallyLongType, AnotherExtremelyLongType) : LongReturnType}
  */
 x.z = 1000;
+
 
 /**
  * Params are also allowed to be long even though they contain spaces.
@@ -45,6 +47,7 @@ var x =
 // +1: LINE_TOO_LONG
 getSomeExtremelyLongNamedFunctionWowThisNameIsSoLongItIsAlmostUnbelievable().dispose();
 
+
 // +4: MISSING_JSDOC_TAG_DESCRIPTION
 // +4: MISSING_JSDOC_TAG_DESCRIPTION
 // +4: MISSING_JSDOC_TAG_DESCRIPTION
@@ -56,6 +59,7 @@ getSomeExtremelyLongNamedFunctionWowThisNameIsSoLongItIsAlmostUnbelievable().dis
 x.y = function(aReallyReallyReallyStrangeParameter, shouldThisParameterWrap) {
   return something;
 };
+
 
 /**
  * @type {goog.a.really.really.really.really.really.really.really.really.long.Type?}
@@ -94,6 +98,7 @@ if (some_flag) {
   } // MISSING_SEMICOLON_AFTER_FUNCTION
 }
 
+
 /**
  * Regression test for function expressions treating semicolons wrong.
  * @bug 1044052
@@ -102,6 +107,7 @@ goog.now = Date.now || function() {
   //...
 };
 
+
 /**
  * Regression test for function expressions treating semicolons wrong.
  * @bug 1044052
@@ -109,6 +115,7 @@ goog.now = Date.now || function() {
 goog.now = Date.now || function() {
   //...
 } // MISSING_SEMICOLON_AFTER_FUNCTION
+
 
 /**
  * Function defined in ternary operator
@@ -123,6 +130,7 @@ goog.dom.$ = document.getElementById ?
     function(id) {
       return document.all[id];
     };
+
 
 /**
  * Test function in object literal needs no semicolon.
@@ -170,6 +178,7 @@ twoSemicolons = 10;
 // A more interesting example of two semicolons
     ; // EXTRA_SPACE, WRONG_INDENTATION, REDUNDANT_SEMICOLON
 
+
 /** @bug 1598895 */
 for (;;) {
   // Do nothing.
@@ -185,6 +194,7 @@ var x = "unnecessary double quotes string"; // UNNECESSARY_DOUBLE_QUOTED_STRING
 // +1: MULTI_LINE_STRING, UNNECESSARY_DOUBLE_QUOTED_STRING,
 var x = "multi-line unnecessary double quoted \
          string.";
+
 
 // Regression test: incorrectly reported missing doc for variable used in global
 // scope.
@@ -223,17 +233,20 @@ if (x) {
   x += 10;
 }; // REDUNDANT_SEMICOLON
 
+
 /**
  * Bad assignment of array to prototype.
  * @type {Array}
  */
 x.prototype.badArray = []; // ILLEGAL_PROTOTYPE_MEMBER_VALUE
 
+
 /**
  * Bad assignment of object to prototype.
  * @type {Object}
  */
 x.prototype.badObject = {}; // ILLEGAL_PROTOTYPE_MEMBER_VALUE
+
 
 /**
  * Bad assignment of class instance to prototype.
@@ -329,5 +342,21 @@ foo = bar ? 1 : 2;
 foo = {
   str: bar ? baz ? blah ? 1 : 2 : 3 : 4
 } // MISSING_SEMICOLON
+
+
+// Regression tests for bug 2969408 GJsLint doesn't like labeled statements.
+mainLoop: while (!y) {
+}
+
+myLabel1: myLabel2: var x;
+
+for (var i = 0; i < n; i++) {
+  myLabel3:
+  while (true) {
+    break myLabel3;
+  }
+}
+
+myLabelA :  myLabelB : x > y ? 0 : 1; // EXTRA_SPACE, EXTRA_SPACE, EXTRA_SPACE
 
 /* comment not closed  // FILE_MISSING_NEWLINE, FILE_IN_BLOCK

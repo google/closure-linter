@@ -20,18 +20,22 @@ __author__ = 'robbyw@google.com (Robert Walker)'
 
 import re
 
+import gflags as flags
 from closure_linter import errors
 from closure_linter import javascriptstatetracker
 from closure_linter import javascripttokens
 from closure_linter import tokenutil
 from closure_linter.common import errorhandler
 
-
 # Shorthand
 Token = javascripttokens.JavaScriptToken
 Type = javascripttokens.JavaScriptTokenType
 
 END_OF_FLAG_TYPE = re.compile(r'(}?\s*)$')
+
+FLAGS = flags.FLAGS
+flags.DEFINE_boolean('disable_indentation_fixing', False,
+                     'Whether to disable automatic fixing of indentation.')
 
 class ErrorFixer(errorhandler.ErrorHandler):
   """Object that fixes simple style errors."""
@@ -154,6 +158,26 @@ class ErrorFixer(errorhandler.ErrorHandler):
       tokenutil.DeleteToken(token)
       self._AddFix(token)
 
+    elif code == errors.WRONG_BLANK_LINE_COUNT:
+      if not token.previous:
+        # TODO(user): Add an insertBefore method to tokenutil.
+        return
+
+      num_lines = error.fix_data
+      should_delete = False
+
+      if num_lines < 0:
+        num_lines = num_lines * -1
+        should_delete = True
+
+      for i in xrange(1, num_lines + 1):
+        if should_delete:
+          # TODO(user): DeleteToken should update line numbers.
+          tokenutil.DeleteToken(token.previous)
+        else:
+          tokenutil.InsertLineAfter(token.previous)
+        self._AddFix(token)
+
     elif code == errors.UNNECESSARY_DOUBLE_QUOTED_STRING:
       end_quote = tokenutil.Search(token, Type.DOUBLE_QUOTE_STRING_END)
       if end_quote:
@@ -239,7 +263,8 @@ class ErrorFixer(errorhandler.ErrorHandler):
         tokenutil.DeleteToken(token.next)
         self._AddFix([token])
 
-    elif code == errors.WRONG_INDENTATION:
+    elif (code == errors.WRONG_INDENTATION and
+        not FLAGS.disable_indentation_fixing):
       token = tokenutil.GetFirstTokenInSameLine(token)
       actual = error.position.start
       expected = error.position.length
@@ -257,6 +282,27 @@ class ErrorFixer(errorhandler.ErrorHandler):
         tokenutil.InsertTokenAfter(new_token, token.previous)
         self._AddFix([token])
 
+    elif code == errors.EXTRA_GOOG_REQUIRE:
+      fixed_tokens = []
+      while token:
+        if token.type == Type.IDENTIFIER:
+          if token.string not in ['goog.require', 'goog.provide']:
+            # Stop iterating over tokens once we're out of the requires and
+            # provides.
+            break
+          if token.string == 'goog.require':
+            # Text of form: goog.require('required'), skipping past open paren
+            # and open quote to the string text.
+            required = token.next.next.next.string
+            if required in error.fix_data:
+              fixed_tokens.append(token)
+              # Want to delete: goog.require + open paren + open single-quote +
+              # text + close single-quote + close paren + semi-colon = 7.
+              tokenutil.DeleteTokens(token, 7)
+        token = token.next
+
+      self._AddFix(fixed_tokens)
+
   def FinishFile(self):
     """Called when the current file has finished style checking.
 
@@ -266,7 +312,6 @@ class ErrorFixer(errorhandler.ErrorHandler):
       f = self._external_file
       if not f:
         print "Fixed %d errors in %s" % (self._file_fix_count, self._file_name)
-        
         f = open(self._file_name, 'w')
 
       token = self._file_token

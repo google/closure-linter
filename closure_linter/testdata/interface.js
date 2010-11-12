@@ -67,6 +67,7 @@ sample.GoodInterface.prototype.legalMethod3;
 sample.GoodInterface.prototype.legalMethod4 = goog.abstractMethod;
 
 
+
 /**
  * Sample interface to demonstrate style errors.
  * @param {string} a This is illegal.

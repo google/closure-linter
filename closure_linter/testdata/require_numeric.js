@@ -15,13 +15,17 @@
 /**
  * @fileoverview Numbers should come before letters.
  *
- *
  */
 
 goog.provide('xa'); // GOOG_PROVIDES_NOT_ALPHABETIZED
 goog.provide('x1');
 goog.provide('xb');
 
-goog.require('aa'); // GOOG_REQUIRES_NOT_ALPHABETIZED
-goog.require('a1');
-goog.require('ab');
+goog.require('dummy.aa'); // GOOG_REQUIRES_NOT_ALPHABETIZED
+goog.require('dummy.a1');
+goog.require('dummy.ab');
+
+dummy.aa.a;
+dummy.a1.a;
+dummy.ab.a;
+

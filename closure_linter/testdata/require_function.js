@@ -14,7 +14,6 @@
 
 /**
  * @fileoverview Description of this file.
- *
  */
 
 goog.require('goog.mobile.paging.getPage');

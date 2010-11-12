@@ -100,6 +100,7 @@ if (x) {
   ] = 10;
 }
 
+
 /**
  * Docs.
  * @param {Number} x desc.
@@ -109,6 +110,7 @@ function functionName( x) { // EXTRA_SPACE
   return !!x;
 }
 
+
 /**
  * Docs.
  * @param {Number} x desc.
@@ -116,6 +118,7 @@ function functionName( x) { // EXTRA_SPACE
 function functionName(x ) { // EXTRA_SPACE
   return;
 }
+
 
 /**
  * Docs.
@@ -125,6 +128,7 @@ function functionName(x ) { // EXTRA_SPACE
 function functionName(x,y) { // MISSING_SPACE
 }
 
+
 /**
  * Docs.
  * @param {Number} x desc.
@@ -133,11 +137,13 @@ function functionName(x,y) { // MISSING_SPACE
 function functionName(x, y) {
 }
 
+
 /**
  * Docs.
  */
 function  functionName() { // EXTRA_SPACE
 }
+
 
 /**
  * Docs.
@@ -147,17 +153,21 @@ function functionName(){ // MISSING_SPACE
 
 functionName (); // EXTRA_SPACE
 
+
 /**
  * Docs.
  */
 function functionName () { // EXTRA_SPACE
 }
 
+
 /**
  * Docs.
  */
 var foo = function () { // EXTRA_SPACE
 };
+
+
 
 /**
  * Missing a newline.
@@ -166,6 +176,7 @@ var foo = function () { // EXTRA_SPACE
  */
 x.y.z = function() {
 };goog.inherits(x.y.z, a.b.c); // MISSING_LINE
+
 
 
 /**
@@ -178,6 +189,7 @@ x.y.z = function() {
    goog.inherits(x.y.z, a.b.c); // WRONG_INDENTATION
 
 
+
 /**
  * Extra blank line.
  * @constructor
@@ -187,6 +199,7 @@ x.y.z = function() {
 };
 
 goog.inherits(x.y.z, a.b.c); // -1: EXTRA_LINE
+
 
 
 /**
@@ -230,6 +243,7 @@ if (something) {
 // +1: ILLEGAL_TAB
 // Tab	<-- in a comment.
 
+
 // +3: ILLEGAL_TAB
 // +3: ILLEGAL_TAB
 /**
@@ -239,6 +253,7 @@ if (something) {
 function x() {
   return '';
 }
+
 
 // +2: ILLEGAL_TAB
 /**
@@ -251,6 +266,7 @@ var whitespaceAtEndOfLine;
 // +1: EXTRA_SPACE
 // Whitespace at end of comment. 
 
+
 // +4: EXTRA_SPACE
 // +4: EXTRA_SPACE
 // +4: EXTRA_SPACE
@@ -261,6 +277,7 @@ var whitespaceAtEndOfLine;
  * @param {string} Description with whitespace at EOL. 
  */
 x = 10;
+
 
 /**
  * @param {?{foo, bar: number}} x This is a valid annotation.

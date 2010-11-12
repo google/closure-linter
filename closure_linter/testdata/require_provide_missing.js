@@ -22,7 +22,6 @@
  * @fileoverview The same code as require_provide_ok, but missing a provide
  * and a require call.
  *
- *
  */
 
 goog.provide('goog.something');
@@ -36,6 +35,7 @@ goog.package.staticFunction();
 
 var y = goog.Class.Enum.VALUE;
 
+
 /**
  * Private variable.
  * @type {number}
@@ -43,11 +43,14 @@ var y = goog.Class.Enum.VALUE;
  */
 goog.something.private_ = 10;
 
+
 /**
  * Static function.
  */
 goog.something.staticFunction = function() {
 };
+
+
 
 /**
  * Constructor for Else.

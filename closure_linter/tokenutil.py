@@ -30,7 +30,7 @@ Type = tokens.TokenType
 
 def GetFirstTokenInSameLine(token):
   """Returns the first token in the same line as token.
-  
+
   Args:
     token: Any token in the line.
 
@@ -155,7 +155,7 @@ def SearchUntil(start_token, token_types, end_types, distance=None,
                       lambda token: token.IsAnyType(end_types),
                       distance, reverse)
 
- 
+
 def DeleteToken(token):
   """Deletes the given token from the linked list.
 
@@ -173,6 +173,16 @@ def DeleteToken(token):
       following_token.metadata.last_code = token.metadata.last_code
       following_token = following_token.next
 
+def DeleteTokens(token, tokenCount):
+  """Deletes the given number of tokens starting with the given token.
+
+  Args:
+    token: The token to start deleting at.
+    tokenCount: The total number of tokens to delete.
+  """
+  for i in xrange(1, tokenCount):
+    DeleteToken(token.next)
+  DeleteToken(token)
 
 def InsertTokenAfter(new_token, token):
   """Insert new_token after token

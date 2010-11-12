@@ -16,12 +16,12 @@
  * Externs files are treated specially. We don't require documentation or
  * return statements in functions when they are documented.
  *
- *
  * @externs
  */
 
 
 function VXMLBaseElement() {}
+
 
 /**
  * Should not complain about return tag with no return statement in
