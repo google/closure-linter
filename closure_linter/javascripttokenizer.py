@@ -201,7 +201,9 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
       Matcher(DOC_INLINE_FLAG, Type.DOC_INLINE_FLAG),
       Matcher(DOC_FLAG_LEX_SPACES, Type.DOC_FLAG,
               JavaScriptModes.DOC_COMMENT_LEX_SPACES_MODE),
-      Matcher(DOC_FLAG, Type.DOC_FLAG),
+
+      # Encountering a doc flag should leave lex spaces mode.
+      Matcher(DOC_FLAG, Type.DOC_FLAG, JavaScriptModes.DOC_COMMENT_MODE),
 
       # Tokenize braces so we can find types.
       Matcher(START_BLOCK, Type.DOC_START_BRACE),

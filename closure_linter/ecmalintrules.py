@@ -546,7 +546,7 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
             while desc_str.endswith('>'):
               start_tag_index = desc_str.rfind('<')
               if start_tag_index < 0:
-                break              
+                break
               desc_str = desc_str[:start_tag_index].rstrip()
             end_position = Position(len(desc_str), 0)
 
@@ -677,7 +677,8 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
               # Languages that don't allow variables to by typed such as
               # JavaScript care but languages such as ActionScript or Java
               # that allow variables to be typed don't care.
-              self.HandleMissingParameterDoc(token, params_iter.next())
+              if not self._limited_doc_checks:
+                self.HandleMissingParameterDoc(token, params_iter.next())
 
             elif op == 'D':
               # Deletion
@@ -686,9 +687,10 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
                   docs_iter.next(), token)
             elif op == 'S':
               # Substitution
-              self._HandleError(errors.WRONG_PARAMETER_DOCUMENTATION,
-                  'Parameter mismatch: got "%s", expected "%s"' %
-                  (params_iter.next(), docs_iter.next()), token)
+              if not self._limited_doc_checks:
+                self._HandleError(errors.WRONG_PARAMETER_DOCUMENTATION,
+                    'Parameter mismatch: got "%s", expected "%s"' %
+                    (params_iter.next(), docs_iter.next()), token)
 
             else:
               # Equality - just advance the iterators

@@ -20,6 +20,7 @@ __author__ = ('robbyw@google.com (Robert Walker)',
               'ajp@google.com (Andy Perelson)',
               'jacobr@google.com (Jacob Richman)')
 
+import StringIO
 import traceback
 
 import gflags as flags
@@ -134,19 +135,29 @@ class CheckerBase(object):
     """
     return self.__has_errors
 
-  def Check(self, filename):
+  def Check(self, filename, source=None):
     """Checks the file, printing warnings and errors as they are found.
 
     Args:
       filename: The name of the file to check.
+      source: Optional. The contents of the file.  Can be either a string or
+          file-like object.  If omitted, contents will be read from disk from
+          the given filename.
     """
-    try:
-      f = open(filename)
-    except IOError:
-      self.__error_handler.HandleFile(filename, None)
-      self.HandleError(errors.FILE_NOT_FOUND, 'File not found', None)
-      self.__error_handler.FinishFile()
-      return
+
+    if source is None:
+      try:
+        f = open(filename)
+      except IOError:
+        self.__error_handler.HandleFile(filename, None)
+        self.HandleError(errors.FILE_NOT_FOUND, 'File not found', None)
+        self.__error_handler.FinishFile()
+        return
+    else:
+      if type(source) in [str, unicode]:
+        f = StringIO.StringIO(source)
+      else:
+        f = source
 
     try:
       if filename.endswith('.html') or filename.endswith('.htm'):

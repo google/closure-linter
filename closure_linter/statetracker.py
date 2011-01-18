@@ -65,6 +65,7 @@ class DocFlag(object):
       'implements',
       'implicitCast',
       'interface',
+      'lends',
       'license',
       'noalias',
       'nocompile',

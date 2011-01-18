@@ -1176,6 +1176,8 @@ Foo_ = function() {
 function bind(fn, obj) {
 }
 
+foo(/** @lends {T} */ ({foo: 'bar'}));
+
 /* Regression tests for not ending block comments. Keep at end of file! **/
 /**
  * When there are multiple asteriks. In the failure case we would get an
