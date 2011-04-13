@@ -97,9 +97,13 @@ class DocFlag(object):
       'checkVars',
       'deprecated',
       'duplicate',
+      'extraProvide',
+      'extraRequire',
       'fileoverviewTags',
       'invalidCasts',
       'missingProperties',
+      'missingProvide',
+      'missingRequire',
       'nonStandardJsDocs',
       'strictModuleDepCheck',
       'undefinedVars',
@@ -251,6 +255,13 @@ class DocComment(object):
     if brace:
       end_token, contents = _GetMatchingEndBraceAndContents(brace)
       self.suppressions[contents] = token
+
+  def SuppressionOnly(self):
+    """Returns whether this comment contains only suppression flags."""
+    for flag_type in self.__flags.keys():
+      if flag_type != 'suppress':
+        return False
+    return True
 
   def AddFlag(self, flag):
     """Add a new document flag.
@@ -510,6 +521,7 @@ class Function(object):
     self.is_constructor = doc and doc.HasFlag('constructor')
     self.is_interface = doc and doc.HasFlag('interface')
     self.has_return = False
+    self.has_throw = False
     self.has_this = False
     self.name = name
     self.doc = doc
@@ -893,6 +905,11 @@ class StateTracker(object):
         function = self.GetFunction()
         if function:
           function.has_return = True
+
+    elif type == Type.KEYWORD and token.string == 'throw':
+      function = self.GetFunction()
+      if function:
+        function.has_throw = True
 
     elif type == Type.SIMPLE_LVALUE:
       identifier = token.values['identifier']

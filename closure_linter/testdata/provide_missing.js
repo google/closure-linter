@@ -1,4 +1,4 @@
-// Copyright 2010 The Closure Linter Authors. All Rights Reserved.
+// Copyright 2011 The Closure Linter Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// We are missing a provide of goog.something.Else.
+// -15: MISSING_GOOG_PROVIDE
+
 /**
- * @fileoverview Checks for extra goog.requires.
+ * @fileoverview Tests missing provides and the usage of the missing provide
+ * suppression annotation.
  *
  */
 
-goog.require('dummy.Aa');
-goog.require('dummy.Bb');
-goog.require('dummy.Ff'); // EXTRA_GOOG_REQUIRE
-goog.require('dummy.Gg'); // EXTRA_GOOG_REQUIRE
-goog.require('dummy.cc');
-goog.require('dummy.cc'); // EXTRA_GOOG_REQUIRE
-goog.require('dummy.hh'); // EXTRA_GOOG_REQUIRE
 
-new dummy.Aa();
-dummy.Bb.someMethod();
-dummy.cc();
+
+/**
+ * Constructor for Something.
+ * @constructor
+ * @suppress {missingProvide}
+ */
+goog.something.Something = function() {};
+
+
+
+/**
+ * Constructor for Else. We should get an error about providing this, but not
+ * about the constructor for Something.
+ * @constructor
+ */
+goog.something.Else = function() {};

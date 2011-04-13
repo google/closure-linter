@@ -12,17 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// -14: MISSING_GOOG_REQUIRE
-// Missing requires are reporteed on line 1.  We are missing a require for
-// goog.SomeInterface.
-
 /**
  * @fileoverview Contains a test to verify that interfaces implemented in a file
  * are goog.require'd.
  *
  */
 
-goog.provide('goog.something.SomeClass');
+// We're missing a goog.require of goog.something.SomeInterface.
+goog.provide('goog.something.SomeClass'); // +1: MISSING_GOOG_REQUIRE
 
 
 

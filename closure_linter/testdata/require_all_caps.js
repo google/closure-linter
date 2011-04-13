@@ -17,12 +17,12 @@
  *
  */
 
-goog.provide('XX');
-goog.provide('ZZ'); // GOOG_PROVIDES_NOT_ALPHABETIZED
+goog.provide('XX'); // GOOG_PROVIDES_NOT_ALPHABETIZED
+goog.provide('ZZ');
 goog.provide('YY');
 
-goog.require('dummy.AA');
-goog.require('dummy.CC'); // GOOG_REQUIRES_NOT_ALPHABETIZED
+goog.require('dummy.AA'); // GOOG_REQUIRES_NOT_ALPHABETIZED
+goog.require('dummy.CC');
 goog.require('dummy.BB');
 
 dummy.AA();

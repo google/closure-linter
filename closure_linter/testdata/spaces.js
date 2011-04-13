@@ -328,3 +328,6 @@ for (i = 0; i < 10;  i++) { // EXTRA_SPACE
 for (i = 0 ;i < 10; i++) { // EXTRA_SPACE, MISSING_SPACE
 }
 
+// Regression test for bug 3508480, parse error when tab as last token.
+// +1: ILLEGAL_TAB, EXTRA_SPACE
+	

@@ -25,6 +25,7 @@ import re
 
 from closure_linter import checkerbase
 from closure_linter import ecmametadatapass
+from closure_linter import error_check
 from closure_linter import errors
 from closure_linter import indentation
 from closure_linter import javascripttokens
@@ -39,8 +40,6 @@ from closure_linter.common import tokens
 import gflags as flags
 
 FLAGS = flags.FLAGS
-flags.DEFINE_boolean('strict', False,
-                     'Whether to validate against the stricter Closure style.')
 flags.DEFINE_list('custom_jsdoc_tags', '', 'Extra jsdoc tags to allow')
 
 # TODO(robbyw): Check for extra parens on return statements
@@ -53,6 +52,7 @@ Context = ecmametadatapass.EcmaContext
 Error = error.Error
 Modes = javascripttokenizer.JavaScriptModes
 Position = position.Position
+Rule = error_check.Rule
 Type = javascripttokens.JavaScriptTokenType
 
 class EcmaScriptLintRules(checkerbase.LintRulesBase):
@@ -183,8 +183,9 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
           self._HandleError(errors.JSDOC_ILLEGAL_QUESTION_WITH_PIPE,
               'JsDoc types cannot contain both "?" and "|": "%s"' % p, token)
 
-      if FLAGS.strict and (flag.type_start_token.type != Type.DOC_START_BRACE or
-                           flag.type_end_token.type != Type.DOC_END_BRACE):
+      if error_check.ShouldCheck(Rule.BRACES_AROUND_TYPE) and (
+          flag.type_start_token.type != Type.DOC_START_BRACE or
+          flag.type_end_token.type != Type.DOC_END_BRACE):
         self._HandleError(errors.MISSING_BRACES_AROUND_TYPE,
             'Type must always be surrounded by curly braces.', token)
 
@@ -249,7 +250,7 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
     type = token.type
 
     # Process the line change.
-    if not self._is_html and FLAGS.strict:
+    if not self._is_html and error_check.ShouldCheck(Rule.INDENTATION):
       # TODO(robbyw): Support checking indentation in HTML files.
       indentation_errors = self._indentation.CheckToken(token, state)
       for indentation_error in indentation_errors:
@@ -408,9 +409,14 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
     elif type == Type.WHITESPACE:
       if self.ILLEGAL_TAB.search(token.string):
         if token.IsFirstInLine():
-          self._HandleError(errors.ILLEGAL_TAB,
-              'Illegal tab in whitespace before "%s"' % token.next.string,
-              token, Position.All(token.string))
+          if token.next:
+            self._HandleError(errors.ILLEGAL_TAB,
+                'Illegal tab in whitespace before "%s"' % token.next.string,
+                token, Position.All(token.string))
+          else:
+            self._HandleError(errors.ILLEGAL_TAB,
+                'Illegal tab in whitespace',
+                token, Position.All(token.string))
         else:
           self._HandleError(errors.ILLEGAL_TAB,
               'Illegal tab in whitespace after "%s"' % token.previous.string,
@@ -476,7 +482,8 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
               'Invalid suppression type: %s' % flag.type,
               token)
 
-      elif FLAGS.strict and flag.flag_type == 'author':
+      elif (error_check.ShouldCheck(Rule.WELL_FORMED_AUTHOR) and
+            flag.flag_type == 'author'):
         # TODO(user): In non strict mode check the author tag for as much as
         # it exists, though the full form checked below isn't required.
         string = token.next.string
@@ -570,7 +577,8 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
           self._HandleError(errors.INVALID_JSDOC_TAG,
               'Invalid JsDoc tag: %s' % token.values['name'], token)
 
-        if (FLAGS.strict and token.values['name'] == 'inheritDoc' and
+        if (error_check.ShouldCheck(Rule.NO_BRACES_AROUND_INHERIT_DOC) and
+            token.values['name'] == 'inheritDoc' and
             type == Type.DOC_INLINE_FLAG):
           self._HandleError(errors.UNNECESSARY_BRACES_AROUND_INHERIT_DOC,
               'Unnecessary braces around @inheritDoc',

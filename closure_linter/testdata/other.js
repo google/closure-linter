@@ -18,6 +18,8 @@
  * @author robbyw@google.com (Robby Walker)
  */
 
+goog.provide('goog.dom');
+
 goog.require('goog.events.EventHandler');
 
 var this_is_a_really_long_line = 100000000000000000000000000000000000000000000000; // LINE_TOO_LONG

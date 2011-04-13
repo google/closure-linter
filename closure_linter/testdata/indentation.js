@@ -17,6 +17,7 @@
  * @author robbyw@google.com (Robert Walker)
  */
 
+goog.provide('goog.editor.SeamlessField');
 goog.provide('goog.something');
 
 goog.require('goog.events.KeyCodes');

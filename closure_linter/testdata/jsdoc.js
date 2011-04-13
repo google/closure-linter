@@ -33,7 +33,9 @@
  */
 // -2: LINE_TOO_LONG
 
-goog.require('goog.NumberLike');
+goog.provide('goog.NumberLike');
+goog.provide('goog.math.Vec2.sum');
+
 goog.require('goog.array');
 goog.require('goog.color');
 goog.require('goog.dom.Range');
@@ -244,6 +246,14 @@ function makeSureReturnTokenizesRight() {
  * @return {number|undefined} Ok unnecessary return doc.
  */
 function okUnnecessaryMissingReturnDoc3() {
+}
+
+
+/**
+ * @return {number} Ok unnecessary return doc.
+ */
+function okUnnecessaryReturnWithThrow() {
+  throw 'foo';
 }
 
 

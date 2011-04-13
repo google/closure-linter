@@ -12,28 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// -14: MISSING_GOOG_REQUIRE
-// -15: MISSING_GOOG_PROVIDE
-// Missing provides and requires are reporteed on line 1.  We are missing a
-// provide of goog.something.Else and a require of goog.Class.Enum and
-// goog.otherthing.Class.Enum.
-
 /**
  * @fileoverview The same code as require_provide_ok, but missing a provide
  * and a require call.
  *
  */
 
-goog.provide('goog.something');
+goog.provide('goog.something'); // +1: MISSING_GOOG_PROVIDE
+// Missing provide of goog.something.Else and goog.something.SomeTypeDef.
 
 goog.require('goog.Class');
-goog.require('goog.package');
+goog.require('goog.package'); // +1: MISSING_GOOG_REQUIRE
+// Missing requires of goog.Class.Enum and goog.otherThing.Class.Enum.
 
 
 var x = new goog.Class();
 goog.package.staticFunction();
 
 var y = goog.Class.Enum.VALUE;
+
+
+/**
+ * @typedef {string}
+ */
+goog.something.SomeTypeDef;
 
 
 /**
@@ -58,6 +60,6 @@ goog.something.staticFunction = function() {
  */
 goog.something.Else = function() {
   // Bug 1801608: Provide goog.otherThing.Class.Enum isn't missing.
-  var enum = goog.otherthing.Class.Enum;
+  var enum = goog.otherThing.Class.Enum;
   goog.otherThing.Class.Enum = enum;
 };

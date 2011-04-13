@@ -24,10 +24,22 @@ goog.provide('Y');
 goog.provide('X');
 goog.provide('Z');
 
-goog.require('dummy.aa');
-goog.require('dummy.Cc');
+// Some comment about why this is suppressed top.
+/** @suppress {extraRequire} */
+goog.require('dummy.NotUsedTop'); // Comment top.
 goog.require('dummy.Bb');
+/** @suppress {extraRequire} */
+// Some comment about why this is suppressed different.
+goog.require('dummy.NotUsedDifferentComment');
+goog.require('dummy.Cc');
+// Some comment about why this is suppressed middle.
+/** @suppress {extraRequire} */
+goog.require('dummy.NotUsedMiddle'); // Comment middle.
 goog.require('dummy.Dd');
+goog.require('dummy.aa');
+// Some comment about why this is suppressed bottom.
+/** @suppress {extraRequire} */
+goog.require('dummy.NotUsedBottom'); // Comment bottom.
 
 var x = new dummy.Bb();
 dummy.Cc.someMethod();
@@ -183,6 +195,15 @@ indent = function() {
           b;
 };
 
+
+/**
+ * Regression test, must insert whitespace before the 'b' when fixing
+ * indentation.
+ * @bug 3473113
+ */
+indent = function(
+b) {
+};
 
 
 

@@ -19,6 +19,7 @@
 __author__ = ('robbyw@google.com (Robert Walker)',
               'ajp@google.com (Andy Perelson)')
 
+
 def ByName(name):
   """Get the error code for the given error name.
 
@@ -64,6 +65,7 @@ GOOG_PROVIDES_NOT_ALPHABETIZED = 141
 MISSING_GOOG_REQUIRE = 142
 MISSING_GOOG_PROVIDE = 143
 EXTRA_GOOG_REQUIRE = 144
+EXTRA_GOOG_PROVIDE = 145
 
 # JsDoc
 INVALID_JSDOC_TAG = 200
@@ -126,6 +128,8 @@ NEW_ERRORS = frozenset([
     WRONG_INDENTATION,
     MISSING_SEMICOLON,
     # Errors added after 2.2.5:
-    WRONG_BLANK_LINE_COUNT,
     EXTRA_GOOG_REQUIRE,
+    # Errors added after 2.2.7:
+    EXTRA_GOOG_PROVIDE,
+    # Errors added after 2.3:
     ])

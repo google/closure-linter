@@ -19,23 +19,80 @@
 
 goog.provide('goog.something');
 goog.provide('goog.something.Else');
+/** @suppress {extraProvide} */
+goog.provide('goog.something.Extra');
+goog.provide('goog.something.SomeTypeDef');
+goog.provide('goog.somethingelse.someMethod');
+goog.provide('goog.super.long.DependencyNameThatForcesTheLineToBeOverEightyCharacters');
+goog.provide('notInClosurizedNamespacesSoNotExtra');
 
 goog.require('dummy.foo');
 goog.require('dummy.foo.someSpecificallyRequiredMethod');
 goog.require('goog.Class');
 goog.require('goog.Class.Enum');
+/** @suppress {extraRequire} */
+goog.require('goog.extra.require');
 goog.require('goog.package');
+goog.require('goog.package.ClassName');
+goog.require('goog.package.OtherClassName');
+goog.require('goog.super.long.DependencyNameThatForcesTheLineToBeOverEightyCharacters2');
+goog.require('goog.super.long.DependencyNameThatForcesTheLineToBeOverEightyCharacters3');
 goog.require('notInClosurizedNamespacesSoNotExtra');
-
 
 dummy.foo.someMethod();
 dummy.foo.someSpecificallyRequiredMethod();
+
+
+// Regression test for bug 3473189. Both of these 'goog.provide' tokens should
+// be completely ignored by alphabetization checks.
+if (typeof goog != 'undefined' && typeof goog.provide == 'function') {
+  goog.provide('goog.something.SomethingElse');
+}
 
 
 var x = new goog.Class();
 goog.package.staticFunction();
 
 var y = goog.Class.Enum.VALUE;
+
+
+// This should not trigger a goog.require.
+var somethingPrivate = goog.somethingPrivate.PrivateEnum_.VALUE;
+
+
+/**
+ * This method is provided directly, instead of its namespace.
+ */
+goog.somethingelse.someMethod = function() {};
+
+
+/**
+ * Defining a private property on a required namespace should not trigger a
+ * provide of that namespace. Yes, people actually do this.
+ * @private
+ */
+goog.Class.privateProperty_ = 1;
+
+
+/**
+ * @typedef {string}
+ */
+goog.something.SomeTypeDef;
+
+
+/**
+ * @typedef {string}
+ * @private
+ */
+goog.something.SomePrivateTypeDef_;
+
+
+/**
+ * Some variable that is declared but not initialized.
+ * @type {string|undefined}
+ * @private
+ */
+goog.something.somePrivateVariable_;
 
 
 /**
@@ -46,6 +103,21 @@ var y = goog.Class.Enum.VALUE;
 goog.something.private_ = 10;
 
 
+
+/**
+ * A really long class name to provide and usage of a really long class name to
+ * be required.
+ * @constructor
+ */
+goog.super.long.DependencyNameThatForcesTheLineToBeOverEightyCharacters =
+    function() {
+  var x = new goog.super.long.
+      DependencyNameThatForcesTheLineToBeOverEightyCharacters2();
+  var x = new goog.super.long
+      .DependencyNameThatForcesTheLineToBeOverEightyCharacters3();
+};
+
+
 /**
  * Static function.
  */
@@ -54,6 +126,16 @@ goog.something.staticFunction = function() {
   // 'namespace'.
   googSomething.property;
   dummySomething.property;
+  goog.package.ClassName.        // A comment in between the identifier pieces.
+      IDENTIFIER_SPLIT_OVER_MULTIPLE_LINES;
+  goog.package.OtherClassName.property = 1;
+
+  // Don't just use goog.bar for missing namespace, hard coded to never require
+  // goog since it's never provided.
+  var mockConstructor = control.createConstructorMock(
+      /** @suppress {missingRequire} */ goog.foo.bar, 'Baz');
+
+  goog.require('goog.shouldBeIgnored');
 };
 
 
@@ -63,4 +145,21 @@ goog.something.staticFunction = function() {
  * @constructor
  */
 goog.something.Else = function() {
+  /** @suppress {missingRequire} */
+  var mockConstructor = this.control.createConstructorMock(
+      goog.foo.bar, 'Baz');
 };
+
+
+
+/**
+ * Constructor for SomethingElse.
+ * @constructor
+ */
+goog.something.SomethingElse = function() {};
+
+
+/**
+ * @suppress {missingProvide}
+ */
+goog.suppress.someMethod = function() {};

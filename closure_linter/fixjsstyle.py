@@ -25,6 +25,11 @@ from closure_linter import checker
 from closure_linter import error_fixer
 from closure_linter.common import simplefileflags as fileflags
 
+FLAGS = flags.FLAGS
+flags.DEFINE_list('additional_extensions', None, 'List of additional file '
+                  'extensions (not js) that should be treated as '
+                  'JavaScript files.')
+
 
 def main(argv = None):
   """Main function.
@@ -35,7 +40,11 @@ def main(argv = None):
   if argv is None:
     argv = flags.FLAGS(sys.argv)
 
-  files = fileflags.GetFileList(argv, 'JavaScript', ['.js'])
+  suffixes = ['.js']
+  if FLAGS.additional_extensions:
+    suffixes += ['.%s' % ext for ext in FLAGS.additional_extensions]
+
+  files = fileflags.GetFileList(argv, 'JavaScript', suffixes)
 
   style_checker = checker.JavaScriptStyleChecker(error_fixer.ErrorFixer())
 

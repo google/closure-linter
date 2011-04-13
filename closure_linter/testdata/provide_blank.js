@@ -13,18 +13,17 @@
 // limitations under the License.
 
 /**
- * @fileoverview Checks for extra goog.requires.
- *
+ * @fileoverview Checks that missing provides are reported at the first require
+ * when there are no other provides in the file.
  */
 
-goog.require('dummy.Aa');
-goog.require('dummy.Bb');
-goog.require('dummy.Ff'); // EXTRA_GOOG_REQUIRE
-goog.require('dummy.Gg'); // EXTRA_GOOG_REQUIRE
-goog.require('dummy.cc');
-goog.require('dummy.cc'); // EXTRA_GOOG_REQUIRE
-goog.require('dummy.hh'); // EXTRA_GOOG_REQUIRE
+goog.require('dummy.package.ClassName'); // MISSING_GOOG_PROVIDE
 
-new dummy.Aa();
-dummy.Bb.someMethod();
-dummy.cc();
+
+
+/**
+ * @constructor
+ */
+dummy.Something = function() {};
+
+var x = new dummy.package.ClassName();

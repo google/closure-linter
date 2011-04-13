@@ -54,6 +54,10 @@ flags.DEFINE_boolean('check_html', False,
                      'Whether to check javascript in html files.')
 flags.DEFINE_boolean('summary', False,
                      'Whether to show an error count summary.')
+flags.DEFINE_list('additional_extensions', None, 'List of additional file '
+                  'extensions (not js) that should be treated as '
+                  'JavaScript files.')
+
 
 GJSLINT_ONLY_FLAGS = ['--unix_mode', '--beep', '--nobeep', '--time',
                       '--check_html', '--summary']
@@ -82,11 +86,13 @@ def main(argv = None):
   """
   if argv is None:
     argv = flags.FLAGS(sys.argv)
-  
+
   if FLAGS.time:
-    start_time = time.time()        
+    start_time = time.time()
 
   suffixes = ['.js']
+  if FLAGS.additional_extensions:
+    suffixes += ['.%s' % ext for ext in FLAGS.additional_extensions]
   if FLAGS.check_html:
     suffixes += ['.html', '.htm']
   files = fileflags.GetFileList(argv, 'JavaScript', suffixes)
@@ -129,8 +135,7 @@ Some of the errors reported by GJsLint may be auto-fixable using the script
 fixjsstyle. Please double check any changes it makes and report any bugs. The
 script can be run by executing:
 
-fixjsstyle %s
-""" % ' '.join(fix_args)
+fixjsstyle %s """ % ' '.join(fix_args)
 
   if FLAGS.time:
     print 'Done in %s.' % FormatTime(time.time() - start_time)
