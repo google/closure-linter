@@ -129,9 +129,5 @@ NEW_ERRORS = frozenset([
     # Errors added after 2.0.2:
     WRONG_INDENTATION,
     MISSING_SEMICOLON,
-    # Errors added after 2.2.5:
-    EXTRA_GOOG_REQUIRE,
-    # Errors added after 2.2.7:
-    EXTRA_GOOG_PROVIDE,
-    # Errors added after 2.3:
+    # Errors added after 2.3.1:
     ])
