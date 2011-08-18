@@ -462,6 +462,16 @@ class.dom_ = function() {
 };
 
 
+/**
+ * Allow compound suppression.
+ * @private
+ */
+class.dom_ = function() {
+  /** @suppress {visibility|with} */
+  with ({}) {}
+};
+
+
 // +4: UNNECESSARY_SUPPRESS
 /**
  * Some docs.
@@ -690,6 +700,27 @@ function jscompilerWontTypeCheck(b) {
  */
 goog.math.Vec2.sum = function(a, b) {
   return new goog.math.Vec2(a.x + b.x, a.y + b.y);
+};
+
+
+// +6: JSDOC_MISSING_OPTIONAL_PREFIX
+// +8: JSDOC_MISSING_OPTIONAL_PREFIX
+// +8: JSDOC_MISSING_OPTIONAL_TYPE
+// +8: JSDOC_MISSING_OPTIONAL_TYPE
+/**
+ * Optional parameters test.
+ * @param {number=} numberOptional The name should be prefixed by opt_.
+ * @param {function(number=)} funcOk Ok.
+ * @param {number} numberOk The type is ok.
+ * @param {function(string=):number=} funcOpt Param name need opt_ prefix.
+ * @param {string} opt_stringMissing The type miss an ending =.
+ * @param {function(number=)} opt_func The type miss an ending =.
+ * @param {string=} opt_ok The type is ok.
+ * @param {function(string=):number=} opt_funcOk Type is ok.
+ */
+goog.math.Vec2.aFunction = function(
+    numberOptional, funcOk, numberOk, funcOpt, opt_stringMissing, opt_func,
+    opt_ok, opt_funcOk) {
 };
 
 

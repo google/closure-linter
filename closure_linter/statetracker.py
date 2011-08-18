@@ -254,7 +254,8 @@ class DocComment(object):
                                   [Type.DOC_FLAG])
     if brace:
       end_token, contents = _GetMatchingEndBraceAndContents(brace)
-      self.suppressions[contents] = token
+      for suppression in contents.split('|'):
+        self.suppressions[suppression] = token
 
   def SuppressionOnly(self):
     """Returns whether this comment contains only suppression flags."""

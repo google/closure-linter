@@ -17,6 +17,14 @@
  * @author robbyw@google.com (Robby Walker)
  * @author  robbyw@google.com  (Robby Walker)
  * @author robbyw@google.com(Robby Walker)
+ * @author Robby Walker (robbyw@google.com)
+ * @author Robby (robbyw@google.com)
+ * @author Robby Walker robbyw@google.com
+ * @author Robby Walker robbyw
+ * @author Robby Walker (@google.com)
+ * @author robbyw@google.com
+ * @author robbyw@google.com Robby
+ * @author robbyw (Robby Walker)
  */
 
 goog.provide('w');
@@ -184,6 +192,23 @@ for (i = 0 ;i < 10; i++) {
 
 var x = 10
 var y = 100;
+
+
+/**
+ * This is to test the ability to add or remove a = in type to mark optional
+ * parameters.
+ * @param {number=} firstArg Incorrect the name should start with opt_. Don't
+ *     handle the fix (yet).
+ * @param {function(string=):number} opt_function This should end with a =.
+ * @param {function(number)} opt_otherFunc This should end with a =.
+ * @param {string} opt_otherArg Incorrect this should be string=.
+ */
+function someFunction(firstArg, opt_function, opt_otherFunc, opt_otherArg) {
+  if (firstArg) {
+    var a = 'firstArg should not be replaced here.';
+    return;
+  }
+}
 
 var indent = 'correct';
  indent = 'too far';

@@ -30,3 +30,14 @@ function someFunction(a) {
 function someFunction.prototype.toString() {
 }
 
+
+/**
+ * When not strict, there is no problem with optional markers in types.
+ * @param {string=} a A string.
+ * @param {string} aOk An other string.
+ * @param {number} opt_b An optional number.
+ * @param {number=} opt_bOk An other optional number.
+ */
+someFunction.optionalParams = function(a, aOk, opt_b, opt_bOk) {
+};
+

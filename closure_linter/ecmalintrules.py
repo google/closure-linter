@@ -361,32 +361,7 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
               token.previous, Position.All(token.previous.string))
 
     elif type == Type.START_BRACKET:
-      if (not first_in_line and token.previous.type == Type.WHITESPACE and
-          last_non_space_token and
-          last_non_space_token.type in Type.EXPRESSION_ENDER_TYPES):
-        self._HandleError(errors.EXTRA_SPACE, 'Extra space before "["',
-            token.previous, Position.All(token.previous.string))
-      # If the [ token is the first token in a line we shouldn't complain
-      # about a missing space before [.  This is because some Ecma script
-      # languages allow syntax like:
-      # [Annotation]
-      # class MyClass {...}
-      # So we don't want to blindly warn about missing spaces before [.
-      # In the the future, when rules for computing exactly how many spaces
-      # lines should be indented are added, then we can return errors for
-      # [ tokens that are improperly indented.
-      # For example:
-      # var someVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongVariableName =
-      # [a,b,c];
-      # should trigger a proper indentation warning message as [ is not indented
-      # by four spaces.
-      elif (not first_in_line and token.previous and
-            not token.previous.type in (
-                [Type.WHITESPACE, Type.START_PAREN, Type.START_BRACKET] +
-                Type.EXPRESSION_ENDER_TYPES)):
-        self._HandleError(errors.MISSING_SPACE, 'Missing space before "["',
-            token, Position.AtBeginning())
-
+      self._HandleStartBracket(token, last_non_space_token)
     elif type in (Type.END_PAREN, Type.END_BRACKET):
       # Ensure there is no space before closing parentheses, except when
       # it's in a for statement with an omitted section, or when it's at the
@@ -477,10 +452,12 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
           self._HandleError(errors.INCORRECT_SUPPRESS_SYNTAX,
               'Invalid suppress syntax: should be @suppress {errortype}. '
               'Spaces matter.', token)
-        elif flag.type not in state.GetDocFlag().SUPPRESS_TYPES:
-          self._HandleError(errors.INVALID_SUPPRESS_TYPE,
-              'Invalid suppression type: %s' % flag.type,
-              token)
+        else:
+          for suppress_type in flag.type.split('|'):
+            if suppress_type not in state.GetDocFlag().SUPPRESS_TYPES:
+              self._HandleError(errors.INVALID_SUPPRESS_TYPE,
+                'Invalid suppression type: %s' % suppress_type,
+                token)
 
       elif (error_check.ShouldCheck(Rule.WELL_FORMED_AUTHOR) and
             flag.flag_type == 'author'):
@@ -626,7 +603,10 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
               self._HandleError(errors.UNNECESSARY_SUPPRESS,
                   '@suppress {underscore} is not necessary with @private',
                   jsdoc.suppressions['underscore'])
-          elif jsdoc.HasFlag('private'):
+          elif (jsdoc.HasFlag('private') and
+                not self.InExplicitlyTypedLanguage()):
+            # It is convention to hide public fields in some ECMA
+            # implementations from documentation using the @private tag.
             self._HandleError(errors.EXTRA_PRIVATE,
                 'Member "%s" must not have @private JsDoc' %
                 identifier, token)
@@ -732,6 +712,39 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
       self._HandleError(errors.MISSING_SEMICOLON,
           'Missing semicolon at end of line', token)
 
+  def _HandleStartBracket(self, token, last_non_space_token):
+    """Handles a token that is an open bracket.
+
+    Args:
+      token: The token to handle.
+      last_non_space_token: The last token that was not a space.
+    """
+    if (not token.IsFirstInLine() and token.previous.type == Type.WHITESPACE and
+        last_non_space_token and
+        last_non_space_token.type in Type.EXPRESSION_ENDER_TYPES):
+      self._HandleError(errors.EXTRA_SPACE, 'Extra space before "["',
+                        token.previous, Position.All(token.previous.string))
+    # If the [ token is the first token in a line we shouldn't complain
+    # about a missing space before [.  This is because some Ecma script
+    # languages allow syntax like:
+    # [Annotation]
+    # class MyClass {...}
+    # So we don't want to blindly warn about missing spaces before [.
+    # In the the future, when rules for computing exactly how many spaces
+    # lines should be indented are added, then we can return errors for
+    # [ tokens that are improperly indented.
+    # For example:
+    # var someVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongVariableName =
+    # [a,b,c];
+    # should trigger a proper indentation warning message as [ is not indented
+    # by four spaces.
+    elif (not token.IsFirstInLine() and token.previous and
+          not token.previous.type in (
+              [Type.WHITESPACE, Type.START_PAREN, Type.START_BRACKET] +
+              Type.EXPRESSION_ENDER_TYPES)):
+      self._HandleError(errors.MISSING_SPACE, 'Missing space before "["',
+                        token, Position.AtBeginning())
+
   def Finalize(self, state, tokenizer_mode):
     last_non_space_token = state.GetLastNonSpaceToken()
     # Check last line for ending with newline.
@@ -760,3 +773,7 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
   def GetLongLineExceptions(self):
     """Gets a list of regexps for lines which can be longer than the limit."""
     return []
+
+  def InExplicitlyTypedLanguage(self):
+    """Returns whether this ecma implementation is explicitly typed."""
+    return False
