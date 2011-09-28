@@ -13,22 +13,25 @@
 // limitations under the License.
 
 /**
- * @fileoverview Checks for extra goog.requires.
+ * @fileoverview Tests that the externs tag within a fileoverview comment is
+ * sufficient to identify an externs file.
+ * @externs
+ *
+ * Externs files are treated specially. We don't require documentation or
+ * return statements in functions when they are documented.
  *
  */
 
-goog.require('dummy.Aa');
-goog.require('dummy.Aa.CONSTANT'); // EXTRA_GOOG_REQUIRE
-goog.require('dummy.Aa.Enum'); // EXTRA_GOOG_REQUIRE
-goog.require('dummy.Bb');
-goog.require('dummy.Ff'); // EXTRA_GOOG_REQUIRE
-goog.require('dummy.Gg'); // EXTRA_GOOG_REQUIRE
-goog.require('dummy.cc');
-goog.require('dummy.cc'); // EXTRA_GOOG_REQUIRE
-goog.require('dummy.hh'); // EXTRA_GOOG_REQUIRE
 
-new dummy.Aa();
-dummy.Bb.someMethod();
-dummy.cc();
-var x = dummy.Aa.Enum.VALUE;
-var y = dummy.Aa.CONSTANT;
+function VXMLBaseElement() {}
+
+
+/**
+ * Should not complain about return tag with no return statement in
+ * an externs file.
+ * @param {string} attrName The name of the attribute.
+ * @return {string}
+ */
+VXMLBaseElement.prototype.getAttribute = function(attrName) {};
+
+VXMLBaseElement.prototype.undocumentedMethod = function() {};

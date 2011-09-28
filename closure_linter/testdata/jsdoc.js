@@ -105,7 +105,7 @@ function missingParam(object) { // MISSING_PARAMETER_DOCUMENTATION
  * @return {number} Hiya.
  * @override
  */
-function missingParamButInherit(object) { // MISSING_PARAMETER_DOCUMENTATION
+function missingParamButInherit(object) {
   return 3;
 }
 
@@ -798,6 +798,24 @@ x.a = function(a) {
 
 
 /**
+ * Test that flags embedded in docs don't trigger ends with invalid character
+ * error.
+ * @bug 2983692
+ * @deprecated Please use the {@code @typedef} annotation.
+ */
+function goodEndChar() {
+}
+
+
+/**
+ * Test that previous case handles unballanced doc tags.
+ * @param {boolean} a Whether we should honor '{' characters in the string.
+ */
+function goodEndChar2(a) {
+}
+
+
+/**
  * Regression test for braces in description invalidly being matched as types.
  * This caused a false error for missing punctuation because the bad token
  * caused us to incorrectly calculate the full description.
@@ -877,6 +895,15 @@ x.privateFoo_ = function() { // MISSING_PRIVATE
  * @override // INVALID_OVERRIDE_PRIVATE
  */
 x.privateBar_ = function() { // MISSING_PRIVATE
+};
+
+
+/**
+ * Inherits private baz_ method (evil, wrong behavior, but we have no choice).
+ * @override
+ * @suppress {accessControls}
+ */
+x.prototype.privateBaz_ = function() {
 };
 
 

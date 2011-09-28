@@ -144,11 +144,17 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
             Position.All(token.string))
 
     elif token.type == Type.END_DOC_COMMENT:
+      doc_comment = state.GetDocComment()
+
+      # When @externs appears in a @fileoverview comment, it should trigger
+      # the same limited doc checks as a special filename like externs.js.
+      if doc_comment.HasFlag('fileoverview') and doc_comment.HasFlag('externs'):
+        self._SetLimitedDocChecks(True)
+
       if (error_check.ShouldCheck(Rule.BLANK_LINES_AT_TOP_LEVEL) and
           not self._is_html and state.InTopLevel() and not state.InBlock()):
 
         # Check if we're in a fileoverview or constructor JsDoc.
-        doc_comment = state.GetDocComment()
         is_constructor = (
             doc_comment.HasFlag('constructor') or
             doc_comment.HasFlag('interface'))

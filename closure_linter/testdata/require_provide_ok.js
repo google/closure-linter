@@ -19,6 +19,7 @@
 
 goog.provide('goog.something');
 goog.provide('goog.something.Else');
+goog.provide('goog.something.Else.Enum');
 /** @suppress {extraProvide} */
 goog.provide('goog.something.Extra');
 goog.provide('goog.something.SomeTypeDef');
@@ -29,7 +30,6 @@ goog.provide('notInClosurizedNamespacesSoNotExtra');
 goog.require('dummy.foo');
 goog.require('dummy.foo.someSpecificallyRequiredMethod');
 goog.require('goog.Class');
-goog.require('goog.Class.Enum');
 /** @suppress {extraRequire} */
 goog.require('goog.extra.require');
 goog.require('goog.package');
@@ -148,6 +148,16 @@ goog.something.Else = function() {
   /** @suppress {missingRequire} */
   var mockConstructor = this.control.createConstructorMock(
       goog.foo.bar, 'Baz');
+};
+
+
+/**
+ * Enum attached to Else.  Should not need to be provided explicitly, but
+ * should not generate an extra require warning either.
+ * @enum {number}
+ */
+goog.something.Else.Enum = {
+  'key': 1
 };
 
 

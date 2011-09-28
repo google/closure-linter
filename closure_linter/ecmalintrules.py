@@ -584,18 +584,24 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
                         identifier.startswith('this.')):
           # We are at the top level and the function/member is documented.
           if identifier.endswith('_') and not identifier.endswith('__'):
-            if jsdoc.HasFlag('override'):
+            # Can have a private class which inherits documentation from a
+            # public superclass.
+            #
+            # @inheritDoc is deprecated in favor of using @override, and they
+            if (jsdoc.HasFlag('override') and not jsdoc.HasFlag('constructor')
+                and not ('accessControls' in jsdoc.suppressions)):
               self._HandleError(errors.INVALID_OVERRIDE_PRIVATE,
                   '%s should not override a private member.' % identifier,
                   jsdoc.GetFlag('override').flag_token)
-            # Can have a private class which inherits documentation from a
-            # public superclass.
-            if jsdoc.HasFlag('inheritDoc') and not jsdoc.HasFlag('constructor'):
+            if (jsdoc.HasFlag('inheritDoc') and not jsdoc.HasFlag('constructor')
+                and not ('accessControls' in jsdoc.suppressions)):
               self._HandleError(errors.INVALID_INHERIT_DOC_PRIVATE,
                   '%s should not inherit from a private member.' % identifier,
                   jsdoc.GetFlag('inheritDoc').flag_token)
             if (not jsdoc.HasFlag('private') and
-                not ('underscore' in jsdoc.suppressions)):
+                not ('underscore' in jsdoc.suppressions) and not
+                ((jsdoc.HasFlag('inheritDoc') or jsdoc.HasFlag('override')) and
+                 ('accessControls' in jsdoc.suppressions))):
               self._HandleError(errors.MISSING_PRIVATE,
                   'Member "%s" must have @private JsDoc.' %
                   identifier, token)

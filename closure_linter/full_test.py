@@ -51,6 +51,7 @@ _TEST_FILES = [
     'blank_lines.js',
     'ends_with_block.js',
     'externs.js',
+    'externs_jsdoc.js',
     'goog_scope.js',
     'html_parse_error.html',
     'indentation.js',
