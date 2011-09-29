@@ -167,12 +167,6 @@ class ClosurizedNamespacesInfo(object):
     if token in self._duplicate_require_tokens:
       return True
 
-    # If the namespace contains a component that is initial caps, then that
-    # must be the last component of the namespace.
-    parts = namespace.split('.')
-    if len(parts) > 1 and parts[-2][0].isupper():
-      return True
-
     # TODO(user): There's probably a faster way to compute this.
     for used_namespace, used_identifier in self._used_namespaces:
       if namespace == used_namespace or namespace == used_identifier:
@@ -454,19 +448,18 @@ class ClosurizedNamespacesInfo(object):
         # TODO(robbyw): Handle this: it's a multi-line identifier.
         return None
 
-      # The namespace for a class is the shortest prefix ending in a class
-      # name, which starts with a capital letter but is not a capitalized word.
-      #
-      # We ultimately do not want to allow requiring or providing of inner
-      # classes/enums.  Instead, a file should provide only the top-level class
-      # and users should require only that.
-      namespace = []
-      for part in parts:
-        if part == 'prototype' or part.isupper():
-          return '.'.join(namespace)
-        namespace.append(part)
-        if part[0].isupper():
-          return '.'.join(namespace)
+      # The easiest checks: Any part that is in initial caps is a class or enum,
+      # done (with the exception of private variables). If 'prototype' is in the
+      # parts, the namespace is whatever is in front of it. For private
+      # variables, they cannot be provided, but we support requiring of whatever
+      # public class they are attached to for use by tests.
+      count = len(parts)
+      for part in reversed(parts):
+        if part == 'prototype':
+          return '.'.join(parts[:count - 1])
+        if part[0].isupper() and not part.isupper():
+          return '.'.join(parts[:count])
+        count -= 1
 
       # At this point, we know there's no class or enum, so the namespace is
       # just the identifier with the last part removed. With the exception of
@@ -474,6 +467,11 @@ class ClosurizedNamespacesInfo(object):
       if parts[-1] in ('apply', 'inherits', 'call'):
         parts.pop()
       parts.pop()
+
+      # If the last part is all uppercase, it is a constant, so the namespace
+      # is whatever is before it.
+      if parts and parts[-1].isupper():
+        parts.pop()
 
       # If the last part ends with an underscore, it is a private variable,
       # method, or enum. The namespace is whatever is before it.

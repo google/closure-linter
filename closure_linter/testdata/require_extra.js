@@ -18,8 +18,6 @@
  */
 
 goog.require('dummy.Aa');
-goog.require('dummy.Aa.CONSTANT'); // EXTRA_GOOG_REQUIRE
-goog.require('dummy.Aa.Enum'); // EXTRA_GOOG_REQUIRE
 goog.require('dummy.Bb');
 goog.require('dummy.Ff'); // EXTRA_GOOG_REQUIRE
 goog.require('dummy.Gg'); // EXTRA_GOOG_REQUIRE
@@ -30,5 +28,3 @@ goog.require('dummy.hh'); // EXTRA_GOOG_REQUIRE
 new dummy.Aa();
 dummy.Bb.someMethod();
 dummy.cc();
-var x = dummy.Aa.Enum.VALUE;
-var y = dummy.Aa.CONSTANT;
