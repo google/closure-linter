@@ -617,14 +617,15 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
                 'Member "%s" must not have @private JsDoc' %
                 identifier, token)
 
-          if ((jsdoc.HasFlag('desc') or jsdoc.HasFlag('hidden'))
+          # These flags are only legal on localizable message definitions;
+          # such variables always begin with the prefix MSG_.
+          for f in ('desc', 'hidden', 'meaning'):
+            if (jsdoc.HasFlag(f)
               and not identifier.startswith('MSG_')
               and identifier.find('.MSG_') == -1):
-            # TODO(user): Update error message to show the actual invalid
-            # tag, either @desc or @hidden.
-            self._HandleError(errors.INVALID_USE_OF_DESC_TAG,
-                'Member "%s" should not have @desc JsDoc' % identifier,
-                token)
+              self._HandleError(errors.INVALID_USE_OF_DESC_TAG,
+                  'Member "%s" should not have @%s JsDoc' % (identifier, f),
+                  token)
 
       # Check for illegaly assigning live objects as prototype property values.
       index = identifier.find('.prototype.')

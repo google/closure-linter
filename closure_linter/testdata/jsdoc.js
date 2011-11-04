@@ -331,6 +331,7 @@ var MSG_YADDA_YADDA_YADDA = 'A great message!';
 /**
  * @desc So is this one.
  * @hidden
+ * @meaning Some unusual meaning.
  */
 x.y.z.MSG_YADDA_YADDA_YADDA = 'A great message!';
 
@@ -344,6 +345,13 @@ var x = 10; // INVALID_USE_OF_DESC_TAG
 /**
  * Same with hidden.
  * @hidden
+ */
+var x = 10; // INVALID_USE_OF_DESC_TAG
+
+
+/**
+ * Same with meaning.
+ * @meaning Some unusual meaning.
  */
 var x = 10; // INVALID_USE_OF_DESC_TAG
 

@@ -39,7 +39,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
       'package.subpackage.methodName': 'package.subpackage',
       'package.subpackage.methodName.apply': 'package.subpackage',
       'package.ClassName.something': 'package.ClassName',
-      'package.ClassName.Enum.VALUE.methodName': 'package.ClassName.Enum',
+      'package.ClassName.Enum.VALUE.methodName': 'package.ClassName',
       'package.ClassName.CONSTANT': 'package.ClassName',
       'package.namespace.CONSTANT.methodName': 'package.namespace',
       'package.ClassName.inherits': 'package.ClassName',
@@ -50,7 +50,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
       'package.ClassName.privateMethod_': 'package.ClassName',
       'package.className.privateProperty_': 'package.className',
       'package.className.privateProperty_.methodName': 'package.className',
-      'package.ClassName.PrivateEnum_': 'package.ClassName.PrivateEnum_',
+      'package.ClassName.PrivateEnum_': 'package.ClassName',
       'package.ClassName.prototype.methodName.apply': 'package.ClassName',
       'package.ClassName.property.subProperty': 'package.ClassName',
       'package.className.prototype.something.somethingElse': 'package.className'
@@ -158,7 +158,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
                      'Should not be extra since it is used.')
 
   def testIsExtraRequire_usedIdentifier(self):
-    """Tests that requires for used namespaces are not extra."""
+    """Tests that requires for used methods on classes are extra."""
     input_lines = [
         'goog.require(\'package.Foo.methodName\');',
         'var x = package.Foo.methodName();'
@@ -166,8 +166,8 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
     token = self._tokenizer.TokenizeFile(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
-    self.assertFalse(namespaces_info.IsExtraRequire(token),
-                     'Should not be extra since it is used.')
+    self.assertTrue(namespaces_info.IsExtraRequire(token),
+                    'Should require the package, not the method specifically.')
 
   def testIsExtraRequire_notUsed(self):
     """Tests that requires for unused namespaces are extra."""
@@ -187,6 +187,54 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
     self.assertFalse(namespaces_info.IsExtraRequire(token),
                      'Should not be extra since it is not closurized.')
 
+  def testIsExtraRequire_objectOnClass(self):
+    """Tests that requiring an object on a class is extra."""
+    input_lines = [
+        'goog.require(\'package.Foo.Enum\');',
+        'var x = package.Foo.Enum.VALUE1;',
+    ]
+    token = self._tokenizer.TokenizeFile(input_lines)
+    namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
+
+    self.assertTrue(namespaces_info.IsExtraRequire(token),
+                    'The whole class, not the object, should be required.');
+
+  def testIsExtraRequire_constantOnClass(self):
+    """Tests that requiring a constant on a class is extra."""
+    input_lines = [
+        'goog.require(\'package.Foo.CONSTANT\');',
+        'var x = package.Foo.CONSTANT',
+    ]
+    token = self._tokenizer.TokenizeFile(input_lines)
+    namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
+
+    self.assertTrue(namespaces_info.IsExtraRequire(token),
+                    'The class, not the constant, should be required.');
+
+  def testIsExtraRequire_constantNotOnClass(self):
+    """Tests that requiring a constant not on a class is OK."""
+    input_lines = [
+        'goog.require(\'package.subpackage.CONSTANT\');',
+        'var x = package.subpackage.CONSTANT',
+    ]
+    token = self._tokenizer.TokenizeFile(input_lines)
+    namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
+
+    self.assertFalse(namespaces_info.IsExtraRequire(token),
+                    'Constants can be required except on classes.');
+
+  def testIsExtraRequire_methodNotOnClass(self):
+    """Tests that requiring a method not on a class is OK."""
+    input_lines = [
+        'goog.require(\'package.subpackage.method\');',
+        'var x = package.subpackage.method()',
+    ]
+    token = self._tokenizer.TokenizeFile(input_lines)
+    namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
+
+    self.assertFalse(namespaces_info.IsExtraRequire(token),
+                    'Methods can be required except on classes.');
+
   def testGetMissingProvides_provided(self):
     """Tests that provided functions don't cause a missing provide."""
     input_lines = [
@@ -203,6 +251,19 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
     input_lines = [
         'goog.provide(\'package.Foo.methodName\');',
         'package.Foo.methodName = function() {};'
+    ]
+    token = self._tokenizer.TokenizeFile(input_lines)
+    namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
+
+    self.assertEquals(0, len(namespaces_info.GetMissingProvides()))
+
+  def testGetMissingProvides_providedParentIdentifier(self):
+    """Tests that provided identifiers on a class don't cause a missing provide
+    on objects attached to that class."""
+    input_lines = [
+        'goog.provide(\'package.foo.ClassName\');',
+        'package.foo.ClassName.methodName = function() {};',
+        'package.foo.ClassName.ObjectName = 1;',
     ]
     token = self._tokenizer.TokenizeFile(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
@@ -259,6 +320,19 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
 
     self.assertEquals(0, len(namespaces_info.GetMissingProvides()))
 
+  def testGetMissingRequires_requiredParentClass(self):
+    """Tests that requiring a parent class of an object is sufficient to prevent
+    a missing require on that object."""
+    input_lines = [
+        'goog.require(\'package.Foo\');',
+        'package.Foo.methodName();',
+        'package.Foo.methodName(package.Foo.ObjectName);'
+    ]
+    token = self._tokenizer.TokenizeFile(input_lines)
+    namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
+
+    self.assertEquals(0, len(namespaces_info.GetMissingRequires()))
+
   def testGetMissingRequires_unrequired(self):
     """Tests that unrequired namespaces cause a missing require."""
     input_lines = ['package.Foo();']
@@ -301,6 +375,18 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(0, len(namespaces_info.GetMissingRequires()))
+
+  def testGetMissingRequires_objectOnClass(self):
+    """Tests that we should require a class, not the object on the class."""
+    input_lines = [
+        'goog.require(\'package.Foo.Enum\');',
+        'var x = package.Foo.Enum.VALUE1;',
+    ]
+    token = self._tokenizer.TokenizeFile(input_lines)
+    namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
+
+    self.assertEquals(1, len(namespaces_info.GetMissingRequires()),
+                    'The whole class, not the object, should be required.');
 
   def testIsFirstProvide(self):
     """Tests operation of the isFirstProvide method."""
@@ -354,4 +440,3 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
 
 if __name__ == '__main__':
   googletest.main()
-
