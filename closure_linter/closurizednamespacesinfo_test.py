@@ -235,6 +235,15 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
     self.assertFalse(namespaces_info.IsExtraRequire(token),
                     'Methods can be required except on classes.');
 
+  def testIsExtraRequire_defaults(self):
+    """Tests that there are no warnings about extra requires for test utils"""
+    input_lines = ['goog.require(\'goog.testing.jsunit\');']
+    token = self._tokenizer.TokenizeFile(input_lines)
+    namespaces_info = self._GetInitializedNamespacesInfo(token, ['goog'], [])
+
+    self.assertFalse(namespaces_info.IsExtraRequire(token),
+                     'Should not be extra since it is for testing.')
+
   def testGetMissingProvides_provided(self):
     """Tests that provided functions don't cause a missing provide."""
     input_lines = [

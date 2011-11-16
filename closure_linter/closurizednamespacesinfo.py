@@ -30,6 +30,10 @@ from closure_linter import tokenutil
 # pylint: disable-msg=C6409
 TokenType = javascripttokens.JavaScriptTokenType
 
+DEFAULT_EXTRA_NAMESPACES = [
+  'goog.testing.asserts',
+  'goog.testing.jsunit',
+]
 
 class ClosurizedNamespacesInfo(object):
   """Dependency information for closurized JavaScript files.
@@ -50,7 +54,8 @@ class ClosurizedNamespacesInfo(object):
           as extra regardless of whether they are actually used.
     """
     self._closurized_namespaces = closurized_namespaces
-    self._ignored_extra_namespaces = ignored_extra_namespaces
+    self._ignored_extra_namespaces = (ignored_extra_namespaces +
+                                      DEFAULT_EXTRA_NAMESPACES)
     self.Reset()
 
   def Reset(self):
@@ -80,6 +85,10 @@ class ClosurizedNamespacesInfo(object):
     # A list of tuples where the first element is the namespace of an identifier
     # used in the file and the second is the identifier itself.
     self._used_namespaces = []
+
+    # A list of seemingly-unnecessary namespaces that are goog.required() and
+    # annotated with @suppress {extraRequire}.
+    self._suppressed_requires = []
 
     # A list of goog.provide tokens which are duplicates.
     self._duplicate_provide_tokens = []
@@ -166,6 +175,9 @@ class ClosurizedNamespacesInfo(object):
 
     if token in self._duplicate_require_tokens:
       return True
+
+    if namespace in self._suppressed_requires:
+      return False
 
     # If the namespace contains a component that is initial caps, then that
     # must be the last component of the namespace.
@@ -304,6 +316,7 @@ class ClosurizedNamespacesInfo(object):
         # gets treated as a regular goog.require (i.e. still gets sorted).
         jsdoc = state_tracker.GetDocComment()
         if jsdoc and ('extraRequire' in jsdoc.suppressions):
+          self._suppressed_requires.append(namespace)
           self._AddUsedNamespace(state_tracker, namespace)
 
       elif token.string == 'goog.provide':

@@ -35,6 +35,8 @@ goog.require('goog.extra.require');
 goog.require('goog.package');
 goog.require('goog.package.ClassName');
 goog.require('goog.package.OtherClassName');
+/** @suppress {extraRequire} Legacy dependency on enum */
+goog.require('goog.package.OuterClassName.InnerClassName');
 goog.require('goog.super.long.DependencyNameThatForcesTheLineToBeOverEightyCharacters2');
 goog.require('goog.super.long.DependencyNameThatForcesTheLineToBeOverEightyCharacters3');
 goog.require('notInClosurizedNamespacesSoNotExtra');
@@ -129,6 +131,9 @@ goog.something.staticFunction = function() {
   goog.package.ClassName.        // A comment in between the identifier pieces.
       IDENTIFIER_SPLIT_OVER_MULTIPLE_LINES;
   goog.package.OtherClassName.property = 1;
+
+  // Test case where inner class needs to be required explicitly.
+  var innerClass = new goog.package.OuterClassName.InnerClassName();
 
   // Don't just use goog.bar for missing namespace, hard coded to never require
   // goog since it's never provided.

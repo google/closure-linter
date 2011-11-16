@@ -102,7 +102,7 @@ class DocFlag(object):
       'checkRegExp',
       'checkTypes',
       'checkVars',
-      'const'
+      'const',
       'constantProperty',
       'deprecated',
       'duplicate',
