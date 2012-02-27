@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2011 Google Inc. All Rights Reserved.
+# Copyright 2011 The Closure Linter Authors. All Rights Reserved.
 
 
 

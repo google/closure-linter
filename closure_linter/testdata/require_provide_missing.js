@@ -47,6 +47,16 @@ goog.something.private_ = 10;
 
 
 /**
+ * Use private variables defined in this file so they don't cause a warning.
+ */
+goog.something.usePrivateVariables = function() {
+  var x = [
+    goog.something.private_
+  ];
+};
+
+
+/**
  * Static function.
  */
 goog.something.staticFunction = function() {

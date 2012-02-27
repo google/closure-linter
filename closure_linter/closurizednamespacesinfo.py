@@ -339,13 +339,15 @@ class ClosurizedNamespacesInfo(object):
       else:
         jsdoc = state_tracker.GetDocComment()
         if jsdoc and jsdoc.HasFlag('typedef'):
-          self._AddCreatedNamespace(state_tracker, whole_identifier_string)
+          self._AddCreatedNamespace(state_tracker, whole_identifier_string,
+                                    self.GetClosurizedNamespace(
+                                        whole_identifier_string))
         else:
           self._AddUsedNamespace(state_tracker, whole_identifier_string)
 
     elif token.type == TokenType.SIMPLE_LVALUE:
       identifier = token.values['identifier']
-      namespace = self._GetClosurizedNamespace(identifier)
+      namespace = self.GetClosurizedNamespace(identifier)
       if state_tracker.InFunction():
         self._AddUsedNamespace(state_tracker, identifier)
       elif namespace and namespace != 'goog':
@@ -439,11 +441,11 @@ class ClosurizedNamespacesInfo(object):
     if jsdoc and 'missingRequire' in jsdoc.suppressions:
       return
 
-    namespace = self._GetClosurizedNamespace(identifier)
+    namespace = self.GetClosurizedNamespace(identifier)
     if namespace:
       self._used_namespaces.append([namespace, identifier])
 
-  def _GetClosurizedNamespace(self, identifier):
+  def GetClosurizedNamespace(self, identifier):
     """Given an identifier, returns the namespace that identifier is from.
 
     Args:

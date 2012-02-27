@@ -24,10 +24,8 @@ import gflags as flags
 from closure_linter import checkerbase
 from closure_linter import closurizednamespacesinfo
 from closure_linter import ecmametadatapass
-from closure_linter import errors
 from closure_linter import javascriptlintrules
 from closure_linter import javascriptstatetracker
-from closure_linter.common import errorprinter
 from closure_linter.common import lintrunner
 
 flags.DEFINE_list('limited_doc_files', ['dummy.js', 'externs.js'],
@@ -50,7 +48,7 @@ class JavaScriptStyleChecker(checkerbase.CheckerBase):
     """Initialize an JavaScriptStyleChecker object.
 
     Args:
-      error_handler: Error handler to pass all errors to
+      error_handler: Error handler to pass all errors to.
     """
     self._namespaces_info = None
     if flags.FLAGS.closurized_namespaces:
@@ -118,25 +116,15 @@ class JavaScriptStyleChecker(checkerbase.CheckerBase):
 class GJsLintRunner(lintrunner.LintRunner):
   """Wrapper class to run GJsLint."""
 
-  def Run(self, filenames, error_handler=None):
+  def Run(self, filenames, error_handler):
     """Run GJsLint on the given filenames.
 
     Args:
       filenames: The filenames to check
-      error_handler: An optional ErrorHandler object, an ErrorPrinter is used if
-        none is specified.
-
-    Returns:
-      error_count, file_count: The number of errors and the number of files that
-          contain errors.
+      error_handler: An ErrorHandler object.
     """
-    if not error_handler:
-      error_handler = errorprinter.ErrorPrinter(errors.NEW_ERRORS)
-
     checker = JavaScriptStyleChecker(error_handler)
 
     # Check the list of files.
     for filename in filenames:
       checker.Check(filename)
-
-    return error_handler

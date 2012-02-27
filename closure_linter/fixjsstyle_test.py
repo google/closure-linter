@@ -36,33 +36,41 @@ class FixJsStyleTest(googletest.TestCase):
   """Test case to for gjslint auto-fixing."""
 
   def testFixJsStyle(self):
-    input_filename = None
-    try:
-      input_filename = '%s/fixjsstyle.in.js' % (_RESOURCE_PREFIX)
+    test_cases = [['fixjsstyle.in.js', 'fixjsstyle.out.js'],
+                  ['indentation.js', 'fixjsstyle.indentation.out.js']]
+    for [running_input_file, running_output_file] in test_cases:
+      input_filename = None
+      golden_filename = None
+      current_filename = None
+      try:
+        input_filename = '%s/%s' % (_RESOURCE_PREFIX, running_input_file)
+        current_filename = input_filename
 
-      golden_filename = '%s/fixjsstyle.out.js' % (_RESOURCE_PREFIX)
-    except IOError, ex:
-      raise IOError('Could not find testdata resource for %s: %s' %
-                    (self._filename, ex))
+        golden_filename = '%s/%s' % (_RESOURCE_PREFIX, running_output_file)
+        current_filename = golden_filename
+      except IOError, ex:
+        raise IOError('Could not find testdata resource for %s: %s' %
+                      (current_filename, ex))
 
-    with open(input_filename) as f:
-      for line in f:
-        # Go to last line.
-        pass
-      self.assertTrue(line == line.rstrip(), 'fixjsstyle.js should not end '
-                      'with a new line.')
+      if running_input_file == 'fixjsstyle.in.js':
+        with open(input_filename) as f:
+          for line in f:
+            # Go to last line.
+            pass
+          self.assertTrue(line == line.rstrip(), '%s file should not end '
+                          'with a new line.' % (input_filename))
 
-    # Autofix the file, sending output to a fake file.
-    actual = StringIO.StringIO()
-    style_checker = checker.JavaScriptStyleChecker(
-        error_fixer.ErrorFixer(actual))
-    style_checker.Check(input_filename)
+      # Autofix the file, sending output to a fake file.
+      actual = StringIO.StringIO()
+      style_checker = checker.JavaScriptStyleChecker(
+          error_fixer.ErrorFixer(actual))
+      style_checker.Check(input_filename)
 
-    # Now compare the files.
-    actual.seek(0)
-    expected = open(golden_filename, 'r')
+      # Now compare the files.
+      actual.seek(0)
+      expected = open(golden_filename, 'r')
 
-    self.assertEqual(actual.readlines(), expected.readlines())
+      self.assertEqual(actual.readlines(), expected.readlines())
 
   def testMissingExtraAndUnsortedRequires(self):
     """Tests handling of missing extra and unsorted goog.require statements."""
@@ -152,6 +160,64 @@ class FixJsStyleTest(googletest.TestCase):
         "dummy.Something = function() {};",
         "",
         "var x = new dummy.Bb();",
+        ]
+
+    self._AssertFixes(original, expected)
+
+  def testGoogScopeIndentation(self):
+    """Tests Handling a typical end-of-scope indentation fix."""
+    original = [
+        'goog.scope(function() {',
+        '  // TODO(brain): Take over the world.',
+        '});  // goog.scope',
+        ]
+
+    expected = [
+        'goog.scope(function() {',
+        '// TODO(brain): Take over the world.',
+        '});  // goog.scope',
+        ]
+
+    self._AssertFixes(original, expected)
+
+  def testMissingEndOfScopeComment(self):
+    """Tests Handling a missing comment at end of goog.scope."""
+    original = [
+        'goog.scope(function() {',
+        '});',
+        ]
+
+    expected = [
+        'goog.scope(function() {',
+        '});  // goog.scope',
+        ]
+
+    self._AssertFixes(original, expected)
+
+  def testMissingEndOfScopeCommentWithOtherComment(self):
+    """Tests handling an irrelevant comment at end of goog.scope."""
+    original = [
+        'goog.scope(function() {',
+        "});  // I don't belong here!",
+        ]
+
+    expected = [
+        'goog.scope(function() {',
+        '});  // goog.scope',
+        ]
+
+    self._AssertFixes(original, expected)
+
+  def testMalformedEndOfScopeComment(self):
+    """Tests Handling a malformed comment at end of goog.scope."""
+    original = [
+        'goog.scope(function() {',
+        '});  // goog.scope FTW',
+        ]
+
+    expected = [
+        'goog.scope(function() {',
+        '});  // goog.scope',
         ]
 
     self._AssertFixes(original, expected)

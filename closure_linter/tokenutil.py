@@ -275,6 +275,21 @@ def InsertTokenAfter(new_token, token):
       iterator = iterator.next
 
 
+def InsertTokensAfter(new_tokens, token):
+  """Insert multiple tokens after token.
+
+  Args:
+    new_tokens: An array of tokens to be added to the stream
+    token: A token already in the stream
+  """
+  # TODO(user): It would be nicer to have InsertTokenAfter defer to here
+  # instead of vice-versa.
+  current_token = token
+  for new_token in new_tokens:
+    InsertTokenAfter(new_token, current_token)
+    current_token = new_token
+
+
 def InsertSpaceTokenAfter(token):
   """Inserts a space token after the given token.
 

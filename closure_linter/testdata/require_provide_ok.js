@@ -105,6 +105,17 @@ goog.something.somePrivateVariable_;
 goog.something.private_ = 10;
 
 
+/**
+ * Use private variables defined in this file so they don't cause a warning.
+ */
+goog.something.usePrivateVariables = function() {
+  var x = [
+    goog.something.private_,
+    goog.Class.privateProperty_
+  ];
+};
+
+
 
 /**
  * A really long class name to provide and usage of a really long class name to
@@ -164,6 +175,15 @@ goog.something.Else = function() {
 goog.something.Else.Enum = {
   'key': 1
 };
+
+
+/**
+ * Sample of a typedef.  This should not need a provide as it is an inner
+ * element like an enum.
+ *
+ * @typedef {{val1: string, val2: boolean, val3: number}}
+ */
+goog.something.Else.Typedef;
 
 
 

@@ -319,6 +319,14 @@ function AConstructor() {
   if (goog.math.Matrix.isValidArray(/** @type {Array} */ (m))) {
     this.array_ = goog.array.clone(/** @type {Array.<Array.<number>>} */ (m));
   }
+
+  // Use the private variables we've defined so they don't generate a warning.
+  var y = [
+    this.isOk_,
+    this.isBad_,
+    this.array_,
+    this.x_
+  ];
 }
 
 

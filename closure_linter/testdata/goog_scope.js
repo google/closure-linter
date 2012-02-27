@@ -24,23 +24,23 @@ goog.provide('goog.something.Something');
 goog.require('goog.util.Else');
 
 goog.scope(function() {
-  var Else = goog.util.Else;
-  var something = goog.something;
+var Else = goog.util.Else;
+var something = goog.something;
 
+/**
+ * This is a something.
+ * @constructor
+ */
+something.Something = function() {
   /**
-   * This is a something.
-   * @constructor
+   * This is an else.
+   * @type {Else}
    */
-  something.Something = function() {
-    /**
-     * This is an else.
-     * @type {Else}
-     */
-    this.myElse = new Else();
-  };
+  this.myElse = new Else();
+};
 
-  /**
-   * Does nothing.
-   */
-  something.Something.prototype.noOp = function() {};
-});
+/**
+ * Does nothing.
+ */
+something.Something.prototype.noOp = function() {};
+});  // goog.scope

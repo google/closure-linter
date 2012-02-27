@@ -318,6 +318,39 @@ class ErrorFixer(errorhandler.ErrorHandler):
         tokenutil.InsertTokenAfter(new_token, token.previous)
         self._AddFix([token])
 
+    elif code in [errors.MALFORMED_END_OF_SCOPE_COMMENT,
+                  errors.MISSING_END_OF_SCOPE_COMMENT]:
+      # Only fix cases where }); is found with no trailing content on the line
+      # other than a comment. Value of 'token' is set to } for this error.
+      if (token.type == Type.END_BLOCK and
+          token.next.type == Type.END_PAREN and
+          token.next.next.type == Type.SEMICOLON):
+        current_token = token.next.next.next
+        removed_tokens = []
+        while current_token and current_token.line_number == token.line_number:
+          if current_token.IsAnyType(Type.WHITESPACE,
+                                     Type.START_SINGLE_LINE_COMMENT,
+                                     Type.COMMENT):
+            removed_tokens.append(current_token)
+            current_token = current_token.next
+          else:
+            return
+
+        if removed_tokens:
+          tokenutil.DeleteTokens(removed_tokens[0], len(removed_tokens))
+
+        whitespace_token = Token('  ', Type.WHITESPACE, token.line,
+                                 token.line_number)
+        start_comment_token = Token('//', Type.START_SINGLE_LINE_COMMENT,
+                                    token.line, token.line_number)
+        comment_token = Token(' goog.scope', Type.COMMENT, token.line,
+                              token.line_number)
+        insertion_tokens = [whitespace_token, start_comment_token,
+                            comment_token]
+
+        tokenutil.InsertTokensAfter(insertion_tokens, token.next.next)
+        self._AddFix(removed_tokens + insertion_tokens)
+
     elif code in [errors.EXTRA_GOOG_PROVIDE, errors.EXTRA_GOOG_REQUIRE]:
       tokens_in_line = tokenutil.GetAllTokensInSameLine(token)
       tokenutil.DeleteTokens(tokens_in_line[0], len(tokens_in_line))

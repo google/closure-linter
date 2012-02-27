@@ -25,6 +25,7 @@ __author__ = ('robbyw@google.com (Robert Walker)',
               'jacobr@google.com (Jacob Richman)')
 
 import re
+from sets import Set
 from closure_linter import ecmalintrules
 from closure_linter import error_check
 from closure_linter import errors
@@ -49,6 +50,9 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
     """Initializes a JavaScriptLintRules instance."""
     ecmalintrules.EcmaScriptLintRules.__init__(self)
     self._namespaces_info = namespaces_info
+    self._declared_private_member_tokens = {}
+    self._declared_private_members = Set()
+    self._used_private_members = Set()
 
   def HandleMissingParameterDoc(self, token, param_name):
     """Handle errors associated with a parameter missing a param tag."""
@@ -89,6 +93,37 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
 
     # Store some convenience variables
     namespaces_info = self._namespaces_info
+
+    if error_check.ShouldCheck(Rule.UNUSED_PRIVATE_MEMBERS):
+      # Find all assignments to private members.
+      if token.type == Type.SIMPLE_LVALUE:
+        identifier = token.string
+        if identifier.endswith('_') and not identifier.endswith('__'):
+          doc_comment = state.GetDocComment()
+          suppressed = (doc_comment and doc_comment.HasFlag('suppress') and
+                        doc_comment.GetFlag('suppress').type == 'underscore')
+          if not suppressed:
+            # Look for static members defined on a provided namespace.
+            namespace = namespaces_info.GetClosurizedNamespace(identifier)
+            provided_namespaces = namespaces_info.GetProvidedNamespaces()
+
+            # Skip cases of this.something_.somethingElse_.
+            regex = re.compile('^this\.[a-zA-Z_]+$')
+            if namespace in provided_namespaces or regex.match(identifier):
+              variable = identifier.split('.')[-1]
+              self._declared_private_member_tokens[variable] = token
+              self._declared_private_members.add(variable)
+        elif not identifier.endswith('__'):
+          # Consider setting public members of private members to be a usage.
+          for piece in identifier.split('.'):
+            if piece.endswith('_'):
+              self._used_private_members.add(piece)
+
+      # Find all usages of private members.
+      if token.type == Type.IDENTIFIER:
+        for piece in token.string.split('.'):
+          if piece.endswith('_'):
+            self._used_private_members.add(piece)
 
     if token.type == Type.DOC_FLAG:
       flag = token.attached_object
@@ -428,6 +463,22 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
     """Perform all checks that need to occur after all lines are processed."""
     # Call the base class's Finalize function.
     super(JavaScriptLintRules, self).Finalize(state, tokenizer_mode)
+
+    if error_check.ShouldCheck(Rule.UNUSED_PRIVATE_MEMBERS):
+      # Report an error for any declared private member that was never used.
+      unused_private_members = (self._declared_private_members -
+                                self._used_private_members)
+
+      for variable in unused_private_members:
+        token = self._declared_private_member_tokens[variable]
+        self._HandleError(errors.UNUSED_PRIVATE_MEMBER,
+                          'Unused private member: %s.' % token.string,
+                          token)
+
+      # Clear state to prepare for the next file.
+      self._declared_private_member_tokens = {}
+      self._declared_private_members = Set()
+      self._used_private_members = Set()
 
     namespaces_info = self._namespaces_info
     if namespaces_info is not None:

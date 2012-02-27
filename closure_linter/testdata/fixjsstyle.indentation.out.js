@@ -252,45 +252,45 @@ var x = {
 
 // Some bad indentation.
 
-  var a = 10; // WRONG_INDENTATION
+var a = 10; // WRONG_INDENTATION
 var b = 10,
-  c = 12; // WRONG_INDENTATION
+    c = 12; // WRONG_INDENTATION
 x = x +
-  10; // WRONG_INDENTATION
+    10; // WRONG_INDENTATION
 if (x == 14) {
- x = 15; // WRONG_INDENTATION
-   x = 16; // WRONG_INDENTATION
+  x = 15; // WRONG_INDENTATION
+  x = 16; // WRONG_INDENTATION
 }
 
 var longFunctionName = function(opt_element) {
   return opt_element ?
-    new z(q(opt_element)) : 100;
+      new z(q(opt_element)) : 100;
   // -1: WRONG_INDENTATION
 };
 
 longFunctionName(a, b, c,
-  d, e, f); // WRONG_INDENTATION
+    d, e, f); // WRONG_INDENTATION
 longFunctionName(a, b,
-                c, // WRONG_INDENTATION
-                  d); // WRONG_INDENTATION
+    c, // WRONG_INDENTATION
+    d); // WRONG_INDENTATION
 
 x = a ? b :
-  c; // WRONG_INDENTATION
+    c; // WRONG_INDENTATION
 y = a ?
-  b : c; // WRONG_INDENTATION
+    b : c; // WRONG_INDENTATION
 
 switch (x) {
   case 10:
-  break; // WRONG_INDENTATION
-    case 20: // WRONG_INDENTATION
+    break; // WRONG_INDENTATION
+  case 20: // WRONG_INDENTATION
     break;
-default: // WRONG_INDENTATION
+  default: // WRONG_INDENTATION
     break;
 }
 
 while (true) {
-   x = 10; // WRONG_INDENTATION
- break; // WRONG_INDENTATION
+  x = 10; // WRONG_INDENTATION
+  break; // WRONG_INDENTATION
 }
 
 function foo() {
@@ -306,9 +306,9 @@ return [
   new x(10)];
 
 return [new x(
-  10)]; // WRONG_INDENTATION
+    10)]; // WRONG_INDENTATION
 return [new x(
-  10)]; // WRONG_INDENTATION
+    10)]; // WRONG_INDENTATION
 
 return {x: y(
     z)};
@@ -317,12 +317,12 @@ return {
 };
 
 return {x: y(
-      z)}; // WRONG_INDENTATION
+    z)}; // WRONG_INDENTATION
 return {x: y(
-  z)}; // WRONG_INDENTATION
+    z)}; // WRONG_INDENTATION
 
 return /** @type {Window} */ (x(
-'javascript:"' + encodeURI(loadingMessage) + '"')); // WRONG_INDENTATION
+    'javascript:"' + encodeURI(loadingMessage) + '"')); // WRONG_INDENTATION
 
 x = {
   y: function() {}
@@ -331,7 +331,7 @@ x = {
 x = {
   y: foo,
   z: bar +
-  baz // WRONG_INDENTATION
+      baz // WRONG_INDENTATION
 };
 
 x({
@@ -350,16 +350,16 @@ var xyz = [100,
            300];
 
 var def = [100,
-          200]; // WRONG_INDENTATION
+  200]; // WRONG_INDENTATION
 
 var ghi = [100,
-            200]; // WRONG_INDENTATION
+  200]; // WRONG_INDENTATION
 
 var abcdefg = ('a' +
                'b');
 
 var x9 = z('7: ' +
-x(x)); // WRONG_INDENTATION
+    x(x)); // WRONG_INDENTATION
 
 function abc() {
   var z = d('div',
@@ -373,16 +373,16 @@ abcdefg('p', {x: 10},
 
 function bar1() {
   return 3 +
-  4; // WRONG_INDENTATION
+      4; // WRONG_INDENTATION
 }
 
 function bar2() {
-   return 3 + // WRONG_INDENTATION
-          4; // WRONG_INDENTATION
+  return 3 + // WRONG_INDENTATION
+      4; // WRONG_INDENTATION
 }
 
 function bar3() {
-   return 3 + // WRONG_INDENTATION
+  return 3 + // WRONG_INDENTATION
          4;
 }
 
@@ -405,13 +405,13 @@ while (x > 0) {
 
 
 goog.scope(function() {
-  var x = 5; // WRONG_INDENTATION
+var x = 5; // WRONG_INDENTATION
 });  // goog.scope
 
 goog.scope(function() {
 var x = 5;
-}); // MISSING_END_OF_SCOPE_COMMENT
+});  // goog.scope
 
 goog.scope(function() {
 var x = 5;
-}); // malformed goog.scope comment // MALFORMED_END_OF_SCOPE_COMMENT
+});  // goog.scope

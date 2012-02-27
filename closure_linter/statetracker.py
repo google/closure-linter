@@ -121,6 +121,7 @@ class DocFlag(object):
       'strictModuleDepCheck',
       'tweakValidation',
       'typeInvalidation',
+      'undefinedNames',
       'undefinedVars',
       'underscore',
       'unknownDefines',

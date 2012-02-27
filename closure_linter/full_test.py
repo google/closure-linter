@@ -33,6 +33,7 @@ import unittest as googletest
 
 from closure_linter import checker
 from closure_linter import errors
+from closure_linter import error_check
 from closure_linter.common import filetestcase
 
 _RESOURCE_PREFIX = 'closure_linter/testdata'
@@ -42,6 +43,7 @@ flags.FLAGS.custom_jsdoc_tags = ('customtag', 'requires')
 flags.FLAGS.closurized_namespaces = ('goog', 'dummy')
 flags.FLAGS.limited_doc_files = ('externs.js', 'dummy.js',
                                  'limited_doc_checks.js')
+flags.FLAGS.jslint_error = error_check.Rule.ALL
 
 # List of files under testdata to test.
 # We need to list files explicitly since pyglib can't list directories.
@@ -82,6 +84,7 @@ _TEST_FILES = [
     'spaces.js',
     'tokenizer.js',
     'unparseable.js',
+    'unused_private_members.js',
     'utf8.html'
     ]
 

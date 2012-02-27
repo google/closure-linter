@@ -117,7 +117,11 @@ class CheckerBase(object):
     self._state_tracker = state_tracker
     self._metadata_pass = metadata_pass
     self._limited_doc_files = limited_doc_files
+
+    # TODO(user): Factor out. A checker does not need to know about the
+    # tokenizer, only the token stream.
     self._tokenizer = javascripttokenizer.JavaScriptTokenizer()
+
     self._has_errors = False
 
   def HandleError(self, code, message, token, position=None,

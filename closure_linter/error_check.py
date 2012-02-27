@@ -34,6 +34,7 @@ class Rule(object):
   NO_BRACES_AROUND_INHERIT_DOC = 'no_braces_around_inherit_doc'
   BRACES_AROUND_TYPE = 'braces_around_type'
   OPTIONAL_TYPE_MARKER = 'optional_type_marker'
+  UNUSED_PRIVATE_MEMBERS = 'unused_private_members'
 
   # Rule to raise all known errors.
   ALL = 'all'
@@ -66,7 +67,9 @@ flags.DEFINE_multistring('jslint_error', [],
                          ' - ' + Rule.BRACES_AROUND_TYPE + ': enforces braces '
                          'around types in JsDoc tags.\n'
                          ' - ' + Rule.OPTIONAL_TYPE_MARKER + ': checks correct '
-                         'use of optional marker = in param types.\n')
+                         'use of optional marker = in param types.\n'
+                         ' - ' + Rule.UNUSED_PRIVATE_MEMBERS + ': checks for '
+                         'unused private variables.\n')
 
 
 def ShouldCheck(rule):

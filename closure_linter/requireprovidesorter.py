@@ -122,6 +122,16 @@ class RequireProvideSorter(object):
     strings = self._GetRequireOrProvideTokenStrings(tokens)
     sorted_strings = sorted(strings)
 
+    # Make a separate pass to remove any blank lines between goog.require/
+    # goog.provide tokens.
+    first_token = tokens[0]
+    last_token = tokens[-1]
+    i = last_token
+    while i != first_token:
+      if i.type is Type.BLANK_LINE:
+        tokenutil.DeleteToken(i)
+      i = i.previous
+
     # A map from required/provided object name to tokens that make up the line
     # it was on, including any comments immediately before it or after it on the
     # same line.

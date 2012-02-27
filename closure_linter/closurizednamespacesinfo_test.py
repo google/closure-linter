@@ -63,7 +63,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
     namespaces_info = closurizednamespacesinfo.ClosurizedNamespacesInfo(
         closurized_namespaces=['package'], ignored_extra_namespaces=[])
     for identifier, expected_namespace in self._test_cases.items():
-      actual_namespace = namespaces_info._GetClosurizedNamespace(identifier)
+      actual_namespace = namespaces_info.GetClosurizedNamespace(identifier)
       self.assertEqual(
           expected_namespace,
           actual_namespace,
