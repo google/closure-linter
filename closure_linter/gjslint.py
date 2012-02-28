@@ -67,10 +67,9 @@ flags.DEFINE_boolean('summary', False,
 flags.DEFINE_list('additional_extensions', None, 'List of additional file '
                   'extensions (not js) that should be treated as '
                   'JavaScript files.')
-flags.DEFINE_boolean('multiprocess', bool(multiprocessing),
+flags.DEFINE_boolean('multiprocess', False,
                      'Whether to parallalize linting using the '
-                     'multiprocessing module.  Enabled by default if the'
-                     'multiprocessing module is present (Python 2.6+).')
+                     'multiprocessing module.  Disabled by default.')
 
 
 GJSLINT_ONLY_FLAGS = ['--unix_mode', '--beep', '--nobeep', '--time',
