@@ -34,17 +34,18 @@ is in tokenizer.py and checker.py.
 """
 
 __author__ = ('robbyw@google.com (Robert Walker)',
-              'ajp@google.com (Andy Perelson)')
+              'ajp@google.com (Andy Perelson)',
+              'nnaze@google.com (Nathan Naze)',)
 
-import functools
+import errno
 import itertools
 import sys
 import time
 
 import gflags as flags
 
-from closure_linter import checker
 from closure_linter import errorrecord
+from closure_linter import runner
 from closure_linter.common import erroraccumulator
 from closure_linter.common import simplefileflags as fileflags
 
@@ -67,9 +68,11 @@ flags.DEFINE_boolean('summary', False,
 flags.DEFINE_list('additional_extensions', None, 'List of additional file '
                   'extensions (not js) that should be treated as '
                   'JavaScript files.')
-flags.DEFINE_boolean('multiprocess', False,
+flags.DEFINE_boolean('multiprocess', bool(multiprocessing),
                      'Whether to parallalize linting using the '
-                     'multiprocessing module.  Disabled by default.')
+                     'multiprocessing module.  Enabled by default if the'
+                     'multiprocessing module is present (Python 2.6+). '
+                     'Disabling may make debugging easier.')
 
 
 GJSLINT_ONLY_FLAGS = ['--unix_mode', '--beep', '--nobeep', '--time',
@@ -92,12 +95,20 @@ def _MultiprocessCheckPaths(paths):
 
   pool = multiprocessing.Pool()
 
-  for results in pool.imap(_CheckPath, paths):
-    for record in results:
-      yield record
+  path_results = pool.imap(_CheckPath, paths)
+  for results in path_results:
+    for result in results:
+      yield result
 
-  pool.close()
-  pool.join()
+  # Force destruct before returning, as this can sometimes raise spurious
+  # "interrupted system call" (EINTR), which we can ignore.
+  try:
+    pool.close()
+    pool.join()
+    del pool
+  except OSError as err:
+    if err.errno is not errno.EINTR:
+      raise err
 
 
 def _CheckPaths(paths):
@@ -126,13 +137,11 @@ def _CheckPath(path):
     A list of errorrecord.ErrorRecords for any found errors.
   """
 
-  error_accumulator = erroraccumulator.ErrorAccumulator()
-  style_checker = checker.JavaScriptStyleChecker(error_accumulator)
-  style_checker.Check(path)
+  error_handler = erroraccumulator.ErrorAccumulator()
+  runner.Run(path, error_handler)
 
-  # Return any errors as error records.
-  make_error_record = functools.partial(errorrecord.MakeErrorRecord, path)
-  return map(make_error_record, error_accumulator.GetErrors())
+  make_error_record = lambda err: errorrecord.MakeErrorRecord(path, err)
+  return map(make_error_record, error_handler.GetErrors())
 
 
 def _GetFilePaths(argv):

@@ -74,6 +74,11 @@ class JavaScriptStateTracker(statetracker.StateTracker):
     """Initializes a JavaScript token stream state tracker."""
     statetracker.StateTracker.__init__(self, JsDocFlag)
 
+  def Reset(self):
+    self._scope_depth = 0
+    self._block_stack = []
+    super(JavaScriptStateTracker, self).Reset()
+
   def InTopLevel(self):
     """Compute whether we are at the top level in the class.
 
@@ -85,7 +90,26 @@ class JavaScriptStateTracker(statetracker.StateTracker):
     Returns:
       Whether we are at the top level in the class.
     """
-    return not self.InParentheses()
+    return self._scope_depth == self.ParenthesesDepth()
+
+  def InFunction(self):
+    """Returns true if the current token is within a function.
+
+    This js-specific override ignores goog.scope functions.
+
+    Returns:
+      True if the current token is within a function.
+    """
+    return self._scope_depth != self.FunctionDepth()
+
+  def InNonScopeBlock(self):
+    """Compute whether we are nested within a non-goog.scope block.
+
+    Returns:
+      True if the token is not enclosed in a block that does not originate from
+      a goog.scope statement. False otherwise.
+    """
+    return self._scope_depth != self.BlockDepth()
 
   def GetBlockType(self, token):
     """Determine the block type given a START_BLOCK token.
@@ -112,5 +136,13 @@ class JavaScriptStateTracker(statetracker.StateTracker):
       token: The token to handle.
       last_non_space_token:
     """
+    if token.type == Type.START_BLOCK:
+      self._block_stack.append(token)
+    if token.type == Type.IDENTIFIER and token.string == 'goog.scope':
+      self._scope_depth += 1
+    if token.type == Type.END_BLOCK:
+      start_token = self._block_stack.pop()
+      if tokenutil.GoogScopeOrNoneFromStartBlock(start_token):
+        self._scope_depth -= 1
     super(JavaScriptStateTracker, self).HandleToken(token,
                                                     last_non_space_token)

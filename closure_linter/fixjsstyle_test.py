@@ -22,8 +22,9 @@ import StringIO
 
 import gflags as flags
 import unittest as googletest
-from closure_linter import checker
 from closure_linter import error_fixer
+from closure_linter import runner
+
 
 _RESOURCE_PREFIX = 'closure_linter/testdata'
 
@@ -48,7 +49,7 @@ class FixJsStyleTest(googletest.TestCase):
 
         golden_filename = '%s/%s' % (_RESOURCE_PREFIX, running_output_file)
         current_filename = golden_filename
-      except IOError, ex:
+      except IOError as ex:
         raise IOError('Could not find testdata resource for %s: %s' %
                       (current_filename, ex))
 
@@ -62,9 +63,7 @@ class FixJsStyleTest(googletest.TestCase):
 
       # Autofix the file, sending output to a fake file.
       actual = StringIO.StringIO()
-      style_checker = checker.JavaScriptStyleChecker(
-          error_fixer.ErrorFixer(actual))
-      style_checker.Check(input_filename)
+      runner.Run(input_filename, error_fixer.ErrorFixer(actual))
 
       # Now compare the files.
       actual.seek(0)
@@ -164,6 +163,16 @@ class FixJsStyleTest(googletest.TestCase):
 
     self._AssertFixes(original, expected)
 
+  def testOutputOkayWhenFirstTokenIsDeleted(self):
+    """Tests that autofix output is is correct when first token is deleted.
+
+    Regression test for bug 4581567
+    """
+    original = ['"use strict";']
+    expected = ["'use strict';"]
+
+    self._AssertFixes(original, expected, include_header=False)
+
   def testGoogScopeIndentation(self):
     """Tests Handling a typical end-of-scope indentation fix."""
     original = [
@@ -222,15 +231,14 @@ class FixJsStyleTest(googletest.TestCase):
 
     self._AssertFixes(original, expected)
 
-  def _AssertFixes(self, original, expected):
+  def _AssertFixes(self, original, expected, include_header=True):
     """Asserts that the error fixer corrects original to expected."""
-    original = self._GetHeader() + original
-    expected = self._GetHeader() + expected
+    if include_header:
+      original = self._GetHeader() + original
+      expected = self._GetHeader() + expected
 
     actual = StringIO.StringIO()
-    style_checker = checker.JavaScriptStyleChecker(
-        error_fixer.ErrorFixer(actual))
-    style_checker.CheckLines('testing.js', original, False)
+    runner.Run('testing.js', error_fixer.ErrorFixer(actual), original)
     actual.seek(0)
 
     expected = [x + '\n' for x in expected]

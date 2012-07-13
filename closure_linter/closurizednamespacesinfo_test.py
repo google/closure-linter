@@ -21,8 +21,8 @@
 import unittest as googletest
 from closure_linter import closurizednamespacesinfo
 from closure_linter import javascriptstatetracker
-from closure_linter import javascripttokenizer
 from closure_linter import javascripttokens
+from closure_linter import testutil
 from closure_linter import tokenutil
 
 # pylint: disable-msg=C6409
@@ -55,8 +55,6 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
       'package.ClassName.property.subProperty': 'package.ClassName',
       'package.className.prototype.something.somethingElse': 'package.className'
   }
-
-  _tokenizer = javascripttokenizer.JavaScriptTokenizer()
 
   def testGetClosurizedNamespace(self):
     """Tests that the correct namespace is returned for various identifiers."""
@@ -93,7 +91,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.provide(\'package.Foo\');',
         'package.Foo = function() {};'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertFalse(namespaces_info.IsExtraProvide(token),
@@ -105,7 +103,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.provide(\'package.Foo.methodName\');',
         'package.Foo.methodName = function() {};'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertFalse(namespaces_info.IsExtraProvide(token),
@@ -114,7 +112,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
   def testIsExtraProvide_notCreated(self):
     """Tests that provides for non-created namespaces are extra."""
     input_lines = ['goog.provide(\'package.Foo\');']
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertTrue(namespaces_info.IsExtraProvide(token),
@@ -127,7 +125,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.provide(\'package.Foo\');',
         'package.Foo = function() {};'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     # Advance to the second goog.provide token.
@@ -139,7 +137,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
   def testIsExtraProvide_notClosurized(self):
     """Tests that provides of non-closurized namespaces are not extra."""
     input_lines = ['goog.provide(\'notclosurized.Foo\');']
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertFalse(namespaces_info.IsExtraProvide(token),
@@ -151,7 +149,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.require(\'package.Foo\');',
         'var x = package.Foo.methodName();'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertFalse(namespaces_info.IsExtraRequire(token),
@@ -163,7 +161,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.require(\'package.Foo.methodName\');',
         'var x = package.Foo.methodName();'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertTrue(namespaces_info.IsExtraRequire(token),
@@ -172,7 +170,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
   def testIsExtraRequire_notUsed(self):
     """Tests that requires for unused namespaces are extra."""
     input_lines = ['goog.require(\'package.Foo\');']
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertTrue(namespaces_info.IsExtraRequire(token),
@@ -181,7 +179,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
   def testIsExtraRequire_notClosurized(self):
     """Tests that requires of non-closurized namespaces are not extra."""
     input_lines = ['goog.require(\'notclosurized.Foo\');']
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertFalse(namespaces_info.IsExtraRequire(token),
@@ -193,7 +191,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.require(\'package.Foo.Enum\');',
         'var x = package.Foo.Enum.VALUE1;',
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertTrue(namespaces_info.IsExtraRequire(token),
@@ -205,7 +203,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.require(\'package.Foo.CONSTANT\');',
         'var x = package.Foo.CONSTANT',
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertTrue(namespaces_info.IsExtraRequire(token),
@@ -217,7 +215,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.require(\'package.subpackage.CONSTANT\');',
         'var x = package.subpackage.CONSTANT',
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertFalse(namespaces_info.IsExtraRequire(token),
@@ -229,7 +227,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.require(\'package.subpackage.method\');',
         'var x = package.subpackage.method()',
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertFalse(namespaces_info.IsExtraRequire(token),
@@ -238,7 +236,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
   def testIsExtraRequire_defaults(self):
     """Tests that there are no warnings about extra requires for test utils"""
     input_lines = ['goog.require(\'goog.testing.jsunit\');']
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['goog'], [])
 
     self.assertFalse(namespaces_info.IsExtraRequire(token),
@@ -250,7 +248,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.provide(\'package.Foo\');',
         'package.Foo = function() {};'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(0, len(namespaces_info.GetMissingProvides()))
@@ -261,7 +259,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.provide(\'package.Foo.methodName\');',
         'package.Foo.methodName = function() {};'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(0, len(namespaces_info.GetMissingProvides()))
@@ -274,7 +272,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'package.foo.ClassName.methodName = function() {};',
         'package.foo.ClassName.ObjectName = 1;',
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(0, len(namespaces_info.GetMissingProvides()))
@@ -282,7 +280,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
   def testGetMissingProvides_unprovided(self):
     """Tests that unprovided functions cause a missing provide."""
     input_lines = ['package.Foo = function() {};']
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(1, len(namespaces_info.GetMissingProvides()))
@@ -291,7 +289,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
   def testGetMissingProvides_privatefunction(self):
     """Tests that unprovided private functions don't cause a missing provide."""
     input_lines = ['package.Foo_ = function() {};']
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(0, len(namespaces_info.GetMissingProvides()))
@@ -302,7 +300,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.require(\'package.Foo\');',
         'package.Foo.methodName = function() {};'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(0, len(namespaces_info.GetMissingProvides()))
@@ -313,7 +311,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.require(\'package.Foo\');',
         'package.Foo();'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(0, len(namespaces_info.GetMissingProvides()))
@@ -324,7 +322,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.require(\'package.Foo\');',
         'package.Foo.methodName();'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(0, len(namespaces_info.GetMissingProvides()))
@@ -337,7 +335,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'package.Foo.methodName();',
         'package.Foo.methodName(package.Foo.ObjectName);'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(0, len(namespaces_info.GetMissingRequires()))
@@ -345,7 +343,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
   def testGetMissingRequires_unrequired(self):
     """Tests that unrequired namespaces cause a missing require."""
     input_lines = ['package.Foo();']
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(1, len(namespaces_info.GetMissingRequires()))
@@ -357,7 +355,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.provide(\'package.Foo\');',
         'package.Foo.methodName();'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(0, len(namespaces_info.GetMissingRequires()))
@@ -368,7 +366,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'package.Foo = function();',
         'package.Foo.methodName();'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(1, len(namespaces_info.GetMissingRequires()))
@@ -380,7 +378,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'package.Foo.methodName = function();',
         'package.Foo.methodName();'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(0, len(namespaces_info.GetMissingRequires()))
@@ -391,7 +389,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.require(\'package.Foo.Enum\');',
         'var x = package.Foo.Enum.VALUE1;',
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertEquals(1, len(namespaces_info.GetMissingRequires()),
@@ -403,7 +401,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         'goog.provide(\'package.Foo\');',
         'package.Foo.methodName();'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = self._GetInitializedNamespacesInfo(token, ['package'], [])
 
     self.assertTrue(namespaces_info.IsFirstProvide(token))
@@ -415,7 +413,7 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         '    veryLong.',
         '    identifier;'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
+    token = testutil.TokenizeSource(input_lines)
     namespaces_info = closurizednamespacesinfo.ClosurizedNamespacesInfo([], [])
 
     self.assertEquals('package.Foo.veryLong.identifier',
@@ -440,12 +438,12 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
   def _GetProvideTokens(self, namespace):
     """Returns a list of tokens for a goog.require of the given namespace."""
     line_text = 'goog.require(\'' + namespace + '\');\n'
-    return javascripttokenizer.JavaScriptTokenizer().TokenizeFile([line_text])
+    return testutil.TokenizeSource([line_text])
 
   def _GetRequireTokens(self, namespace):
     """Returns a list of tokens for a goog.require of the given namespace."""
     line_text = 'goog.require(\'' + namespace + '\');\n'
-    return javascripttokenizer.JavaScriptTokenizer().TokenizeFile([line_text])
+    return testutil.TokenizeSource([line_text])
 
 if __name__ == '__main__':
   googletest.main()

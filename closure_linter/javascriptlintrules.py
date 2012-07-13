@@ -25,7 +25,7 @@ __author__ = ('robbyw@google.com (Robert Walker)',
               'jacobr@google.com (Jacob Richman)')
 
 import re
-from sets import Set
+
 from closure_linter import ecmalintrules
 from closure_linter import error_check
 from closure_linter import errors
@@ -51,8 +51,8 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
     ecmalintrules.EcmaScriptLintRules.__init__(self)
     self._namespaces_info = namespaces_info
     self._declared_private_member_tokens = {}
-    self._declared_private_members = Set()
-    self._used_private_members = Set()
+    self._declared_private_members = set()
+    self._used_private_members = set()
 
   def HandleMissingParameterDoc(self, token, param_name):
     """Handle errors associated with a parameter missing a param tag."""
@@ -82,6 +82,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
       token: The current token under consideration
       state: parser_state object that indicates the current state in the page
     """
+
     if self.__ContainsRecordType(token):
       # We should bail out and not emit any warnings for this annotation.
       # TODO(nicksantos): Support record types for real.
@@ -104,8 +105,12 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
                         doc_comment.GetFlag('suppress').type == 'underscore')
           if not suppressed:
             # Look for static members defined on a provided namespace.
-            namespace = namespaces_info.GetClosurizedNamespace(identifier)
-            provided_namespaces = namespaces_info.GetProvidedNamespaces()
+            if namespaces_info:
+              namespace = namespaces_info.GetClosurizedNamespace(identifier)
+              provided_namespaces = namespaces_info.GetProvidedNamespaces()
+            else:
+              namespace = None
+              provided_namespaces = set()
 
             # Skip cases of this.something_.somethingElse_.
             regex = re.compile('^this\.[a-zA-Z_]+$')
@@ -187,7 +192,9 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
         self._SetLimitedDocChecks(True)
 
       if (error_check.ShouldCheck(Rule.BLANK_LINES_AT_TOP_LEVEL) and
-          not self._is_html and state.InTopLevel() and not state.InBlock()):
+          not self._is_html and
+          state.InTopLevel() and
+          not state.InNonScopeBlock()):
 
         # Check if we're in a fileoverview or constructor JsDoc.
         is_constructor = (
@@ -371,6 +378,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
 
         # Report extra goog.require statement.
         if namespaces_info.IsExtraRequire(token):
+
           self._HandleError(
               errors.EXTRA_GOOG_REQUIRE,
               'Unnecessary goog.require: ' + namespace,
@@ -459,10 +467,10 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
         token, position=Position.AtBeginning(),
         fix_data=(missing_requires, need_blank_line))
 
-  def Finalize(self, state, tokenizer_mode):
+  def Finalize(self, state):
     """Perform all checks that need to occur after all lines are processed."""
     # Call the base class's Finalize function.
-    super(JavaScriptLintRules, self).Finalize(state, tokenizer_mode)
+    super(JavaScriptLintRules, self).Finalize(state)
 
     if error_check.ShouldCheck(Rule.UNUSED_PRIVATE_MEMBERS):
       # Report an error for any declared private member that was never used.
@@ -477,8 +485,8 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
 
       # Clear state to prepare for the next file.
       self._declared_private_member_tokens = {}
-      self._declared_private_members = Set()
-      self._used_private_members = Set()
+      self._declared_private_members = set()
+      self._used_private_members = set()
 
     namespaces_info = self._namespaces_info
     if namespaces_info is not None:

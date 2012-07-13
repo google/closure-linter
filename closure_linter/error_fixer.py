@@ -16,6 +16,9 @@
 
 """Main class responsible for automatically fixing simple style violations."""
 
+# Allow non-Google copyright
+# pylint: disable-msg=C6304
+
 __author__ = 'robbyw@google.com (Robert Walker)'
 
 import re
@@ -143,7 +146,7 @@ class ErrorFixer(errorhandler.ErrorHandler):
     elif code in (errors.ILLEGAL_SEMICOLON_AFTER_FUNCTION,
                   errors.REDUNDANT_SEMICOLON,
                   errors.COMMA_AT_END_OF_LITERAL):
-      tokenutil.DeleteToken(token)
+      self._DeleteToken(token)
       self._AddFix(token)
 
     elif code == errors.INVALID_JSDOC_TAG:
@@ -182,7 +185,7 @@ class ErrorFixer(errorhandler.ErrorHandler):
       self._AddFix(token)
 
     elif code == errors.EXTRA_LINE:
-      tokenutil.DeleteToken(token)
+      self._DeleteToken(token)
       self._AddFix(token)
 
     elif code == errors.WRONG_BLANK_LINE_COUNT:
@@ -197,10 +200,10 @@ class ErrorFixer(errorhandler.ErrorHandler):
         num_lines *= -1
         should_delete = True
 
-      for i in xrange(1, num_lines + 1):
+      for unused_i in xrange(1, num_lines + 1):
         if should_delete:
           # TODO(user): DeleteToken should update line numbers.
-          tokenutil.DeleteToken(token.previous)
+          self._DeleteToken(token.previous)
         else:
           tokenutil.InsertBlankLineAfter(token.previous)
         self._AddFix(token)
@@ -216,8 +219,8 @@ class ErrorFixer(errorhandler.ErrorHandler):
 
         tokenutil.InsertTokenAfter(single_quote_start, token)
         tokenutil.InsertTokenAfter(single_quote_end, end_quote)
-        tokenutil.DeleteToken(token)
-        tokenutil.DeleteToken(end_quote)
+        self._DeleteToken(token)
+        self._DeleteToken(end_quote)
         self._AddFix([token, end_quote])
 
     elif code == errors.MISSING_BRACES_AROUND_TYPE:
@@ -285,8 +288,8 @@ class ErrorFixer(errorhandler.ErrorHandler):
 
     elif code == errors.UNNECESSARY_BRACES_AROUND_INHERIT_DOC:
       if token.previous.string == '{' and token.next.string == '}':
-        tokenutil.DeleteToken(token.previous)
-        tokenutil.DeleteToken(token.next)
+        self._DeleteToken(token.previous)
+        self._DeleteToken(token.next)
         self._AddFix([token])
 
     elif code == errors.INVALID_AUTHOR_TAG_DESCRIPTION:
@@ -337,7 +340,7 @@ class ErrorFixer(errorhandler.ErrorHandler):
             return
 
         if removed_tokens:
-          tokenutil.DeleteTokens(removed_tokens[0], len(removed_tokens))
+          self._DeleteTokens(removed_tokens[0], len(removed_tokens))
 
         whitespace_token = Token('  ', Type.WHITESPACE, token.line,
                                  token.line_number)
@@ -353,7 +356,7 @@ class ErrorFixer(errorhandler.ErrorHandler):
 
     elif code in [errors.EXTRA_GOOG_PROVIDE, errors.EXTRA_GOOG_REQUIRE]:
       tokens_in_line = tokenutil.GetAllTokensInSameLine(token)
-      tokenutil.DeleteTokens(tokens_in_line[0], len(tokens_in_line))
+      self._DeleteTokens(tokens_in_line[0], len(tokens_in_line))
       self._AddFix(tokens_in_line)
 
     elif code in [errors.MISSING_GOOG_PROVIDE, errors.MISSING_GOOG_REQUIRE]:
@@ -414,6 +417,36 @@ class ErrorFixer(errorhandler.ErrorHandler):
         Token(')', Type.END_PAREN, line_text, line_number),
         Token(';', Type.SEMICOLON, line_text, line_number)
         ]
+
+  def _DeleteToken(self, token):
+    """Deletes the specified token from the linked list of tokens.
+
+    Updates instance variables pointing to tokens such as _file_token if
+    they reference the deleted token.
+
+    Args:
+      token: The token to delete.
+    """
+    if token == self._file_token:
+      self._file_token = token.next
+
+    tokenutil.DeleteToken(token)
+
+  def _DeleteTokens(self, token, token_count):
+    """Deletes the given number of tokens starting with the given token.
+
+    Updates instance variables pointing to tokens such as _file_token if
+    they reference the deleted token.
+
+    Args:
+      token: The first token to delete.
+      token_count: The total number of tokens to delete.
+    """
+    if token == self._file_token:
+      for unused_i in xrange(token_count):
+        self._file_token = self._file_token.next
+
+    tokenutil.DeleteTokens(token, token_count)
 
   def FinishFile(self):
     """Called when the current file has finished style checking.

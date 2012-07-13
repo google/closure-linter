@@ -20,12 +20,13 @@ __author__ = ('robbyw@google.com (Robert Walker)',
               'ajp@google.com (Andy Perelson)')
 
 import copy
+import StringIO
 
-from closure_linter import javascripttokens
 from closure_linter.common import tokens
+from closure_linter.javascripttokens import JavaScriptToken
+from closure_linter.javascripttokens import JavaScriptTokenType
 
 # Shorthand
-JavaScriptToken = javascripttokens.JavaScriptToken
 Type = tokens.TokenType
 
 
@@ -372,3 +373,87 @@ def Compare(token1, token2):
     return token1.line_number - token2.line_number
   else:
     return token1.start_index - token2.start_index
+
+
+def GoogScopeOrNoneFromStartBlock(token):
+  """Determines if the given START_BLOCK is part of a goog.scope statement.
+
+  Args:
+    token: A token of type START_BLOCK.
+
+  Returns:
+    The goog.scope function call token, or None if such call doesn't exist.
+  """
+  if token.type != JavaScriptTokenType.START_BLOCK:
+    return None
+
+  # Search for a goog.scope statement, which will be 5 tokens before the
+  # block. Illustration of the tokens found prior to the start block:
+  # goog.scope(function() {
+  #      5    4    3   21 ^
+
+  maybe_goog_scope = token
+  for unused_i in xrange(5):
+    maybe_goog_scope = (maybe_goog_scope.previous if maybe_goog_scope and
+                        maybe_goog_scope.previous else None)
+  if maybe_goog_scope and maybe_goog_scope.string == 'goog.scope':
+    return maybe_goog_scope
+
+
+def GetTokenRange(start_token, end_token):
+  """Returns a list of tokens between the two given, inclusive.
+
+  Args:
+    start_token: Start token in the range.
+    end_token: End token in the range.
+
+  Returns:
+    A list of tokens, in order, from start_token to end_token (including start
+    and end).  Returns none if the tokens do not describe a valid range.
+  """
+
+  token_range = []
+  token = start_token
+
+  while token:
+    token_range.append(token)
+
+    if token == end_token:
+      return token_range
+
+    token = token.next
+
+
+def TokensToString(token_iterable):
+  """Convert a number of tokens into a string.
+
+  Newlines will be inserted whenever the line_number of two neighboring
+  strings differ.
+
+  Args:
+    token_iterable: The tokens to turn to a string.
+
+  Returns:
+    A string representation of the given tokens.
+  """
+
+  buf = StringIO.StringIO()
+  token_list = list(token_iterable)
+  if not token_list:
+    return ''
+
+  line_number = token_list[0].line_number
+
+  for token in token_list:
+
+    while line_number < token.line_number:
+      line_number += 1
+      buf.write('\n')
+
+    if line_number > token.line_number:
+      line_number = token.line_number
+      buf.write('\n')
+
+    buf.write(token.string)
+
+  return buf.getvalue()

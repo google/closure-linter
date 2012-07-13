@@ -31,9 +31,9 @@ import unittest
 import gflags as flags
 import unittest as googletest
 
-from closure_linter import checker
 from closure_linter import errors
 from closure_linter import error_check
+from closure_linter import runner
 from closure_linter.common import filetestcase
 
 _RESOURCE_PREFIX = 'closure_linter/testdata'
@@ -78,15 +78,15 @@ _TEST_FILES = [
     'require_missing.js',
     'require_numeric.js',
     'require_provide_blank.js',
-    'require_provide_ok.js',
     'require_provide_missing.js',
+    'require_provide_ok.js',
     'simple.html',
     'spaces.js',
     'tokenizer.js',
     'unparseable.js',
     'unused_private_members.js',
-    'utf8.html'
-    ]
+    'utf8.html',
+]
 
 
 class GJsLintTestSuite(unittest.TestSuite):
@@ -106,8 +106,11 @@ class GJsLintTestSuite(unittest.TestSuite):
       test_files = _TEST_FILES
     for test_file in test_files:
       resource_path = os.path.join(_RESOURCE_PREFIX, test_file)
-      self.addTest(filetestcase.AnnotatedFileTestCase(resource_path,
-          checker.GJsLintRunner(), errors.ByName))
+      self.addTest(
+          filetestcase.AnnotatedFileTestCase(
+              resource_path,
+              runner.Run,
+              errors.ByName))
 
 if __name__ == '__main__':
   # Don't let main parse args; it happens in the TestSuite.

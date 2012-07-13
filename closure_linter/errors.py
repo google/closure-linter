@@ -112,6 +112,11 @@ INTERFACE_METHOD_CANNOT_HAVE_CODE = 401
 MISSING_END_OF_SCOPE_COMMENT = 500
 MALFORMED_END_OF_SCOPE_COMMENT = 501
 
+# goog.scope - Namespace aliasing
+# TODO(nnaze) Add additional errors here and in aliaspass.py
+INVALID_USE_OF_GOOG_SCOPE = 600
+EXTRA_GOOG_SCOPE_USAGE = 601
+
 # ActionScript specific errors:
 # TODO(user): move these errors to their own file and move all JavaScript
 # specific errors to their own file as well.
@@ -139,4 +144,7 @@ NEW_ERRORS = frozenset([
     MALFORMED_END_OF_SCOPE_COMMENT,
     UNUSED_PRIVATE_MEMBER,
     # Errors added after 2.3.5:
+    INVALID_USE_OF_GOOG_SCOPE,
+    EXTRA_GOOG_SCOPE_USAGE,
+    # Errors added after 2.3.6
     ])

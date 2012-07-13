@@ -115,18 +115,30 @@ class EcmaContext(object):
   BLOCK_TYPES = frozenset([
       ROOT, BLOCK, CASE_BLOCK, FOR_GROUP_BLOCK, IMPLIED_BLOCK])
 
-  def __init__(self, type, start_token, parent):
+  def __init__(self, context_type, start_token, parent=None):
     """Initializes the context object.
 
     Args:
-      type: The context type.
+      context_type: The context type.
       start_token: The token where this context starts.
       parent: The parent context.
+
+    Attributes:
+      type: The context type.
+      start_token: The token where this context starts.
+      end_token: The token where this context ends.
+      parent: The parent context.
+      children: The child contexts of this context, in order.
     """
-    self.type = type
+    self.type = context_type
     self.start_token = start_token
     self.end_token = None
-    self.parent = parent
+
+    self.parent = None
+    self.children = []
+
+    if parent:
+      parent.AddChild(self)
 
   def __repr__(self):
     """Returns a string representation of the context object."""
@@ -137,6 +149,32 @@ class EcmaContext(object):
       context = context.parent
     return 'Context(%s)' % ' > '.join(stack)
 
+  def AddChild(self, child):
+    """Adds a child to this context and sets child's parent to this context.
+
+    Args:
+      child: A child EcmaContext.  The child's parent will be set to this
+          context.
+    """
+
+    child.parent = self
+
+    self.children.append(child)
+    self.children.sort(EcmaContext._CompareContexts)
+
+  def GetRoot(self):
+    """Get the root context that contains this context, if any."""
+    context = self
+    while context:
+      if context.type is EcmaContext.ROOT:
+        return context
+      context = context.parent
+
+  @staticmethod
+  def _CompareContexts(context1, context2):
+    """Sorts contexts 1 and 2 by start token document position."""
+    return tokenutil.Compare(context1.start_token, context2.start_token)
+
 
 class EcmaMetaData(object):
   """Token metadata for EcmaScript languages.
@@ -146,6 +184,9 @@ class EcmaMetaData(object):
     context: The context this token appears in.
     operator_type: The operator type, will be one of the *_OPERATOR constants
         defined below.
+    aliased_symbol: The full symbol being identified, as a string (e.g. an
+        'XhrIo' alias for 'goog.net.XhrIo'). Only applicable to identifier
+        tokens. This is set in aliaspass.py and is a best guess.
   """
 
   UNARY_OPERATOR = 'unary'
@@ -164,6 +205,7 @@ class EcmaMetaData(object):
     self.is_implied_semicolon = False
     self.is_implied_block = False
     self.is_implied_block_close = False
+    self.aliased_symbol = None
 
   def __repr__(self):
     """Returns a string representation of the context object."""

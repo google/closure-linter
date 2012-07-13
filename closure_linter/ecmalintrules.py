@@ -565,7 +565,7 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
       identifier = token.values['identifier']
 
       if ((not state.InFunction() or state.InConstructor()) and
-          not state.InParentheses() and not state.InObjectLiteralDescendant()):
+          state.InTopLevel() and not state.InObjectLiteralDescendant()):
         jsdoc = state.GetDocComment()
         if not state.HasDocComment(identifier):
           # Only test for documentation on identifiers with .s in them to
@@ -752,7 +752,7 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
       self._HandleError(errors.MISSING_SPACE, 'Missing space before "["',
                         token, Position.AtBeginning())
 
-  def Finalize(self, state, tokenizer_mode):
+  def Finalize(self, state):
     last_non_space_token = state.GetLastNonSpaceToken()
     # Check last line for ending with newline.
     if state.GetLastLine() and not (state.GetLastLine().isspace() or
@@ -760,13 +760,6 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
       self._HandleError(
           errors.FILE_MISSING_NEWLINE,
           'File does not end with new line.  (%s)' % state.GetLastLine(),
-          last_non_space_token)
-
-    # Check that the mode is not mid comment, argument list, etc.
-    if not tokenizer_mode == Modes.TEXT_MODE:
-      self._HandleError(
-          errors.FILE_IN_BLOCK,
-          'File ended in mode "%s".' % tokenizer_mode,
           last_non_space_token)
 
     try:

@@ -111,7 +111,7 @@ class ClosurizedNamespacesInfo(object):
       A list of strings where each string is a 'namespace' corresponding to an
       existing goog.provide statement in the file being checked.
     """
-    return list(self._provided_namespaces)
+    return set(self._provided_namespaces)
 
   def GetRequiredNamespaces(self):
     """Returns the namespaces which are already required by this file.
@@ -120,7 +120,7 @@ class ClosurizedNamespacesInfo(object):
       A list of strings where each string is a 'namespace' corresponding to an
       existing goog.require statement in the file being checked.
     """
-    return list(self._required_namespaces)
+    return set(self._required_namespaces)
 
   def IsExtraProvide(self, token):
     """Returns whether the given goog.provide token is unnecessary.

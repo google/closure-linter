@@ -19,10 +19,9 @@
 
 
 import unittest as googletest
-from closure_linter import ecmametadatapass
-from closure_linter import javascripttokenizer
 from closure_linter import javascripttokens
 from closure_linter import requireprovidesorter
+from closure_linter import testutil
 
 # pylint: disable-msg=C6409
 TokenType = javascripttokens.JavaScriptTokenType
@@ -30,9 +29,6 @@ TokenType = javascripttokens.JavaScriptTokenType
 
 class RequireProvideSorterTest(googletest.TestCase):
   """Tests for RequireProvideSorter."""
-
-  _tokenizer = javascripttokenizer.JavaScriptTokenizer()
-  _metadata_pass = ecmametadatapass.EcmaMetaDataPass()
 
   def testFixRequires_removeBlankLines(self):
     """Tests that blank lines are omitted in sorted goog.require statements."""
@@ -49,9 +45,7 @@ class RequireProvideSorterTest(googletest.TestCase):
         'goog.require(\'package.subpackage.ClassA\');',
         'goog.require(\'package.subpackage.ClassB\');'
     ]
-    token = self._tokenizer.TokenizeFile(input_lines)
-    self._metadata_pass.Reset()
-    self._metadata_pass.Process(token)
+    token = testutil.TokenizeSourceAndRunEcmaPass(input_lines)
 
     sorter = requireprovidesorter.RequireProvideSorter()
     sorter.FixRequires(token)

@@ -155,7 +155,7 @@ class IndentationRules(object):
       start_token = self._PopTo(Type.START_BLOCK)
       # Check for required goog.scope comment.
       if start_token:
-        goog_scope = self._GoogScopeOrNone(start_token.token)
+        goog_scope = tokenutil.GoogScopeOrNoneFromStartBlock(start_token.token)
         if goog_scope is not None:
           if not token.line.endswith(';  // goog.scope\n'):
             if (token.line.find('//') > -1 and
@@ -447,27 +447,6 @@ class IndentationRules(object):
       if token.type not in Type.NON_CODE_TYPES:
         return False
 
-  def _GoogScopeOrNone(self, token):
-    """Determines if the given START_BLOCK is part of a goog.scope statement.
-
-    Args:
-      token: A token of type START_BLOCK.
-
-    Returns:
-      The goog.scope function call token, or None if such call doesn't exist.
-    """
-    # Search for a goog.scope statement, which will be 5 tokens before the
-    # block. Illustration of the tokens found prior to the start block:
-    # goog.scope(function() {
-    #      5    4    3   21 ^
-
-    maybe_goog_scope = token
-    for unused_i in xrange(5):
-      maybe_goog_scope = (maybe_goog_scope.previous if maybe_goog_scope and
-                          maybe_goog_scope.previous else None)
-    if maybe_goog_scope and maybe_goog_scope.string == 'goog.scope':
-      return maybe_goog_scope
-
   def _Add(self, token_info):
     """Adds the given token info to the stack.
 
@@ -479,7 +458,8 @@ class IndentationRules(object):
       return
 
     if token_info.is_block or token_info.token.type == Type.START_PAREN:
-      token_info.overridden_by = self._GoogScopeOrNone(token_info.token)
+      token_info.overridden_by = (
+          tokenutil.GoogScopeOrNoneFromStartBlock(token_info.token))
       index = 1
       while index <= len(self._stack):
         stack_info = self._stack[-index]
@@ -498,8 +478,8 @@ class IndentationRules(object):
             # },
             # 30);
             close_block = token_info.token.metadata.context.end_token
-            stack_info.is_permanent_override = \
-                close_block.line_number != token_info.token.line_number
+            stack_info.is_permanent_override = (
+                close_block.line_number != token_info.token.line_number)
         elif (token_info.token.type == Type.START_BLOCK and
               token_info.token.metadata.context.type == Context.BLOCK and
               (stack_token.IsAssignment() or

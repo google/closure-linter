@@ -16,7 +16,7 @@
 
 """A simple, pickle-serializable class to represent a lint error."""
 
-
+__author__ = 'nnaze@google.com (Nathan Naze)'
 
 import gflags as flags
 
