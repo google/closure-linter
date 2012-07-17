@@ -20,7 +20,6 @@
 
 __author__ = 'nnaze@google.com (Nathan Naze)'
 
-import os
 import traceback
 
 import gflags as flags
@@ -75,6 +74,23 @@ def _Tokenize(fileobj):
   return start_token, tokenizer.mode
 
 
+def _IsLimitedDocCheck(filename, limited_doc_files):
+  """Whether this this a limited-doc file.
+
+  Args:
+    filename: The filename.
+    limited_doc_files: Iterable of strings. Suffixes of filenames that should
+      be limited doc check.
+
+  Returns:
+    Whether the file should be limited check.
+  """
+  for limited_doc_filename in limited_doc_files:
+    if filename.endswith(limited_doc_filename):
+      return True
+  return False
+
+
 def Run(filename, error_handler, source=None):
   """Tokenize, run passes, and check the given file.
 
@@ -116,11 +132,11 @@ def Run(filename, error_handler, source=None):
   ecma_pass = ecmametadatapass.EcmaMetaDataPass()
   error_token = RunMetaDataPass(token, ecma_pass, error_handler, filename)
 
-  limited_doc_checks = (
-      os.path.basename(filename) in flags.FLAGS.limited_doc_files)
+  is_limited_doc_check = (
+      _IsLimitedDocCheck(filename, flags.FLAGS.limited_doc_files))
 
   _RunChecker(token, error_handler,
-              limited_doc_checks=limited_doc_checks,
+              is_limited_doc_check,
               is_html=_IsHtml(filename),
               stop_token=error_token)
 

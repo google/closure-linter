@@ -22,6 +22,7 @@ import StringIO
 
 import mox
 
+
 import unittest as googletest
 
 from closure_linter import errors
@@ -29,6 +30,18 @@ from closure_linter import runner
 from closure_linter.common import error
 from closure_linter.common import errorhandler
 from closure_linter.common import tokens
+
+
+class LimitedDocTest(googletest.TestCase):
+
+  def testIsLimitedDocCheck(self):
+    self.assertTrue(runner._IsLimitedDocCheck('foo_test.js', ['_test.js']))
+    self.assertFalse(runner._IsLimitedDocCheck('foo_bar.js', ['_test.js']))
+
+    self.assertTrue(runner._IsLimitedDocCheck(
+        'foo_moo.js', ['moo.js', 'quack.js']))
+    self.assertFalse(runner._IsLimitedDocCheck(
+        'foo_moo.js', ['woof.js', 'quack.js']))
 
 
 class RunnerTest(googletest.TestCase):
