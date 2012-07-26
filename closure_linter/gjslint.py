@@ -39,6 +39,7 @@ __author__ = ('robbyw@google.com (Robert Walker)',
 
 import errno
 import itertools
+import platform
 import sys
 import time
 
@@ -68,10 +69,12 @@ flags.DEFINE_boolean('summary', False,
 flags.DEFINE_list('additional_extensions', None, 'List of additional file '
                   'extensions (not js) that should be treated as '
                   'JavaScript files.')
-flags.DEFINE_boolean('multiprocess', bool(multiprocessing),
-                     'Whether to parallalize linting using the '
-                     'multiprocessing module.  Enabled by default if the'
-                     'multiprocessing module is present (Python 2.6+). '
+flags.DEFINE_boolean('multiprocess',
+                     platform.system() is 'Linux' and bool(multiprocessing),
+                     'Whether to attempt parallelized linting using the '
+                     'multiprocessing module.  Enabled by default on Linux '
+                     'if the multiprocessing module is present (Python 2.6+). '
+                     'Otherwise disabled by default. '
                      'Disabling may make debugging easier.')
 
 

@@ -67,7 +67,7 @@ def ParseFunctionsAndComments(source):
     source: A source file as a string or file-like object (iterates lines).
 
   Returns:
-    The comments and functions as a tuple.
+    The functions and comments as a tuple.
   """
   start_token = TokenizeSourceAndRunEcmaPass(source)
 
