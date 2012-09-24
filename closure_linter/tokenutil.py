@@ -457,3 +457,99 @@ def TokensToString(token_iterable):
     buf.write(token.string)
 
   return buf.getvalue()
+
+
+def GetIdentifierForToken(token):
+  """Get the symbol specified by a token.
+
+  Given a token, this function additionally concatenates any parts of an
+  identifying symbol being identified that are split by whitespace or a
+  newline.
+
+  The function will return None if the token is not the first token of an
+  identifier.
+
+  Args:
+    token: The first token of a symbol.
+
+  Returns:
+    The whole symbol, as a string.
+  """
+
+  # Search backward to determine if this token is the first token of the
+  # identifier. If it is not the first token, return None to signal that this
+  # token should be ignored.
+  prev_token = token.previous
+  while prev_token:
+    if (prev_token.IsType(JavaScriptTokenType.IDENTIFIER) or
+        _IsDot(prev_token)):
+      return None
+
+    if (prev_token.IsType(tokens.TokenType.WHITESPACE) or
+        prev_token.IsAnyType(JavaScriptTokenType.COMMENT_TYPES)):
+      prev_token = prev_token.previous
+    else:
+      break
+
+  # A "function foo()" declaration.
+  if token.type is JavaScriptTokenType.FUNCTION_NAME:
+    return token.string
+
+  # A "var foo" declaration (if the previous token is 'var')
+  previous_code_token = CustomSearch(
+      token,
+      lambda t: t not in JavaScriptTokenType.NON_CODE_TYPES,
+      reverse=True)
+
+  if previous_code_token and previous_code_token.IsKeyword('var'):
+    return token.string
+
+  # Otherwise, this is potentially a namespaced (goog.foo.bar) identifier that
+  # could span multiple lines or be broken up by whitespace.  We need
+  # to concatenate.
+  identifier_types = set([
+      JavaScriptTokenType.IDENTIFIER,
+      JavaScriptTokenType.SIMPLE_LVALUE
+      ])
+
+  assert token.type in identifier_types
+
+  # Start with the first token
+  symbol_tokens = [token]
+
+  if token.next:
+    for t in token.next:
+      last_symbol_token = symbol_tokens[-1]
+
+      # An identifier is part of the previous symbol if it has a trailing
+      # dot.
+      if t.type in identifier_types:
+        if last_symbol_token.string.endswith('.'):
+          symbol_tokens.append(t)
+          continue
+        else:
+          break
+
+      # A dot is part of the previous symbol if it does not have a trailing
+      # dot.
+      if _IsDot(t):
+        if not last_symbol_token.string.endswith('.'):
+          symbol_tokens.append(t)
+          continue
+        else:
+          break
+
+      # Skip any whitespace
+      if t.type in JavaScriptTokenType.NON_CODE_TYPES:
+        continue
+
+      # This is the end of the identifier. Stop iterating.
+      break
+
+  if symbol_tokens:
+    return ''.join([t.string for t in symbol_tokens])
+
+
+def _IsDot(token):
+  """Whether the token represents a "dot" operator (foo.bar)."""
+  return token.type is tokens.TokenType.NORMAL and token.string == '.'

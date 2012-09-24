@@ -291,19 +291,22 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
         is_immediately_called = (token.next and
                                  token.next.type == Type.START_PAREN)
         if state.InTopLevelFunction():
-          # When the function was top-level and not immediately called, check
-          # that it's terminated by a semi-colon.
-          if state.InAssignedFunction():
-            if not is_immediately_called and (last_in_line or
-                not token.next.type == Type.SEMICOLON):
-              self._HandleError(errors.MISSING_SEMICOLON_AFTER_FUNCTION,
-                  'Missing semicolon after function assigned to a variable',
-                  token, Position.AtEnd(token.string))
-          else:
+          # A semicolons should not be included at the end of a function
+          # declaration.
+          if not state.InAssignedFunction():
             if not last_in_line and token.next.type == Type.SEMICOLON:
               self._HandleError(errors.ILLEGAL_SEMICOLON_AFTER_FUNCTION,
                   'Illegal semicolon after function declaration',
                   token.next, Position.All(token.next.string))
+
+        # A semicolon should be included at the end of a function expression
+        # that is not immediately called.
+        if state.InAssignedFunction():
+          if not is_immediately_called and (last_in_line or
+              not token.next.type == Type.SEMICOLON):
+            self._HandleError(errors.MISSING_SEMICOLON_AFTER_FUNCTION,
+                'Missing semicolon after function assigned to a variable',
+                token, Position.AtEnd(token.string))
 
         if (state.InInterfaceMethod() and last_code.type != Type.START_BLOCK):
           self._HandleError(errors.INTERFACE_METHOD_CANNOT_HAVE_CODE,

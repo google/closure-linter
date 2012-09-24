@@ -692,7 +692,7 @@ if (test) {
 } else {
   x.functionInElseBlockNeedsDocs = function() { // MISSING_MEMBER_DOCUMENTATION
     x.functionInFunctionNeedsNoDocs = function() {
-    }
+    };
   };
 }
 

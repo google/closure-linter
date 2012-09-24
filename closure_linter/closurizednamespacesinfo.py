@@ -295,7 +295,7 @@ class ClosurizedNamespacesInfo(object):
 
     if token.type == TokenType.IDENTIFIER:
       # TODO(user): Consider saving the whole identifier in metadata.
-      whole_identifier_string = self._GetWholeIdentifierString(token)
+      whole_identifier_string = tokenutil.GetIdentifierForToken(token)
       if whole_identifier_string is None:
         # We only want to process the identifier one time. If the whole string
         # identifier is None, that means this token was part of a multi-token
@@ -362,49 +362,6 @@ class ClosurizedNamespacesInfo(object):
         interface = tokenutil.Search(doc_start, TokenType.COMMENT)
         self._AddUsedNamespace(state_tracker, interface.string)
 
-
-  def _GetWholeIdentifierString(self, token):
-    """Returns the whole identifier string for the given token.
-
-    Checks the tokens after the current one to see if the token is one in a
-    sequence of tokens which are actually just one identifier (i.e. a line was
-    wrapped in the middle of an identifier).
-
-    Args:
-      token: The token to check.
-
-    Returns:
-      The whole identifier string or None if this token is not the first token
-      in a multi-token identifier.
-    """
-    result = ''
-
-    # Search backward to determine if this token is the first token of the
-    # identifier. If it is not the first token, return None to signal that this
-    # token should be ignored.
-    prev_token = token.previous
-    while prev_token:
-      if (prev_token.IsType(TokenType.IDENTIFIER) or
-          prev_token.IsType(TokenType.NORMAL) and prev_token.string == '.'):
-        return None
-      elif (not prev_token.IsType(TokenType.WHITESPACE) and
-            not prev_token.IsAnyType(TokenType.COMMENT_TYPES)):
-        break
-      prev_token = prev_token.previous
-
-    # Search forward to find other parts of this identifier separated by white
-    # space.
-    next_token = token
-    while next_token:
-      if (next_token.IsType(TokenType.IDENTIFIER) or
-          next_token.IsType(TokenType.NORMAL) and next_token.string == '.'):
-        result += next_token.string
-      elif (not next_token.IsType(TokenType.WHITESPACE) and
-            not next_token.IsAnyType(TokenType.COMMENT_TYPES)):
-        break
-      next_token = next_token.next
-
-    return result
 
   def _AddCreatedNamespace(self, state_tracker, identifier, namespace=None):
     """Adds the namespace of an identifier to the list of created namespaces.

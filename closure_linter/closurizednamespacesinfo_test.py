@@ -414,12 +414,12 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         '    identifier;'
     ]
     token = testutil.TokenizeSource(input_lines)
-    namespaces_info = closurizednamespacesinfo.ClosurizedNamespacesInfo([], [])
 
     self.assertEquals('package.Foo.veryLong.identifier',
-                      namespaces_info._GetWholeIdentifierString(token))
+                      tokenutil.GetIdentifierForToken(token))
+
     self.assertEquals(None,
-                      namespaces_info._GetWholeIdentifierString(token.next))
+                      tokenutil.GetIdentifierForToken(token.next))
 
   def _GetInitializedNamespacesInfo(self, token, closurized_namespaces,
                                     ignored_extra_namespaces):

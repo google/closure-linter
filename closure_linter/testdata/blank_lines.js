@@ -1,3 +1,7 @@
+/**
+ * @fileoverview This is a file overview with no lines above it, at the top of
+ *      the file (GOOD).
+ */
 /** // WRONG_BLANK_LINE_COUNT
  * @fileoverview This is a file overview with no lines above it (BAD).
  */

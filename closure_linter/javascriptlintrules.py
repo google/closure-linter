@@ -243,7 +243,9 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
         error_message = False
         expected_blank_lines = 0
 
-        if is_file_overview and blank_lines == 0:
+        # Only need blank line before file overview if it is not the beginning
+        # of the file, e.g. copyright is first.
+        if is_file_overview and blank_lines == 0 and block_start.previous:
           error_message = 'Should have a blank line before a file overview.'
           expected_blank_lines = 1
         elif is_constructor and blank_lines != 3:

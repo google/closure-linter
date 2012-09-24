@@ -75,6 +75,8 @@ function doesNotEndWithSemicolon() {
 }
 
 doesEndWithSemicolon = function() {
+  var shouldEndWithSemicolon = function() {
+  } // MISSING_SEMICOLON_AFTER_FUNCTION
 };
 
 doesNotEndWithSemicolon = function() {
@@ -99,6 +101,10 @@ if (some_flag) {
   doesNotEndWithSemicolon = function() {
   } // MISSING_SEMICOLON_AFTER_FUNCTION
 }
+
+// No semicolon for expressions that are immediately called.
+var immediatelyCalledFunctionReturnValue = function() {
+}();
 
 
 /**

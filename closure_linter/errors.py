@@ -146,5 +146,5 @@ NEW_ERRORS = frozenset([
     # Errors added after 2.3.5:
     INVALID_USE_OF_GOOG_SCOPE,
     EXTRA_GOOG_SCOPE_USAGE,
-    # Errors added after 2.3.6
+    # Errors added after 2.3.7
     ])

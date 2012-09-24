@@ -49,4 +49,12 @@ something.withTrailingUnderscore_ = 'should be declared @private';
  * Does nothing.
  */
 something.Something.prototype.noOp = function() {};
+
+
+/**
+ * Does something.
+ * Tests for included semicolon in function expression in goog.scope.
+ */
+something.Something.prototype.someOp = function() {
+} // MISSING_SEMICOLON_AFTER_FUNCTION
 });  // goog.scope

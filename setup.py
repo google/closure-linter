@@ -20,7 +20,7 @@ except ImportError:
     from distutils.core import setup
 
 setup(name='closure_linter',
-      version='2.3.6.1',
+      version='2.3.7',
       description='Closure Linter',
       license='Apache',
       author='The Closure Linter Authors',

@@ -59,6 +59,7 @@ class DocFlag(object):
       'deprecated',
       'enum',
       'export',
+      'expose',
       'extends',
       'externs',
       'fileoverview',
@@ -75,6 +76,7 @@ class DocFlag(object):
       'param',
       'preserve',
       'private',
+      'provideGoog',
       'return',
       'see',
       'supported',
@@ -347,8 +349,22 @@ class DocComment(object):
     return tokenutil.TokensToString(
         self._YieldDescriptionTokens())
 
-  def GetTarget(self):
-    """Get this comment's target.
+  def GetTargetIdentifier(self):
+    """Returns the identifier (as a string) that this is a comment for.
+
+    Note that this uses method uses GetIdentifierForToken to get the full
+    identifier, even if broken up by whitespace, newlines, or comments,
+    and thus could be longer than GetTargetToken().string.
+
+    Returns:
+      The identifier for the token this comment is for.
+    """
+    token = self.GetTargetToken()
+    if token:
+      return tokenutil.GetIdentifierForToken(token)
+
+  def GetTargetToken(self):
+    """Get this comment's target token.
 
     Returns:
       The token that is the target of this comment, or None if there isn't one.

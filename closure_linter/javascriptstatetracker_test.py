@@ -190,6 +190,22 @@ class CommentTest(googletest.TestCase):
          */
         """)
 
+    self.assertCommentTarget('theTarget.is.split.across.lines', """
+        /**
+         * Comment that addresses a symbol split across lines.
+         */
+        (theTarget.is.split
+             .across.lines)
+        """)
+
+    self.assertCommentTarget('theTarget.is.split.across.lines', """
+        /**
+         * Comment that addresses a symbol split across lines.
+         */
+        (theTarget.is.split.
+                across.lines)
+        """)
+
   def _ParseComment(self, script):
     """Parse a script that contains one comment and return it."""
     _, comments = testutil.ParseFunctionsAndComments(script)
@@ -198,12 +214,7 @@ class CommentTest(googletest.TestCase):
 
   def assertCommentTarget(self, target, script):
     comment = self._ParseComment(script)
-    comment_target_string = None
-    comment_target = comment.GetTarget()
-    if comment_target:
-      comment_target_string = comment_target.string
-
-    self.assertEquals(target, comment_target_string)
+    self.assertEquals(target, comment.GetTargetIdentifier())
 
 
 if __name__ == '__main__':

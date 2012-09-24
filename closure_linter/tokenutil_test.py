@@ -22,6 +22,7 @@ __author__ = ('nnaze@google.com (Nathan Naze)')
 
 import unittest as googletest
 
+from closure_linter import testutil
 from closure_linter import tokenutil
 
 
@@ -77,6 +78,95 @@ class TokenUtilTest(googletest.TestCase):
         tokenutil.TokensToString([d, e, a, b, c]),
         'Neighboring tokens not in line_number order should have a newline '
         'between them.')
+
+  def testGetIdentifierForToken(self):
+
+    tokens = testutil.TokenizeSource("""
+start1.abc.def.prototype.
+  onContinuedLine
+
+(start2.abc.def
+  .hij.klm
+  .nop)
+
+start3.abc.def
+   .hij = function() {};
+
+// An absurd multi-liner.
+start4.abc.def.
+   hij.
+   klm = function() {};
+
+start5 . aaa . bbb . ccc
+  shouldntBePartOfThePreviousSymbol
+
+start6.abc.def ghi.shouldntBePartOfThePreviousSymbol
+
+var start7 = 42;
+
+function start8() {
+
+}
+
+start9.abc. // why is there a comment here?
+  def /* another comment */
+  shouldntBePart
+
+start10.abc // why is there a comment here?
+  .def /* another comment */
+  shouldntBePart
+
+start11.abc. middle1.shouldNotBeIdentifier
+""")
+
+    def _GetTokenStartingWith(token_starts_with):
+      for t in tokens:
+        if t.string.startswith(token_starts_with):
+          return t
+
+    self.assertEquals(
+        'start1.abc.def.prototype.onContinuedLine',
+        tokenutil.GetIdentifierForToken(_GetTokenStartingWith('start1')))
+
+    self.assertEquals(
+        'start2.abc.def.hij.klm.nop',
+        tokenutil.GetIdentifierForToken(_GetTokenStartingWith('start2')))
+
+    self.assertEquals(
+        'start3.abc.def.hij',
+        tokenutil.GetIdentifierForToken(_GetTokenStartingWith('start3')))
+
+    self.assertEquals(
+        'start4.abc.def.hij.klm',
+        tokenutil.GetIdentifierForToken(_GetTokenStartingWith('start4')))
+
+    self.assertEquals(
+        'start5.aaa.bbb.ccc',
+        tokenutil.GetIdentifierForToken(_GetTokenStartingWith('start5')))
+
+    self.assertEquals(
+        'start6.abc.def',
+        tokenutil.GetIdentifierForToken(_GetTokenStartingWith('start6')))
+
+    self.assertEquals(
+        'start7',
+        tokenutil.GetIdentifierForToken(_GetTokenStartingWith('start7')))
+
+    self.assertEquals(
+        'start8',
+        tokenutil.GetIdentifierForToken(_GetTokenStartingWith('start8')))
+
+    self.assertEquals(
+        'start9.abc.def',
+        tokenutil.GetIdentifierForToken(_GetTokenStartingWith('start9')))
+
+    self.assertEquals(
+        'start10.abc.def',
+        tokenutil.GetIdentifierForToken(_GetTokenStartingWith('start10')))
+
+    self.assertIsNone(
+        tokenutil.GetIdentifierForToken(_GetTokenStartingWith('middle1')))
+
 
 if __name__ == '__main__':
   googletest.main()
