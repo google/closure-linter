@@ -76,6 +76,7 @@ class ErrorFixer(errorhandler.ErrorHandler):
       first_token: The first token in the file.
     """
     self._file_name = filename
+    self._file_is_html = filename.endswith('.html') or filename.endswith('.htm')
     self._file_token = first_token
     self._file_fix_count = 0
     self._file_changed_lines = set()
@@ -451,9 +452,20 @@ class ErrorFixer(errorhandler.ErrorHandler):
   def FinishFile(self):
     """Called when the current file has finished style checking.
 
-    Used to go back and fix any errors in the file.
+    Used to go back and fix any errors in the file. It currently supports both
+    js and html files. For js files it does a simple dump of all tokens, but in
+    order to support html file, we need to merge the original file with the new
+    token set back together. This works because the tokenized html file is the
+    original html file with all non js lines kept but blanked out with one blank
+    line token per line of html.
     """
     if self._file_fix_count:
+      # Get the original file content for html.
+      if self._file_is_html:
+        f = open(self._file_name, 'r')
+        original_lines = f.readlines()
+        f.close()
+
       f = self._external_file
       if not f:
         print 'Fixed %d errors in %s' % (self._file_fix_count, self._file_name)
@@ -461,12 +473,23 @@ class ErrorFixer(errorhandler.ErrorHandler):
 
       token = self._file_token
       char_count = 0
+      line = ''
       while token:
-        f.write(token.string)
+        line += token.string
         char_count += len(token.string)
 
         if token.IsLastInLine():
-          f.write('\n')
+          # We distinguish if a blank line in html was from stripped original
+          # file or newly added error fix by looking at the "org_line_number"
+          # field on the token. It is only set in the tokenizer, so for all
+          # error fixes, the value should be None.
+          if (line or not self._file_is_html or
+              token.orig_line_number is None):
+            f.write(line)
+            f.write('\n')
+          else:
+            f.write(original_lines[token.orig_line_number - 1])
+          line = ''
           if char_count > 80 and token.line_number in self._file_changed_lines:
             print 'WARNING: Line %d of %s is now longer than 80 characters.' % (
                 token.line_number, self._file_name)

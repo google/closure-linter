@@ -1262,6 +1262,58 @@ function bind(fn, obj) {
 
 foo(/** @lends {T} */ ({foo: 'bar'}));
 
+
+
+/**
+ * @param {*} x  .
+ * @constructor
+ * @struct
+ */
+function StructMaker(x) { this.x = x; }
+
+var structObjLit = /** @struct */ { x: 123 };
+
+
+
+/**
+ * @param {*} x .
+ * @constructor
+ * @dict
+ */
+function DictMaker(x) { this['x'] = x; }
+
+var dictObjLit = /** @dict */ { x: 123 };
+
+
+/**
+ * @idGenerator
+ * @param {string} x .
+ * @return {string} .
+ */
+function makeId(x) {
+  return '';
+}
+
+
+/**
+ * @consistentIdGenerator
+ * @param {string} x .
+ * @return {string} .
+ */
+function makeConsistentId(x) {
+  return '';
+}
+
+
+/**
+ * @stableIdGenerator
+ * @param {string} x .
+ * @return {string} .
+ */
+function makeStableId(x) {
+  return '';
+}
+
 /* Regression tests for not ending block comments. Keep at end of file! **/
 /**
  * When there are multiple asteriks. In the failure case we would get an

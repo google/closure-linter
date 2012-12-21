@@ -360,4 +360,4 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
         name of the function.
     """
     return javascripttokens.JavaScriptToken(string, token_type, line,
-                                            line_number, values)
+                                            line_number, values, line_number)

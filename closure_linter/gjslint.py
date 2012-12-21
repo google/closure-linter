@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# python2.6 for command-line runs using p4lib.  pylint: disable-msg=C6301
-#
 # Copyright 2007 The Closure Linter Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

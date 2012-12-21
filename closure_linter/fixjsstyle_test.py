@@ -37,8 +37,10 @@ class FixJsStyleTest(googletest.TestCase):
   """Test case to for gjslint auto-fixing."""
 
   def testFixJsStyle(self):
-    test_cases = [['fixjsstyle.in.js', 'fixjsstyle.out.js'],
-                  ['indentation.js', 'fixjsstyle.indentation.out.js']]
+    test_cases = [
+        ['fixjsstyle.in.js', 'fixjsstyle.out.js'],
+        ['indentation.js', 'fixjsstyle.indentation.out.js'],
+        ['fixjsstyle.html.in.html', 'fixjsstyle.html.out.html']]
     for [running_input_file, running_output_file] in test_cases:
       input_filename = None
       golden_filename = None
