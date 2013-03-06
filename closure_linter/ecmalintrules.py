@@ -88,6 +88,9 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
   LONG_LINE_IGNORE = frozenset(['*', '//', '@see'] +
       ['@%s' % tag for tag in statetracker.DocFlag.HAS_TYPE])
 
+  JSDOC_FLAGS_DESCRIPTION_NOT_REQUIRED = frozenset([
+      '@param', '@return', '@returns'])
+
   def __init__(self):
     """Initialize this lint rule object."""
     checkerbase.LintRulesBase.__init__(self)
@@ -507,8 +510,10 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
           flag_name = token.type
           if 'name' in token.values:
             flag_name = '@' + token.values['name']
-          self._HandleError(errors.MISSING_JSDOC_TAG_DESCRIPTION,
-              'Missing description in %s tag' % flag_name, token)
+
+          if not flag_name in self.JSDOC_FLAGS_DESCRIPTION_NOT_REQUIRED:
+            self._HandleError(errors.MISSING_JSDOC_TAG_DESCRIPTION,
+                'Missing description in %s tag' % flag_name, token)
         else:
           self._CheckForMissingSpaceBeforeToken(flag.description_start_token)
 

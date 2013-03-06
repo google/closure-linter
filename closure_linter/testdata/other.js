@@ -50,9 +50,6 @@ var x =
 getSomeExtremelyLongNamedFunctionWowThisNameIsSoLongItIsAlmostUnbelievable().dispose();
 
 
-// +4: MISSING_JSDOC_TAG_DESCRIPTION
-// +4: MISSING_JSDOC_TAG_DESCRIPTION
-// +4: MISSING_JSDOC_TAG_DESCRIPTION
 /**
  * @param {number|string|Object|Element|Array.<Object>|null} aReallyReallyReallyStrangeParameter
  * @param {number|string|Object|Element|goog.a.really.really.really.really.really.really.really.really.long.Type|null} shouldThisParameterWrap

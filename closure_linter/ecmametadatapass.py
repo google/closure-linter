@@ -410,6 +410,9 @@ class EcmaMetaDataPass(object):
       # Pop up to but not including the switch block.
       while self._context.parent.type != EcmaContext.SWITCH:
         self._PopContext()
+        if self._context.parent is None:
+          raise ParseError(token, 'Encountered case/default statement '
+                           'without switch statement')
 
     elif token.IsOperator('?'):
       self._AddContext(EcmaContext.TERNARY_TRUE)

@@ -338,9 +338,16 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
 
         # Report extra goog.provide statement.
         if namespaces_info.IsExtraProvide(token):
+          msg = 'Unnecessary goog.provide: ' +  namespace
+
+          # Hint to user if this is a Test namespace.
+          if namespace.endswith('Test'):
+            msg += (' *Test namespaces must be mentioned in the '
+                    'goog.setTestOnly() call')
+
           self._HandleError(
               errors.EXTRA_GOOG_PROVIDE,
-              'Unnecessary goog.provide: ' + namespace,
+              msg,
               token, position=Position.AtBeginning())
 
         if namespaces_info.IsLastProvide(token):
@@ -433,41 +440,63 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
     """Reports missing provide statements to the error handler.
 
     Args:
-      missing_provides: A list of strings where each string is a namespace that
-          should be provided, but is not.
+      missing_provides: A dictionary of string(key) and integer(value) where
+          each string(key) is a namespace that should be provided, but is not
+          and integer(value) is first line number where it's required.
       token: The token where the error was detected (also where the new provides
           will be inserted.
       need_blank_line: Whether a blank line needs to be inserted after the new
           provides are inserted. May be True, False, or None, where None
           indicates that the insert location is unknown.
     """
+
+    missing_provides_msg = 'Missing the following goog.provide statements:\n'
+    missing_provides_msg += '\n'.join(['goog.provide(\'%s\');' % x for x in
+                                       sorted(missing_provides)])
+    missing_provides_msg += '\n'
+
+    missing_provides_msg += '\nFirst line where provided: \n'
+    missing_provides_msg += '\n'.join(
+        ['  %s : line %d' % (x, missing_provides[x]) for x in
+         sorted(missing_provides)])
+    missing_provides_msg += '\n'
+
     self._HandleError(
         errors.MISSING_GOOG_PROVIDE,
-        'Missing the following goog.provide statements:\n' +
-        '\n'.join(map(lambda x: 'goog.provide(\'%s\');' % x,
-                      sorted(missing_provides))),
+        missing_provides_msg,
         token, position=Position.AtBeginning(),
-        fix_data=(missing_provides, need_blank_line))
+        fix_data=(missing_provides.keys(), need_blank_line))
 
   def _ReportMissingRequires(self, missing_requires, token, need_blank_line):
     """Reports missing require statements to the error handler.
 
     Args:
-      missing_requires: A list of strings where each string is a namespace that
-          should be required, but is not.
+      missing_requires: A dictionary of string(key) and integer(value) where
+          each string(key) is a namespace that should be required, but is not
+          and integer(value) is first line number where it's required.
       token: The token where the error was detected (also where the new requires
           will be inserted.
       need_blank_line: Whether a blank line needs to be inserted before the new
           requires are inserted. May be True, False, or None, where None
           indicates that the insert location is unknown.
     """
+
+    missing_requires_msg = 'Missing the following goog.require statements:\n'
+    missing_requires_msg += '\n'.join(['goog.require(\'%s\');' % x for x in
+                                       sorted(missing_requires)])
+    missing_requires_msg += '\n'
+
+    missing_requires_msg += '\nFirst line where required: \n'
+    missing_requires_msg += '\n'.join(
+        ['  %s : line %d' % (x, missing_requires[x]) for x in
+         sorted(missing_requires)])
+    missing_requires_msg += '\n'
+
     self._HandleError(
         errors.MISSING_GOOG_REQUIRE,
-        'Missing the following goog.require statements:\n' +
-        '\n'.join(map(lambda x: 'goog.require(\'%s\');' % x,
-                      sorted(missing_requires))),
+        missing_requires_msg,
         token, position=Position.AtBeginning(),
-        fix_data=(missing_requires, need_blank_line))
+        fix_data=(missing_requires.keys(), need_blank_line))
 
   def Finalize(self, state):
     """Perform all checks that need to occur after all lines are processed."""

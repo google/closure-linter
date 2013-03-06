@@ -79,7 +79,7 @@ class DocFlag(object):
       'param',
       'preserve',
       'private',
-      'provideGoog',
+      'protected',
       'return',
       'see',
       'stableIdGenerator',
@@ -137,14 +137,14 @@ class DocFlag(object):
       'with'])
 
   HAS_DESCRIPTION = frozenset([
-    'define', 'deprecated', 'desc', 'fileoverview', 'license', 'param',
-    'preserve', 'return', 'supported'])
+      'define', 'deprecated', 'desc', 'fileoverview', 'license', 'param',
+      'preserve', 'return', 'supported'])
 
   HAS_TYPE = frozenset([
       'define', 'enum', 'extends', 'implements', 'param', 'return', 'type',
       'suppress'])
 
-  TYPE_ONLY = frozenset(['enum', 'extends', 'implements',  'suppress', 'type'])
+  TYPE_ONLY = frozenset(['enum', 'extends', 'implements', 'suppress', 'type'])
 
   HAS_NAME = frozenset(['param'])
 

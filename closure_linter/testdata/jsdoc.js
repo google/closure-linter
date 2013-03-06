@@ -167,20 +167,20 @@ function missingReturnType() {
 }
 
 
-// +2: MISSING_JSDOC_TAG_DESCRIPTION, MISSING_SPACE
+// +2: MISSING_SPACE
 /**
  * @return{type}
  */
-function missingSpaceAndReturnDescription() {
+function missingSpaceOnReturnType() {
   return something;
 }
 
 
-// +2: MISSING_JSDOC_TAG_TYPE, MISSING_JSDOC_TAG_DESCRIPTION
+// +2: MISSING_JSDOC_TAG_TYPE
 /**
  * @return
  */
-function missingReturnTypeAndDescription() {
+function missingReturnType() {
   return something;
 }
 
@@ -204,12 +204,12 @@ function unnecessaryMissingReturnDoc() {
 }
 
 
-// +3: MISSING_JSDOC_TAG_TYPE, MISSING_JSDOC_TAG_DESCRIPTION
+// +3: MISSING_JSDOC_TAG_TYPE
 // +2: UNNECESSARY_RETURN_DOCUMENTATION
 /**
  * @return
  */
-function unnecessaryMissingReturnDocNoType() {
+function unnecessaryMissingReturnNoType() {
 }
 
 
@@ -364,8 +364,8 @@ var x = 10; // INVALID_USE_OF_DESC_TAG
 var x = 10; // INVALID_USE_OF_DESC_TAG
 
 
-// +9: MISSING_JSDOC_TAG_DESCRIPTION, MISSING_SPACE
-// +9: MISSING_JSDOC_TAG_TYPE, MISSING_JSDOC_TAG_DESCRIPTION
+// +9: MISSING_SPACE
+// +9: MISSING_JSDOC_TAG_TYPE
 // +10: OUT_OF_ORDER_JSDOC_TAG_TYPE
 // +10: MISSING_JSDOC_TAG_TYPE, MISSING_SPACE
 /**
@@ -401,7 +401,7 @@ function wrappedParams(good, okay, fine) {
 }
 
 
-// +4: MISSING_JSDOC_TAG_TYPE, MISSING_JSDOC_TAG_DESCRIPTION
+// +4: MISSING_JSDOC_TAG_TYPE
 // +3: MISSING_JSDOC_PARAM_NAME
 /**
  * Really bad
@@ -697,17 +697,6 @@ if (test) {
 }
 
 
-/**
- * Checking that @notypecheck is allowed flag.
- * @notypecheck
- * @param {boolean} b A boolean.
- */
-function jscompilerWontTypeCheck(b) {
-}
-
-
-// +4: MISSING_JSDOC_TAG_DESCRIPTION
-// +4: MISSING_JSDOC_TAG_DESCRIPTION
 /**
  * Regression test.
  * @param {goog.math.Vec2} a

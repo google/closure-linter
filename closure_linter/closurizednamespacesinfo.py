@@ -24,6 +24,8 @@ processed to determine if they constitute the creation or usage of a dependency.
 
 
 
+import re
+
 from closure_linter import javascripttokens
 from closure_linter import tokenutil
 
@@ -79,11 +81,13 @@ class ClosurizedNamespacesInfo(object):
     # two lists would only have to contain namespaces.
 
     # A list of tuples where the first element is the namespace of an identifier
-    # created in the file and the second is the identifier itself.
+    # created in the file, the second is the identifier itself and the third is
+    # the line number where it's created.
     self._created_namespaces = []
 
     # A list of tuples where the first element is the namespace of an identifier
-    # used in the file and the second is the identifier itself.
+    # used in the file, the second is the identifier itself and the third is the
+    # line number where it's used.
     self._used_namespaces = []
 
     # A list of seemingly-unnecessary namespaces that are goog.required() and
@@ -145,7 +149,7 @@ class ClosurizedNamespacesInfo(object):
       return True
 
     # TODO(user): There's probably a faster way to compute this.
-    for created_namespace, created_identifier in self._created_namespaces:
+    for created_namespace, created_identifier, _ in self._created_namespaces:
       if namespace == created_namespace or namespace == created_identifier:
         return False
 
@@ -186,34 +190,36 @@ class ClosurizedNamespacesInfo(object):
       return True
 
     # TODO(user): There's probably a faster way to compute this.
-    for used_namespace, used_identifier in self._used_namespaces:
+    for used_namespace, used_identifier, _ in self._used_namespaces:
       if namespace == used_namespace or namespace == used_identifier:
         return False
 
     return True
 
   def GetMissingProvides(self):
-    """Returns the set of missing provided namespaces for the current file.
+    """Returns the dict of missing provided namespaces for the current file.
 
     Returns:
-      Returns a set of strings where each string is a namespace that should be
-      provided by this file, but is not.
+      Returns a dictionary of key as string and value as integer where each
+      string(key) is a namespace that should be provided by this file, but is
+      not and integer(value) is first line number where it's defined.
     """
     if self._scopified_file:
-      return set()
+      return dict()
 
-    missing_provides = set()
-    for namespace, identifier in self._created_namespaces:
+    missing_provides = dict()
+    for namespace, identifier, line_number in self._created_namespaces:
       if (not self._IsPrivateIdentifier(identifier) and
           namespace not in self._provided_namespaces and
           identifier not in self._provided_namespaces and
-          namespace not in self._required_namespaces):
-        missing_provides.add(namespace)
+          namespace not in self._required_namespaces and
+          namespace not in missing_provides):
+        missing_provides[namespace] = line_number
 
     return missing_provides
 
   def GetMissingRequires(self):
-    """Returns the set of missing required namespaces for the current file.
+    """Returns the dict of missing required namespaces for the current file.
 
     For each non-private identifier used in the file, find either a
     goog.require, goog.provide or a created identifier that satisfies it.
@@ -227,11 +233,12 @@ class ClosurizedNamespacesInfo(object):
     can't always detect the creation of the namespace.
 
     Returns:
-      Returns a set of strings where each string is a namespace that should be
-      required by this file, but is not.
+      Returns a dictionary of key as string and value integer where each
+      string(key) is a namespace that should be required by this file, but is
+      not and integer(value) is first line number where it's used.
     """
     if self._scopified_file:
-      return set()
+      return dict()
 
     external_dependencies = set(self._required_namespaces)
 
@@ -239,17 +246,18 @@ class ClosurizedNamespacesInfo(object):
     external_dependencies.add('goog')
 
     created_identifiers = set()
-    for namespace, identifier in self._created_namespaces:
+    for namespace, identifier, line_number in self._created_namespaces:
       created_identifiers.add(identifier)
 
-    missing_requires = set()
-    for namespace, identifier in self._used_namespaces:
+    missing_requires = dict()
+    for namespace, identifier, line_number in self._used_namespaces:
       if (not self._IsPrivateIdentifier(identifier) and
           namespace not in external_dependencies and
           namespace not in self._provided_namespaces and
           identifier not in external_dependencies and
-          identifier not in created_identifiers):
-        missing_requires.add(namespace)
+          identifier not in created_identifiers and
+          namespace not in missing_requires):
+        missing_requires[namespace] = line_number
 
     return missing_requires
 
@@ -317,7 +325,7 @@ class ClosurizedNamespacesInfo(object):
         jsdoc = state_tracker.GetDocComment()
         if jsdoc and ('extraRequire' in jsdoc.suppressions):
           self._suppressed_requires.append(namespace)
-          self._AddUsedNamespace(state_tracker, namespace)
+          self._AddUsedNamespace(state_tracker, namespace, token.line_number)
 
       elif token.string == 'goog.provide':
         self._provide_tokens.append(token)
@@ -331,27 +339,46 @@ class ClosurizedNamespacesInfo(object):
         # gets treated as a regular goog.provide (i.e. still gets sorted).
         jsdoc = state_tracker.GetDocComment()
         if jsdoc and ('extraProvide' in jsdoc.suppressions):
-          self._AddCreatedNamespace(state_tracker, namespace)
+          self._AddCreatedNamespace(state_tracker, namespace, token.line_number)
 
       elif token.string == 'goog.scope':
         self._scopified_file = True
+
+      elif token.string == 'goog.setTestOnly':
+
+        # Since the message is optional, we don't want to scan to later lines.
+        for t in tokenutil.GetAllTokensInSameLine(token):
+          if t.type == TokenType.STRING_TEXT:
+            message = t.string
+
+            if re.match(r'^\w+(\.\w+)+$', message):
+              # This looks like a namespace. If it's a Closurized namespace,
+              # consider it created.
+              base_namespace = message.split('.', 1)[0]
+              if base_namespace in self._closurized_namespaces:
+                self._AddCreatedNamespace(state_tracker, message, token.line_number)
+
+            break
 
       else:
         jsdoc = state_tracker.GetDocComment()
         if jsdoc and jsdoc.HasFlag('typedef'):
           self._AddCreatedNamespace(state_tracker, whole_identifier_string,
+                                    token.line_number,
                                     self.GetClosurizedNamespace(
                                         whole_identifier_string))
         else:
-          self._AddUsedNamespace(state_tracker, whole_identifier_string)
+          self._AddUsedNamespace(state_tracker, whole_identifier_string,
+                                 token.line_number)
 
     elif token.type == TokenType.SIMPLE_LVALUE:
       identifier = token.values['identifier']
       namespace = self.GetClosurizedNamespace(identifier)
       if state_tracker.InFunction():
-        self._AddUsedNamespace(state_tracker, identifier)
+        self._AddUsedNamespace(state_tracker, identifier, token.line_number)
       elif namespace and namespace != 'goog':
-        self._AddCreatedNamespace(state_tracker, identifier, namespace)
+        self._AddCreatedNamespace(state_tracker, identifier, token.line_number,
+                                  namespace)
 
     elif token.type == TokenType.DOC_FLAG:
       flag_type = token.attached_object.flag_type
@@ -360,10 +387,11 @@ class ClosurizedNamespacesInfo(object):
         # Interfaces should be goog.require'd.
         doc_start = tokenutil.Search(token, TokenType.DOC_START_BRACE)
         interface = tokenutil.Search(doc_start, TokenType.COMMENT)
-        self._AddUsedNamespace(state_tracker, interface.string)
+        self._AddUsedNamespace(state_tracker, interface.string,
+                               token.line_number)
 
-
-  def _AddCreatedNamespace(self, state_tracker, identifier, namespace=None):
+  def _AddCreatedNamespace(self, state_tracker, identifier, line_number,
+                           namespace=None):
     """Adds the namespace of an identifier to the list of created namespaces.
 
     If the identifier is annotated with a 'missingProvide' suppression, it is
@@ -372,6 +400,7 @@ class ClosurizedNamespacesInfo(object):
     Args:
       state_tracker: The JavaScriptStateTracker instance.
       identifier: The identifier to add.
+      line_number: Line number where namespace is created.
       namespace: The namespace of the identifier or None if the identifier is
           also the namespace.
     """
@@ -382,9 +411,9 @@ class ClosurizedNamespacesInfo(object):
     if jsdoc and 'missingProvide' in jsdoc.suppressions:
       return
 
-    self._created_namespaces.append([namespace, identifier])
+    self._created_namespaces.append([namespace, identifier, line_number])
 
-  def _AddUsedNamespace(self, state_tracker, identifier):
+  def _AddUsedNamespace(self, state_tracker, identifier, line_number):
     """Adds the namespace of an identifier to the list of used namespaces.
 
     If the identifier is annotated with a 'missingRequire' suppression, it is
@@ -393,6 +422,7 @@ class ClosurizedNamespacesInfo(object):
     Args:
       state_tracker: The JavaScriptStateTracker instance.
       identifier: An identifier which has been used.
+      line_number: Line number where namespace is used.
     """
     jsdoc = state_tracker.GetDocComment()
     if jsdoc and 'missingRequire' in jsdoc.suppressions:
@@ -400,7 +430,7 @@ class ClosurizedNamespacesInfo(object):
 
     namespace = self.GetClosurizedNamespace(identifier)
     if namespace:
-      self._used_namespaces.append([namespace, identifier])
+      self._used_namespaces.append([namespace, identifier, line_number])
 
   def GetClosurizedNamespace(self, identifier):
     """Given an identifier, returns the namespace that identifier is from.

@@ -162,10 +162,12 @@ def RunMetaDataPass(start_token, metadata_pass, error_handler, filename=''):
     if flags.FLAGS.error_trace:
       traceback.print_exc()
     error_token = parse_err.token
+    error_msg = str(parse_err)
     error_handler.HandleError(
         error.Error(errors.FILE_DOES_NOT_PARSE,
                     ('Error parsing file at token "%s". Unable to '
-                     'check the rest of file.' % error_token), error_token))
+                     'check the rest of file.'
+                     '\nError "%s"' % (error_token, error_msg)), error_token))
     return error_token
   except Exception:  # pylint: disable-msg=W0703
     traceback.print_exc()

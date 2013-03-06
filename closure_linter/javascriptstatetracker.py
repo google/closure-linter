@@ -50,7 +50,7 @@ class JsDocFlag(statetracker.DocFlag):
   # TODO(robbyw): determine which of these, if any, should be illegal.
   EXTENDED_DOC = frozenset([
       'class', 'code', 'desc', 'final', 'hidden', 'inheritDoc', 'link',
-      'meaning', 'protected', 'notypecheck', 'throws'])
+      'meaning', 'provideGoog', 'throws'])
 
   LEGAL_DOC = EXTENDED_DOC | statetracker.DocFlag.LEGAL_DOC
 

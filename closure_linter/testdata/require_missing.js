@@ -35,4 +35,6 @@ goog.something.Else = function() {
   // Previous suppress should only be scoped to that statement.
   mockConstructor = this.control.createConstructorMock(
       goog.foo.bar, 'Baz');
+
+  this.control.invoke(goog.foo.bar, 'Test');
 };
