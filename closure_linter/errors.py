@@ -152,4 +152,5 @@ NEW_ERRORS = frozenset([
     # Errors added after 2.3.9:
     JSDOC_MISSING_VAR_ARGS_TYPE,
     JSDOC_MISSING_VAR_ARGS_NAME,
+    # Errors added after 2.3.10:
     ])
