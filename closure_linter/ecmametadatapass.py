@@ -187,6 +187,8 @@ class EcmaMetaData(object):
     aliased_symbol: The full symbol being identified, as a string (e.g. an
         'XhrIo' alias for 'goog.net.XhrIo'). Only applicable to identifier
         tokens. This is set in aliaspass.py and is a best guess.
+    is_alias_definition: True if the symbol is part of an alias definition.
+        If so, these symbols won't be counted towards goog.requires/provides.
   """
 
   UNARY_OPERATOR = 'unary'
@@ -206,6 +208,7 @@ class EcmaMetaData(object):
     self.is_implied_block = False
     self.is_implied_block_close = False
     self.aliased_symbol = None
+    self.is_alias_definition = False
 
   def __repr__(self):
     """Returns a string representation of the context object."""
@@ -214,6 +217,8 @@ class EcmaMetaData(object):
       parts.append('optype: %r' % self.operator_type)
     if self.is_implied_semicolon:
       parts.append('implied;')
+    if self.aliased_symbol:
+      parts.append('alias for: %s' % self.aliased_symbol)
     return 'MetaData(%s)' % ', '.join(parts)
 
   def IsUnaryOperator(self):

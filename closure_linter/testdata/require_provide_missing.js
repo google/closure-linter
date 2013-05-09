@@ -51,7 +51,8 @@ goog.something.private_ = 10;
  */
 goog.something.usePrivateVariables = function() {
   var x = [
-    goog.something.private_
+    goog.something.private_,
+    x
   ];
 };
 

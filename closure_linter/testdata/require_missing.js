@@ -29,11 +29,11 @@ goog.provide('goog.something.Else'); // +1: MISSING_GOOG_REQUIRE
  */
 goog.something.Else = function() {
   /** @suppress {missingRequire} */
-  var mockConstructor = this.control.createConstructorMock(
+  this.control.createConstructorMock(
       goog.foo.bar, 'Baz');
 
   // Previous suppress should only be scoped to that statement.
-  mockConstructor = this.control.createConstructorMock(
+  this.control.createConstructorMock(
       goog.foo.bar, 'Baz');
 
   this.control.invoke(goog.foo.bar, 'Test');

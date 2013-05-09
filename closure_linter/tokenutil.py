@@ -239,6 +239,47 @@ def DeleteTokens(token, token_count):
   DeleteToken(token)
 
 
+def InsertTokenBefore(new_token, token):
+  """Insert new_token before token.
+
+  Args:
+    new_token: A token to be added to the stream
+    token: A token already in the stream
+  """
+  new_token.next = token
+  new_token.previous = token.previous
+
+  new_token.metadata = copy.copy(token.metadata)
+
+  if new_token.IsCode():
+    old_last_code = token.metadata.last_code
+    following_token = token
+    while (following_token and
+           following_token.metadata.last_code == old_last_code):
+      following_token.metadata.last_code = new_token
+      following_token = following_token.next
+
+  token.previous = new_token
+  if new_token.previous:
+    new_token.previous.next = new_token
+
+  if new_token.start_index is None:
+    if new_token.line_number == token.line_number:
+      new_token.start_index = token.start_index
+    else:
+      previous_token = new_token.previous
+      if previous_token:
+        new_token.start_index = (previous_token.start_index +
+                                 len(previous_token.string))
+      else:
+        new_token.start_index = 0
+
+    iterator = new_token.next
+    while iterator and iterator.line_number == new_token.line_number:
+      iterator.start_index += len(new_token.string)
+      iterator = iterator.next
+
+
 def InsertTokenAfter(new_token, token):
   """Insert new_token after token.
 
@@ -459,6 +500,69 @@ def TokensToString(token_iterable):
   return buf.getvalue()
 
 
+def GetPreviousCodeToken(token):
+  """Returns the code token before the specified token.
+
+  Args:
+    token: A token.
+
+  Returns:
+    The code token before the specified token or None if no such token
+    exists.
+  """
+
+  return CustomSearch(
+      token,
+      lambda t: t and t.type not in JavaScriptTokenType.NON_CODE_TYPES,
+      reverse=True)
+
+
+def GetNextCodeToken(token):
+  """Returns the next code token after the specified token.
+
+  Args:
+    token: A token.
+
+  Returns:
+    The next code token after the specified token or None if no such token
+    exists.
+  """
+
+  return CustomSearch(
+      token,
+      lambda t: t and t.type not in JavaScriptTokenType.NON_CODE_TYPES,
+      reverse=False)
+
+
+def GetIdentifierStart(token):
+  """Returns the first token in an identifier.
+
+  Given a token which is part of an identifier, returns the token at the start
+  of the identifier.
+
+  Args:
+    token: A token which is part of an identifier.
+
+  Returns:
+    The token at the start of the identifier or None if the identifier was not
+    of the form 'a.b.c' (e.g. "['a']['b'].c").
+  """
+
+  start_token = token
+  previous_code_token = GetPreviousCodeToken(token)
+
+  while (previous_code_token and (
+      previous_code_token.IsType(JavaScriptTokenType.IDENTIFIER) or
+      _IsDot(previous_code_token))):
+    start_token = previous_code_token
+    previous_code_token = GetPreviousCodeToken(previous_code_token)
+
+  if _IsDot(start_token):
+    return None
+
+  return start_token
+
+
 def GetIdentifierForToken(token):
   """Get the symbol specified by a token.
 
@@ -496,10 +600,7 @@ def GetIdentifierForToken(token):
     return token.string
 
   # A "var foo" declaration (if the previous token is 'var')
-  previous_code_token = CustomSearch(
-      token,
-      lambda t: t not in JavaScriptTokenType.NON_CODE_TYPES,
-      reverse=True)
+  previous_code_token = GetPreviousCodeToken(token)
 
   if previous_code_token and previous_code_token.IsKeyword('var'):
     return token.string

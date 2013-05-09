@@ -53,6 +53,10 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
     self._declared_private_member_tokens = {}
     self._declared_private_members = set()
     self._used_private_members = set()
+    # A stack of dictionaries, one for each function scope entered. Each
+    # dictionary is keyed by an identifier that defines a local variable and has
+    # a token as its value.
+    self._unused_local_variables_by_scope = []
 
   def HandleMissingParameterDoc(self, token, param_name):
     """Handle errors associated with a parameter missing a param tag."""
@@ -83,7 +87,9 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
       state: parser_state object that indicates the current state in the page
     """
 
-    if self.__ContainsRecordType(token):
+    # For @param don't ignore record type.
+    if (self.__ContainsRecordType(token) and
+        not token.attached_object.flag_type == 'param'):
       # We should bail out and not emit any warnings for this annotation.
       # TODO(nicksantos): Support record types for real.
       state.GetDocComment().Invalidate()
@@ -94,6 +100,9 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
 
     # Store some convenience variables
     namespaces_info = self._namespaces_info
+
+    if error_check.ShouldCheck(Rule.UNUSED_LOCAL_VARIABLES):
+      self._CheckUnusedLocalVariables(token, state)
 
     if error_check.ShouldCheck(Rule.UNUSED_PRIVATE_MEMBERS):
       # Find all assignments to private members.
@@ -137,21 +146,36 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
         self._CheckForMissingSpaceBeforeToken(
             token.attached_object.name_token)
 
-        if (error_check.ShouldCheck(Rule.OPTIONAL_TYPE_MARKER) and
-            flag.type is not None and flag.name is not None):
-          # Check for optional marker in type.
-          if (flag.type.endswith('=') and
-              not flag.name.startswith('opt_')):
-            self._HandleError(errors.JSDOC_MISSING_OPTIONAL_PREFIX,
-                              'Optional parameter name %s must be prefixed '
-                              'with opt_.' % flag.name,
-                              token)
-          elif (not flag.type.endswith('=') and
-                flag.name.startswith('opt_')):
-            self._HandleError(errors.JSDOC_MISSING_OPTIONAL_TYPE,
-                              'Optional parameter %s type must end with =.' %
-                              flag.name,
-                              token)
+        if flag.type is not None and flag.name is not None:
+          if error_check.ShouldCheck(Rule.VARIABLE_ARG_MARKER):
+            # Check for variable arguments marker in type.
+            if (flag.type.startswith('...') and
+                not flag.name == 'var_args'):
+              self._HandleError(errors.JSDOC_MISSING_VAR_ARGS_NAME,
+                                'Variable length argument %s must be renamed '
+                                'to var_args.' % flag.name,
+                                token)
+            elif (not flag.type.startswith('...') and
+                  flag.name == 'var_args'):
+              self._HandleError(errors.JSDOC_MISSING_VAR_ARGS_TYPE,
+                                'Variable length argument %s type must start '
+                                'with \'...\'.' % flag.name,
+                                token)
+
+          if error_check.ShouldCheck(Rule.OPTIONAL_TYPE_MARKER):
+            # Check for optional marker in type.
+            if (flag.type.endswith('=') and
+                not flag.name.startswith('opt_')):
+              self._HandleError(errors.JSDOC_MISSING_OPTIONAL_PREFIX,
+                                'Optional parameter name %s must be prefixed '
+                                'with opt_.' % flag.name,
+                                token)
+            elif (not flag.type.endswith('=') and
+                  flag.name.startswith('opt_')):
+              self._HandleError(errors.JSDOC_MISSING_OPTIONAL_TYPE,
+                                'Optional parameter %s type must end with =.' %
+                                flag.name,
+                                token)
 
       if flag.flag_type in state.GetDocFlag().HAS_TYPE:
         # Check for both missing type token and empty type braces '{}'
@@ -294,14 +318,54 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
                   'Found @return JsDoc on function that returns nothing',
                   return_flag.flag_token, Position.AtBeginning())
 
-      if state.InFunction() and state.IsFunctionClose():
-        is_immediately_called = (token.next and
-                                 token.next.type == Type.START_PAREN)
+        # b/4073735. Method in object literal definition of prototype can
+        # safely reference 'this'.
+        prototype_object_literal = False
+        block_start = None
+        previous_code = None
+        previous_previous_code = None
+
+        # Search for cases where prototype is defined as object literal.
+        #       previous_previous_code
+        #       |       previous_code
+        #       |       | block_start
+        #       |       | |
+        # a.b.prototype = {
+        #   c : function() {
+        #     this.d = 1;
+        #   }
+        # }
+
+        # If in object literal, find first token of block so to find previous
+        # tokens to check above condition.
+        if state.InObjectLiteral():
+          block_start = state.GetCurrentBlockStart()
+
+        # If an object literal then get previous token (code type). For above
+        # case it should be '='.
+        if block_start:
+          previous_code = tokenutil.SearchExcept(block_start,
+                                                 Type.NON_CODE_TYPES, None,
+                                                 True)
+
+        # If previous token to block is '=' then get its previous token.
+        if previous_code and previous_code.IsOperator('='):
+          previous_previous_code = tokenutil.SearchExcept(previous_code,
+                                                          Type.NON_CODE_TYPES,
+                                                          None, True)
+
+        # If variable/token before '=' ends with '.prototype' then its above
+        # case of prototype defined with object literal.
+        prototype_object_literal = (previous_previous_code and
+                                    previous_previous_code.string.endswith(
+                                        '.prototype'))
+
         if (function.has_this and function.doc and
             not function.doc.HasFlag('this') and
             not function.is_constructor and
             not function.is_interface and
-            '.prototype.' not in function.name):
+            '.prototype.' not in function.name and
+            not prototype_object_literal):
           self._HandleError(
               errors.MISSING_JSDOC_TAG_THIS,
               'Missing @this JsDoc in function referencing "this". ('
@@ -435,6 +499,75 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
               'Extra space after "%s"' % token.previous.string,
               token,
               Position.All(token.string))
+    elif token.type == Type.SEMICOLON:
+      previous_token = tokenutil.SearchExcept(token, Type.NON_CODE_TYPES, None,
+                                              True)
+      if (previous_token.type == Type.KEYWORD and
+          not previous_token.string in ['break', 'continue', 'return']):
+        self._HandleError(
+            errors.REDUNDANT_SEMICOLON,
+            ('Semicolon after \'%s\' without any statement.'
+             ' Looks like an error.' % previous_token.string),
+            token,
+            Position.AtEnd(token.string))
+
+  def _CheckUnusedLocalVariables(self, token, state):
+    """Checks for unused local variables in function blocks.
+
+    Args:
+      token: The token to check.
+      state: The state tracker.
+    """
+    # We don't use state.InFunction because that disregards scope functions.
+    inFunction = state.FunctionDepth() > 0;
+    if token.type == Type.SIMPLE_LVALUE or token.type == Type.IDENTIFIER:
+      if inFunction:
+        identifier = token.string
+        # Check whether the previous token was var.
+        previous_code_token = tokenutil.CustomSearch(
+            token,
+            lambda t: t.type not in Type.NON_CODE_TYPES,
+            reverse=True)
+        if previous_code_token and previous_code_token.IsKeyword('var'):
+          # Add local variable declaration to the top of the unused locals
+          # stack.
+          self._unused_local_variables_by_scope[-1][identifier] = token
+        elif token.type == Type.IDENTIFIER:
+          # This covers most cases where the variable is used as an identifier.
+          self._MarkLocalVariableUsed(token)
+        elif token.type == Type.SIMPLE_LVALUE and '.' in identifier:
+          # This covers cases where a value is assigned to a property of the
+          # variable.
+          self._MarkLocalVariableUsed(token)
+    elif token.type == Type.START_BLOCK:
+      if inFunction and state.IsFunctionOpen():
+        # Push a new map onto the stack
+        self._unused_local_variables_by_scope.append({})
+    elif token.type == Type.END_BLOCK:
+      if state.IsFunctionClose():
+        # Pop the stack and report any remaining locals as unused.
+        unused_local_variables = self._unused_local_variables_by_scope.pop()
+        for unused_token in unused_local_variables.values():
+          self._HandleError(errors.UNUSED_LOCAL_VARIABLE,
+              'Unused local variable: %s.' % unused_token.string,
+              unused_token)
+
+  def _MarkLocalVariableUsed(self, token):
+    """Marks the local variable in the scope nearest to the current scope that
+    matches the given token as used.
+
+    Args:
+      token: The token representing the potential usage of a local variable.
+    """
+
+    identifier = token.string.split('.')[0]
+    # Find the first instance of the identifier in the stack of function scopes
+    # and mark it used.
+    for unused_local_variables in reversed(
+        self._unused_local_variables_by_scope):
+      if identifier in unused_local_variables:
+        del unused_local_variables[identifier]
+        break
 
   def _ReportMissingProvides(self, missing_provides, token, need_blank_line):
     """Reports missing provide statements to the error handler.
@@ -547,31 +680,36 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
       token: The first token in the token stream.
     """
     sorter = requireprovidesorter.RequireProvideSorter()
-    provides_result = sorter.CheckProvides(token)
-    if provides_result:
+    first_provide_token = sorter.CheckProvides(token)
+    if first_provide_token:
+      new_order = sorter.GetFixedProvideString(first_provide_token)
       self._HandleError(
           errors.GOOG_PROVIDES_NOT_ALPHABETIZED,
           'goog.provide classes must be alphabetized.  The correct code is:\n' +
-          '\n'.join(
-              map(lambda x: 'goog.provide(\'%s\');' % x, provides_result[1])),
-          provides_result[0],
+          new_order,
+          first_provide_token,
           position=Position.AtBeginning(),
-          fix_data=provides_result[0])
+          fix_data=first_provide_token)
 
-    requires_result = sorter.CheckRequires(token)
-    if requires_result:
+    first_require_token = sorter.CheckRequires(token)
+    if first_require_token:
+      new_order = sorter.GetFixedRequireString(first_require_token)
       self._HandleError(
           errors.GOOG_REQUIRES_NOT_ALPHABETIZED,
           'goog.require classes must be alphabetized.  The correct code is:\n' +
-          '\n'.join(
-              map(lambda x: 'goog.require(\'%s\');' % x, requires_result[1])),
-          requires_result[0],
+          new_order,
+          first_require_token,
           position=Position.AtBeginning(),
-          fix_data=requires_result[0])
+          fix_data=first_require_token)
 
   def GetLongLineExceptions(self):
-    """Gets a list of regexps for lines which can be longer than the limit."""
+    """Gets a list of regexps for lines which can be longer than the limit.
+
+    Returns:
+      A list of regexps, used as matches (rather than searches).
+    """
     return [
-        re.compile('goog\.require\(.+\);?\s*$'),
-        re.compile('goog\.provide\(.+\);?\s*$')
+        re.compile(r'goog\.require\(.+\);?\s*$'),
+        re.compile(r'goog\.provide\(.+\);?\s*$'),
+        re.compile(r'[\s/*]*@visibility\s*{.*}[\s*/]*$'),
         ]

@@ -135,6 +135,19 @@ class ErrorFixer(errorhandler.ErrorHandler):
       token.attached_object = javascriptstatetracker.JsDocFlag(token)
       self._AddFix(token)
 
+    elif code == errors.JSDOC_MISSING_VAR_ARGS_TYPE:
+      iterator = token.attached_object.type_start_token
+      if iterator.type == Type.DOC_START_BRACE or iterator.string.isspace():
+        iterator = iterator.next
+
+      starting_space = len(iterator.string) - len(iterator.string.lstrip())
+      iterator.string = '%s...%s' % (' ' * starting_space,
+                                     iterator.string.lstrip())
+
+      # Create a new flag object with updated type info.
+      token.attached_object = javascriptstatetracker.JsDocFlag(token)
+      self._AddFix(token)
+
     elif code in (errors.MISSING_SEMICOLON_AFTER_FUNCTION,
                   errors.MISSING_SEMICOLON):
       semicolon_token = Token(';', Type.SEMICOLON, token.line,
@@ -309,6 +322,12 @@ class ErrorFixer(errorhandler.ErrorHandler):
       actual = error.position.start
       expected = error.position.length
 
+      # Cases where first token is param but with leading spaces.
+      if (len(token.string.lstrip()) == len(token.string) - actual and
+          token.string.lstrip()):
+        token.string = token.string.lstrip()
+        actual = 0
+
       if token.type in (Type.WHITESPACE, Type.PARAMETERS) and actual != 0:
         token.string = token.string.lstrip() + (' ' * expected)
         self._AddFix([token])
@@ -472,6 +491,10 @@ class ErrorFixer(errorhandler.ErrorHandler):
         f = open(self._file_name, 'w')
 
       token = self._file_token
+      # If something got inserted before first token (e.g. due to sorting)
+      # then move to start. Bug 8398202.
+      while token.previous:
+        token = token.previous
       char_count = 0
       line = ''
       while token:

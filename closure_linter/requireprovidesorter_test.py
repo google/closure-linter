@@ -30,6 +30,48 @@ TokenType = javascripttokens.JavaScriptTokenType
 class RequireProvideSorterTest(googletest.TestCase):
   """Tests for RequireProvideSorter."""
 
+  def testGetFixedProvideString(self):
+    """Tests that fixed string constains proper comments also."""
+    input_lines = [
+        'goog.provide(\'package.xyz\');',
+        '/** @suppress {extraprovide} **/',
+        'goog.provide(\'package.abcd\');'
+    ]
+
+    expected_lines = [
+        '/** @suppress {extraprovide} **/',
+        'goog.provide(\'package.abcd\');',
+        'goog.provide(\'package.xyz\');'
+    ]
+
+    token = testutil.TokenizeSourceAndRunEcmaPass(input_lines)
+
+    sorter = requireprovidesorter.RequireProvideSorter()
+    fixed_provide_string = sorter.GetFixedProvideString(token)
+
+    self.assertEquals(expected_lines, fixed_provide_string.splitlines())
+
+  def testGetFixedRequireString(self):
+    """Tests that fixed string constains proper comments also."""
+    input_lines = [
+        'goog.require(\'package.xyz\');',
+        '/** This is needed for scope. **/',
+        'goog.require(\'package.abcd\');'
+    ]
+
+    expected_lines = [
+        '/** This is needed for scope. **/',
+        'goog.require(\'package.abcd\');',
+        'goog.require(\'package.xyz\');'
+    ]
+
+    token = testutil.TokenizeSourceAndRunEcmaPass(input_lines)
+
+    sorter = requireprovidesorter.RequireProvideSorter()
+    fixed_require_string = sorter.GetFixedRequireString(token)
+
+    self.assertEquals(expected_lines, fixed_require_string.splitlines())
+
   def testFixRequires_removeBlankLines(self):
     """Tests that blank lines are omitted in sorted goog.require statements."""
     input_lines = [

@@ -103,29 +103,24 @@ def _IsFunctionLiteralBlock(block_context):
   return False
 
 
-def MatchClosureGoogScopeAlias(context, closurized_namespaces):
+def IsInClosurizedNamespace(symbol, closurized_namespaces):
   """Match a goog.scope alias.
 
   Args:
-    context: An EcmaContext object.
+    symbol: An identifier like 'goog.events.Event'.
     closurized_namespaces: Iterable of valid Closurized namespaces (strings).
 
   Returns:
-    If a valid alias that aliases an identifier in a Closurized namespace,
-    returns a tuple of alias and symbol, otherwise None.
+    True if symbol is an identifier in a Closurized namespace, otherwise False.
   """
+  for ns in closurized_namespaces:
+    if symbol.startswith(ns + '.'):
+      return True
 
-  alias_match = _MatchAlias(context)
-
-  if alias_match:
-    alias, symbol = alias_match
-
-    for ns in closurized_namespaces:
-      if symbol.startswith(ns + '.'):
-        return alias, symbol
+  return False
 
 
-def _MatchAlias(context):
+def MatchAlias(context):
   """Match an alias statement (some identifier assigned to a variable).
 
   Example alias: var MyClass = proj.longNamespace.MyClass.
@@ -177,5 +172,9 @@ def _MatchAlias(context):
          code_tokens[3].IsType(JavaScriptTokenType.IDENTIFIER)):
     return
 
-  alias, symbol = code_tokens[1].string, code_tokens[3].string
-  return alias, symbol
+  alias, symbol = code_tokens[1], code_tokens[3]
+  # Mark both tokens as an alias definition to avoid counting them as usages.
+  alias.metadata.is_alias_definition = True
+  symbol.metadata.is_alias_definition = True
+
+  return alias.string, symbol.string

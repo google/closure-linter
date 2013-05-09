@@ -110,7 +110,8 @@ dummy.Something.prototype.useAllTheThings = function() {
     this.normalVariable_,
     this.normalVariableOnPrototype_,
     dummy.Something.normalStaticMethod_(),
-    this.normalMethod_()
+    this.normalMethod_(),
+    x
   ];
 };
 

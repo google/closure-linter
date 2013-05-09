@@ -129,6 +129,17 @@ class JavaScriptStateTracker(statetracker.StateTracker):
     else:
       return self.OBJECT_LITERAL
 
+  def GetCurrentBlockStart(self):
+    """Gets the start token of current block.
+
+    Returns:
+      Starting token of current block. None if not in block.
+    """
+    if self._block_stack:
+      return self._block_stack[-1]
+    else:
+      return None
+
   def HandleToken(self, token, last_non_space_token):
     """Handles the given token and updates state.
 

@@ -26,11 +26,36 @@ from closure_linter import ecmametadatapass
 from closure_linter import errors
 from closure_linter import javascripttokens
 from closure_linter import scopeutil
+from closure_linter import tokenutil
 from closure_linter.common import error
 
 
 # TODO(nnaze): Create a Pass interface and move this class, EcmaMetaDataPass,
 # and related classes onto it.
+
+
+def _GetAliasForIdentifier(identifier, alias_map):
+  """Returns the aliased_symbol name for an identifier.
+
+  Example usage:
+    >>> alias_map = {'MyClass': 'goog.foo.MyClass'}
+    >>> _GetAliasForIdentifier('MyClass.prototype.action', alias_map)
+    'goog.foo.MyClass.prototype.action'
+
+    >>> _GetAliasForIdentifier('MyClass.prototype.action', {})
+    None
+
+  Args:
+    identifier: The identifier.
+    alias_map: A dictionary mapping a symbol to an alias.
+
+  Returns:
+    The aliased symbol name or None if not found.
+  """
+  ns = identifier.split('.', 1)[0]
+  aliased_symbol = alias_map.get(ns)
+  if aliased_symbol:
+    return aliased_symbol + identifier[len(ns):]
 
 
 class AliasPass(object):
@@ -169,20 +194,26 @@ class AliasPass(object):
         seen_contexts.add(token_context)
 
         # If this is a alias statement in the goog.scope block.
-        if token_context.parent is scope_block:
-          match = scopeutil.MatchClosureGoogScopeAlias(
-              token_context, self._closurized_namespaces)
+        if (token_context.type == ecmametadatapass.EcmaContext.VAR and
+            token_context.parent.parent is scope_block):
+          match = scopeutil.MatchAlias(token_context.parent)
 
           # If this is an alias, remember it in the map.
           if match:
             alias, symbol = match
-            alias_map[alias] = symbol
+            symbol = _GetAliasForIdentifier(symbol, alias_map) or symbol
+            if scopeutil.IsInClosurizedNamespace(symbol,
+                                                 self._closurized_namespaces):
+              alias_map[alias] = symbol
 
       # If this token is an identifier that matches an alias,
       # mark the token as an alias to the original symbol.
-      if token.type is javascripttokens.JavaScriptTokenType.IDENTIFIER:
-        aliased_symbol = alias_map.get(token.string)
-        if aliased_symbol:
-          token.metadata.aliased_symbol = aliased_symbol
+      if (token.type is javascripttokens.JavaScriptTokenType.SIMPLE_LVALUE or
+          token.type is javascripttokens.JavaScriptTokenType.IDENTIFIER):
+        identifier = tokenutil.GetIdentifierForToken(token)
+        if identifier:
+          aliased_symbol = _GetAliasForIdentifier(identifier, alias_map)
+          if aliased_symbol:
+            token.metadata.aliased_symbol = aliased_symbol
 
       token = token.next  # Get next token

@@ -76,7 +76,7 @@ class StatementTest(googletest.TestCase):
     start_token = testutil.TokenizeSourceAndRunEcmaPass(script)
     statement = _FindFirstContextOfType(
         start_token, ecmametadatapass.EcmaContext.STATEMENT)
-    match = scopeutil._MatchAlias(statement)
+    match = scopeutil.MatchAlias(statement)
     self.assertEquals(expected_match, match)
 
   def testSimpleAliases(self):
@@ -156,7 +156,7 @@ class AliasTest(googletest.TestCase):
   def testMatchAliasStatement(self):
     matches = set()
     for context in _FindContexts(self.start_token):
-      match = scopeutil._MatchAlias(context)
+      match = scopeutil.MatchAlias(context)
       if match:
         matches.add(match)
 
@@ -168,16 +168,17 @@ class AliasTest(googletest.TestCase):
              ('NonClosurizedClass', 'aaa.bbb.NonClosurizedClass')]),
         matches)
 
-  def testMatchClosureGoogScopeAliasStatement(self):
+  def testMatchAliasStatement_withClosurizedNamespaces(self):
 
     closurized_namepaces = frozenset(['goog', 'myproject'])
 
     matches = set()
     for context in _FindContexts(self.start_token):
-      match = scopeutil.MatchClosureGoogScopeAlias(
-          context, closurized_namepaces)
+      match = scopeutil.MatchAlias(context)
       if match:
-        matches.add(match)
+        unused_alias, symbol = match
+        if scopeutil.IsInClosurizedNamespace(symbol, closurized_namepaces):
+          matches.add(match)
 
     self.assertEquals(
         set([('MyClass', 'myproject.foo.MyClass'),

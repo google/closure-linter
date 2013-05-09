@@ -202,12 +202,29 @@ var y = 100;
  * @param {function(string=):number} opt_function This should end with a =.
  * @param {function(number)} opt_otherFunc This should end with a =.
  * @param {string} opt_otherArg Incorrect this should be string=.
+ * @param {{string, number}} opt_recordArg Incorrect this should
+ *     be {string, number}=.
  */
-function someFunction(firstArg, opt_function, opt_otherFunc, opt_otherArg) {
-  if (firstArg) {
-    var a = 'firstArg should not be replaced here.';
-    return;
-  }
+function someFunction(firstArg, opt_function, opt_otherFunc, opt_otherArg,
+    opt_recordArg) {
+}
+
+
+/**
+ * This is to test the ability to add '...' in type with variable arguments.
+ * @param {number} firstArg First argument.
+ * @param {string} var_args This should start with '...'.
+ */
+function varArgFunction(firstArg, var_args) {
+}
+
+
+/**
+ * This is to test the ability to add '...' in type with variable arguments.
+ * @param {number} firstArg First argument.
+ * @param {{a, b}} var_args This should start with '...'.
+ */
+function varArgRecordTypeFunction(firstArg, var_args) {
 }
 
 var indent = 'correct';
@@ -218,6 +235,16 @@ indent = 'too short';
 indent = function() {
    return a +
           b;
+};
+
+
+/**
+ * Regression test, must insert whitespace before the 'b' when fixing
+ * indentation. Its different from below case of bug 3473113 as has spaces
+ * before parameter which was not working in part of the bug fix.
+ */
+indentWrongSpaces = function(
+  b) {
 };
 
 

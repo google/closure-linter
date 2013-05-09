@@ -57,16 +57,27 @@ class AliasPassTest(googletest.TestCase):
     alias_pass = aliaspass.AliasPass(set(['goog', 'myproject']))
     alias_pass.Process(start_token)
 
-    my_class_token = _GetTokenByLineAndString(start_token, 'myClass', 5)
+    alias_token = _GetTokenByLineAndString(start_token, 'Event', 4)
+    self.assertTrue(alias_token.metadata.is_alias_definition)
+
+    my_class_token = _GetTokenByLineAndString(start_token, 'myClass', 8)
     self.assertIsNone(my_class_token.metadata.aliased_symbol)
 
-    component_token = _GetTokenByLineAndString(start_token, 'Component', 13)
+    component_token = _GetTokenByLineAndString(start_token, 'Component', 16)
     self.assertEquals('goog.ui.Component',
                       component_token.metadata.aliased_symbol)
 
+    event_token = _GetTokenByLineAndString(start_token, 'Event.Something', 16)
+    self.assertEquals('goog.events.Event.Something',
+                      event_token.metadata.aliased_symbol)
+
     non_closurized_token = _GetTokenByLineAndString(
-        start_token, 'NonClosurizedClass', 14)
+        start_token, 'NonClosurizedClass', 17)
     self.assertIsNone(non_closurized_token.metadata.aliased_symbol)
+
+    long_start_token = _GetTokenByLineAndString(start_token, 'Event.', 20)
+    self.assertEquals('goog.events.Event.MultilineIdentifier.someMethod',
+                      long_start_token.metadata.aliased_symbol)
 
   def testMultipleGoogScopeCalls(self):
     start_token = testutil.TokenizeSourceAndRunEcmaPass(
@@ -96,20 +107,28 @@ class AliasPassTest(googletest.TestCase):
     self.assertEquals(11, error.token.line_number)
 
 
-_TEST_ALIAS_SCRIPT = """goog.scope(function() {
+_TEST_ALIAS_SCRIPT = """
+goog.scope(function() {
+var events = goog.events; // scope alias
+var Event = events.Event; // nested scope alias
 
-  // This should not be registered as an aliased identifier because
-  // it appears before the alias.
-  var myClass = new MyClass();
+// This should not be registered as an aliased identifier because
+// it appears before the alias.
+var myClass = new MyClass();
 
-  var Component = goog.ui.Component; // scope alias
-  var MyClass = myproject.foo.MyClass; // scope alias
+var Component = goog.ui.Component; // scope alias
+var MyClass = myproject.foo.MyClass; // scope alias
 
-  // Scope alias of non-Closurized namespace.
-  var NonClosurizedClass = aaa.bbb.NonClosurizedClass;
+// Scope alias of non-Closurized namespace.
+var NonClosurizedClass = aaa.bbb.NonClosurizedClass;
 
-  var component = new Component();
-  var nonClosurized = NonClosurizedClass();
+var component = new Component(Event.Something);
+var nonClosurized = NonClosurizedClass();
+
+// A created namespace with a really long identifier.
+Event.
+    MultilineIdentifier.
+        someMethod = function() {};
 });
 """
 

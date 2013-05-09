@@ -53,6 +53,7 @@ class DocFlag(object):
   STANDARD_DOC = frozenset([
       'author',
       'bug',
+      'classTemplate',
       'consistentIdGenerator',
       'const',
       'constructor',
@@ -71,6 +72,7 @@ class DocFlag(object):
       'interface',
       'lends',
       'license',
+      'ngInject',  # This annotation is specific to AngularJS.
       'noalias',
       'nocompile',
       'nosideeffects',
@@ -1086,7 +1088,7 @@ class StateTracker(object):
 
       # Detect documented non-assignments.
       next_token = tokenutil.SearchExcept(token, Type.NON_CODE_TYPES)
-      if next_token.IsType(Type.SEMICOLON):
+      if next_token and next_token.IsType(Type.SEMICOLON):
         if (self._last_non_space_token and
             self._last_non_space_token.IsType(Type.END_DOC_COMMENT)):
           self._documented_identifiers.add(token.string)

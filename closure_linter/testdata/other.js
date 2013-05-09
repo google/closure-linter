@@ -72,6 +72,7 @@ function doesNotEndWithSemicolon() {
 }
 
 doesEndWithSemicolon = function() {
+  // +1: UNUSED_LOCAL_VARIABLE
   var shouldEndWithSemicolon = function() {
   } // MISSING_SEMICOLON_AFTER_FUNCTION
 };
@@ -150,6 +151,14 @@ x.y = {
   }
 };
 
+// Semicolon required at end of object literal.
+var throwObjectLiteral = function() {
+  throw {
+    x: 0,
+    y: 1
+  } // MISSING_SEMICOLON
+};
+
 var testRegex = /(\([^\)]*\))|(\[[^\]]*\])|({[^}]*})|(&lt;[^&]*&gt;)/g;
 var testRegex2 = /abc/gimsx;
 
@@ -178,6 +187,14 @@ if (i == index) {
 ++i;
 
 var twoSemicolons = 10;; // REDUNDANT_SEMICOLON
+
+if (i == index) {
+} else; // REDUNDANT_SEMICOLON
+i++;
+
+do; // REDUNDANT_SEMICOLON
+{
+} while (i == index);
 
 twoSemicolons = 10;
 // A more interesting example of two semicolons

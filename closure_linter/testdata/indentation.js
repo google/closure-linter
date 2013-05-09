@@ -123,7 +123,7 @@ goog.something.q = function() {
 };
 
 function doSomething() {
-  var titleElement = goog.something(x,
+  var titleElement = goog.something(x, // UNUSED_LOCAL_VARIABLE
       y);
 }
 
@@ -362,7 +362,7 @@ var x9 = z('7: ' +
 x(x)); // WRONG_INDENTATION
 
 function abc() {
-  var z = d('div',
+  var z = d('div', // UNUSED_LOCAL_VARIABLE
       {
         a: 'b'
       });
@@ -404,14 +404,15 @@ while (x > 0) {
 });  // goog.scope
 
 
-goog.scope(function() {
+goog.scope(function() { // EXTRA_GOOG_SCOPE_USAGE
+// +1: UNUSED_LOCAL_VARIABLE
   var x = 5; // WRONG_INDENTATION
 });  // goog.scope
 
-goog.scope(function() {
-var x = 5;
+goog.scope(function() { // EXTRA_GOOG_SCOPE_USAGE
+var x = 5; // UNUSED_LOCAL_VARIABLE
 }); // MISSING_END_OF_SCOPE_COMMENT
 
-goog.scope(function() {
-var x = 5;
+goog.scope(function() { // EXTRA_GOOG_SCOPE_USAGE
+var x = 5; // UNUSED_LOCAL_VARIABLE
 }); // malformed goog.scope comment // MALFORMED_END_OF_SCOPE_COMMENT

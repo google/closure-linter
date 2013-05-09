@@ -24,6 +24,7 @@ __author__ = ('nnaze@google.com (Nathan Naze)')
 
 import unittest as googletest
 
+from closure_linter import javascripttokens
 from closure_linter import statetracker
 
 
@@ -31,6 +32,16 @@ class _FakeDocFlag(object):
 
   def __repr__(self):
     return '@%s %s' % (self.flag_type, self.name)
+
+
+class IdentifierTest(googletest.TestCase):
+
+  def testJustIdentifier(self):
+    a = javascripttokens.JavaScriptToken(
+        'abc', javascripttokens.JavaScriptTokenType.IDENTIFIER, 'abc', 1)
+
+    st = statetracker.StateTracker()
+    st.HandleToken(a, None)
 
 
 class DocCommentTest(googletest.TestCase):

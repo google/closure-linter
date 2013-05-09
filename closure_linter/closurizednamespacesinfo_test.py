@@ -19,7 +19,9 @@
 
 
 import unittest as googletest
+from closure_linter import aliaspass
 from closure_linter import closurizednamespacesinfo
+from closure_linter import ecmametadatapass
 from closure_linter import javascriptstatetracker
 from closure_linter import javascripttokens
 from closure_linter import testutil
@@ -449,6 +451,47 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
     namespaces_info = self._GetNamespacesInfoForScript(input_lines, ['goog'])
     self.assertTrue(namespaces_info._scopified_file)
 
+  def testScope_unusedAlias(self):
+    """Tests that an used alias symbol doesn't result in a require."""
+    input_lines = [
+        'goog.scope(function() {',
+        'var Event = goog.events.Event;',
+        '});'
+        ]
+
+    namespaces_info = self._GetNamespacesInfoForScript(input_lines, ['goog'])
+    missing_requires = namespaces_info.GetMissingRequires()
+    self.assertEquals({}, missing_requires)
+
+  def testScope_usedAlias(self):
+    """Tests that aliased symbols result in correct requires."""
+    input_lines = [
+        'goog.scope(function() {',
+        'var Event = goog.events.Event;',
+        'var dom = goog.dom;',
+        'Event(dom.classes.get);',
+        '});'
+        ]
+
+    namespaces_info = self._GetNamespacesInfoForScript(input_lines, ['goog'])
+    missing_requires = namespaces_info.GetMissingRequires()
+    self.assertEquals({'goog.dom.classes': 4, 'goog.events.Event': 4},
+                      missing_requires)
+
+  def testScope_provides(self):
+    """Tests that aliased symbols result in correct provides."""
+    input_lines = [
+        'goog.scope(function() {',
+        'goog.bar = {};',
+        'var bar = goog.bar;',
+        'bar.Foo = {};',
+        '});'
+        ]
+
+    namespaces_info = self._GetNamespacesInfoForScript(input_lines, ['goog'])
+    missing_provides = namespaces_info.GetMissingProvides()
+    self.assertEquals({'goog.bar.Foo': 4}, missing_provides)
+
   def testSetTestOnlyNamespaces(self):
     """Tests that a namespace in setTestOnly makes it a valid provide."""
     namespaces_info = self._GetNamespacesInfoForScript([
@@ -491,6 +534,12 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
         closurized_namespaces=closurized_namespaces,
         ignored_extra_namespaces=ignored_extra_namespaces)
     state_tracker = javascriptstatetracker.JavaScriptStateTracker()
+
+    ecma_pass = ecmametadatapass.EcmaMetaDataPass()
+    ecma_pass.Process(token)
+
+    alias_pass = aliaspass.AliasPass(closurized_namespaces)
+    alias_pass.Process(token)
 
     while token:
       namespaces_info.ProcessToken(token, state_tracker)

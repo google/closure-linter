@@ -26,6 +26,7 @@ import re
 from closure_linter import checkerbase
 from closure_linter import ecmametadatapass
 from closure_linter import error_check
+from closure_linter import errorrules
 from closure_linter import errors
 from closure_linter import indentation
 from closure_linter import javascripttokens
@@ -67,9 +68,10 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
   language.
   """
 
-  # Static constants.
-  MAX_LINE_LENGTH = 80
+  # It will be initialized in constructor so the flags are initialized.
+  max_line_length = -1
 
+  # Static constants.
   MISSING_PARAMETER_SPACE = re.compile(r',\S')
 
   EXTRA_SPACE = re.compile('(\(\s|\s\))')
@@ -94,6 +96,8 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
   def __init__(self):
     """Initialize this lint rule object."""
     checkerbase.LintRulesBase.__init__(self)
+    if EcmaScriptLintRules.max_line_length == -1:
+      EcmaScriptLintRules.max_line_length = errorrules.GetMaxLineLength()
 
   def Initialize(self, checker, limited_doc_checks, is_html):
     """Initialize this lint rule object before parsing a new file."""
@@ -141,7 +145,7 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
       # false positives at the cost of more false negatives.
       length = len(line)
 
-    if length > self.MAX_LINE_LENGTH:
+    if length > EcmaScriptLintRules.max_line_length:
 
       # If the line matches one of the exceptions, then it's ok.
       for long_line_regexp in self.GetLongLineExceptions():
@@ -313,13 +317,15 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
 
         if (state.InInterfaceMethod() and last_code.type != Type.START_BLOCK):
           self._HandleError(errors.INTERFACE_METHOD_CANNOT_HAVE_CODE,
-              'Interface methods cannot contain code', last_code)
+                            'Interface methods cannot contain code', last_code)
 
       elif (state.IsBlockClose() and
             token.next and token.next.type == Type.SEMICOLON):
-        self._HandleError(errors.REDUNDANT_SEMICOLON,
-            'No semicolon is required to end a code block',
-            token.next, Position.All(token.next.string))
+        if (not last_code.metadata.context.parent.type == Context.OBJECT_LITERAL
+          and not last_code.metadata.context.type == Context.OBJECT_LITERAL):
+          self._HandleError(errors.REDUNDANT_SEMICOLON,
+              'No semicolon is required to end a code block',
+              token.next, Position.All(token.next.string))
 
     elif type == Type.SEMICOLON:
       if token.previous and token.previous.type == Type.WHITESPACE:
@@ -779,7 +785,11 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
           last_non_space_token)
 
   def GetLongLineExceptions(self):
-    """Gets a list of regexps for lines which can be longer than the limit."""
+    """Gets a list of regexps for lines which can be longer than the limit.
+
+    Returns:
+      A list of regexps, used as matches (rather than searches).
+    """
     return []
 
   def InExplicitlyTypedLanguage(self):

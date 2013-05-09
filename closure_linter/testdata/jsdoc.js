@@ -33,6 +33,7 @@
  */
 // -2: LINE_TOO_LONG
 
+goog.provide('MyClass');
 goog.provide('goog.NumberLike');
 goog.provide('goog.math.Vec2.sum');
 
@@ -53,6 +54,7 @@ goog.require('goog.math.Vec2');
  * @returns // INVALID_JSDOC_TAG
  * @params  // INVALID_JSDOC_TAG
  * @defines // INVALID_JSDOC_TAG
+ * @nginject // INVALID_JSDOC_TAG
  */
 function badTags() {
 }
@@ -81,6 +83,7 @@ function goodTags() {
  * Some documentation goes here.
  *
  * @param {Object} object Good docs.
+ * @ngInject
  */
 function good(object) {
 }
@@ -320,12 +323,15 @@ function AConstructor() {
     this.array_ = goog.array.clone(/** @type {Array.<Array.<number>>} */ (m));
   }
 
-  // Use the private variables we've defined so they don't generate a warning.
+  // Use the private and local variables we've defined so they don't generate a
+  // warning.
   var y = [
     this.isOk_,
     this.isBad_,
     this.array_,
-    this.x_
+    this.x_,
+    y,
+    x
   ];
 }
 
@@ -925,7 +931,7 @@ test.x = function() {
  * Invalid reference to this.
  */ // MISSING_JSDOC_TAG_THIS
 test.x.y = function() {
-  var x = this.x;
+  var x = this.x; // UNUSED_LOCAL_VARIABLE
 };
 
 
@@ -949,7 +955,7 @@ test.x.y = function() {
  * Invalid reference to this.
  */ // MISSING_JSDOC_TAG_THIS
 function a() {
-  var x = this.x;
+  var x = this.x; // UNUSED_LOCAL_VARIABLE
 }
 
 
@@ -1030,13 +1036,13 @@ detroit.commands.ChangeOwnerCommand.
  */
 test.x.y = function() {
   this.y = x;
-  var x = this.y;
+  var x = this.y; // UNUSED_LOCAL_VARIABLE
   some.func.call(this);
 };
 
 // Test that anonymous function doesn't throw an error.
 window.setTimeout(function() {
-  var x = 10;
+  var x = 10; // UNUSED_LOCAL_VARIABLE
 }, 0);
 
 
@@ -1249,6 +1255,16 @@ Foo_ = function() {
 function bind(fn, obj) {
 }
 
+
+
+/**
+ * @constructor
+ * @classTemplate T
+ */
+function MyClass() {
+}
+
+
 foo(/** @lends {T} */ ({foo: 'bar'}));
 
 
@@ -1302,6 +1318,22 @@ function makeConsistentId(x) {
 function makeStableId(x) {
   return '';
 }
+
+
+/**
+ * Test to make sure defining object with object literal doest not produce
+ * doc warning for @this.
+ * Regression test for b/4073735.
+ */
+var Foo = function();
+Foo.prototype = {
+  /**
+   * @return {number} Never.
+   */
+  method: function() {
+    return this.method();
+  }
+};
 
 /* Regression tests for not ending block comments. Keep at end of file! **/
 /**

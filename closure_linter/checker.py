@@ -21,6 +21,7 @@ __author__ = ('robbyw@google.com (Robert Walker)',
 
 import gflags as flags
 
+from closure_linter import aliaspass
 from closure_linter import checkerbase
 from closure_linter import closurizednamespacesinfo
 from closure_linter import javascriptlintrules
@@ -45,11 +46,15 @@ class JavaScriptStyleChecker(checkerbase.CheckerBase):
       error_handler: Error handler to pass all errors to.
     """
     self._namespaces_info = None
+    self._alias_pass = None
     if flags.FLAGS.closurized_namespaces:
       self._namespaces_info = (
           closurizednamespacesinfo.ClosurizedNamespacesInfo(
               flags.FLAGS.closurized_namespaces,
               flags.FLAGS.ignored_extra_namespaces))
+
+      self._alias_pass = aliaspass.AliasPass(
+          flags.FLAGS.closurized_namespaces, error_handler)
 
     checkerbase.CheckerBase.__init__(
         self,
@@ -72,6 +77,9 @@ class JavaScriptStyleChecker(checkerbase.CheckerBase):
       stop_token: If given, checks should stop at this token.
     """
     self._lint_rules.Initialize(self, limited_doc_checks, is_html)
+
+    if self._alias_pass:
+      self._alias_pass.Process(start_token)
 
     # To maximize the amount of errors that get reported before a parse error
     # is displayed, don't run the dependency pass if a parse error exists.

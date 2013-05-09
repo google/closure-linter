@@ -54,10 +54,7 @@ class RequireProvideSorter(object):
       token: A token in the token stream before any goog.provide tokens.
 
     Returns:
-      A tuple containing the first provide token in the token stream and a list
-      of provided objects sorted alphabetically. For example:
-
-      (JavaScriptToken, ['object.a', 'object.b', ...])
+      The first provide token in the token stream.
 
       None is returned if all goog.provide statements are already sorted.
     """
@@ -65,7 +62,7 @@ class RequireProvideSorter(object):
     provide_strings = self._GetRequireOrProvideTokenStrings(provide_tokens)
     sorted_provide_strings = sorted(provide_strings)
     if provide_strings != sorted_provide_strings:
-      return [provide_tokens[0], sorted_provide_strings]
+      return provide_tokens[0]
     return None
 
   def CheckRequires(self, token):
@@ -79,10 +76,7 @@ class RequireProvideSorter(object):
       token: A token in the token stream before any goog.require tokens.
 
     Returns:
-      A tuple containing the first require token in the token stream and a list
-      of required dependencies sorted alphabetically. For example:
-
-      (JavaScriptToken, ['object.a', 'object.b', ...])
+      The first require token in the token stream.
 
       None is returned if all goog.require statements are already sorted.
     """
@@ -90,7 +84,7 @@ class RequireProvideSorter(object):
     require_strings = self._GetRequireOrProvideTokenStrings(require_tokens)
     sorted_require_strings = sorted(require_strings)
     if require_strings != sorted_require_strings:
-      return (require_tokens[0], sorted_require_strings)
+      return require_tokens[0]
     return None
 
   def FixProvides(self, token):
@@ -143,12 +137,18 @@ class RequireProvideSorter(object):
       for i in tokens_to_delete:
         tokenutil.DeleteToken(i)
 
+    # Save token to rest of file. Sorted token will be inserted before this.
+    rest_of_file = tokens_map[strings[-1]][-1].next
+
     # Re-add all tokens in the map in alphabetical order.
     insert_after = tokens[0].previous
     for string in sorted_strings:
       for i in tokens_map[string]:
-        tokenutil.InsertTokenAfter(i, insert_after)
-        insert_after = i
+        if rest_of_file:
+          tokenutil.InsertTokenBefore(i, rest_of_file)
+        else:
+          tokenutil.InsertTokenAfter(i, insert_after)
+          insert_after = i
 
   def _GetRequireOrProvideTokens(self, token, token_string):
     """Gets all goog.provide or goog.require tokens in the given token stream.
@@ -234,7 +234,8 @@ class RequireProvideSorter(object):
       # sorting.
       first_token = token
       previous_first_token = tokenutil.GetFirstTokenInPreviousLine(first_token)
-      while previous_first_token.IsAnyType(Type.COMMENT_TYPES):
+      while (previous_first_token and
+             previous_first_token.IsAnyType(Type.COMMENT_TYPES)):
         first_token = previous_first_token
         previous_first_token = tokenutil.GetFirstTokenInPreviousLine(
             first_token)
@@ -270,3 +271,54 @@ class RequireProvideSorter(object):
     token_list.append(last_token)
 
     return token_list
+
+  def GetFixedRequireString(self, token):
+    """Get fixed/sorted order of goog.require statements.
+
+    Args:
+      token: The first token in the token stream.
+
+    Returns:
+      A string for correct sorted order of goog.require.
+    """
+    return self._GetFixedRequireOrProvideString(
+        self._GetRequireOrProvideTokens(token, 'goog.require'))
+
+  def GetFixedProvideString(self, token):
+    """Get fixed/sorted order of goog.provide statements.
+
+    Args:
+      token: The first token in the token stream.
+
+    Returns:
+      A string for correct sorted order of goog.provide.
+    """
+    return self._GetFixedRequireOrProvideString(
+        self._GetRequireOrProvideTokens(token, 'goog.provide'))
+
+  def _GetFixedRequireOrProvideString(self, tokens):
+    """Sorts goog.provide or goog.require statements.
+
+    Args:
+      tokens: A list of goog.provide or goog.require tokens in the order they
+              appear in the token stream. i.e. the first token in this list must
+              be the first goog.provide or goog.require token.
+
+    Returns:
+      A string for sorted goog.require or goog.provide statements
+    """
+
+    # A map from required/provided object name to tokens that make up the line
+    # it was on, including any comments immediately before it or after it on the
+    # same line.
+    tokens_map = self._GetTokensMap(tokens)
+    sorted_strings = sorted(tokens_map.keys())
+
+    new_order = ''
+    for string in sorted_strings:
+      for i in tokens_map[string]:
+        new_order += i.string
+        if i.IsLastInLine():
+          new_order += '\n'
+
+    return new_order

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#
 # Copyright 2008 The Closure Linter Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -73,50 +72,108 @@ class FixJsStyleTest(googletest.TestCase):
 
       self.assertEqual(actual.readlines(), expected.readlines())
 
-  def testMissingExtraAndUnsortedRequires(self):
-    """Tests handling of missing extra and unsorted goog.require statements."""
+  def testUnsortedRequires(self):
+    """Tests handling of unsorted goog.require statements without header.
+
+       Bug 8398202.
+    """
     original = [
-        "goog.require('dummy.aa');",
-        "goog.require('dummy.Cc');",
-        "goog.require('dummy.Dd');",
-        "",
-        "var x = new dummy.Bb();",
-        "dummy.Cc.someMethod();",
-        "dummy.aa.someMethod();",
+        'goog.require(\'dummy.aa\');',
+        'goog.require(\'dummy.Cc\');',
+        'goog.require(\'dummy.Dd\');',
+        '',
+        'function a() {',
+        '  dummy.aa.i = 1;',
+        '  dummy.Cc.i = 1;',
+        '  dummy.Dd.i = 1;',
+        '}',
         ]
 
     expected = [
-        "goog.require('dummy.Bb');",
-        "goog.require('dummy.Cc');",
-        "goog.require('dummy.aa');",
-        "",
-        "var x = new dummy.Bb();",
-        "dummy.Cc.someMethod();",
-        "dummy.aa.someMethod();",
+        'goog.require(\'dummy.Cc\');',
+        'goog.require(\'dummy.Dd\');',
+        'goog.require(\'dummy.aa\');',
+        '',
+        'function a() {',
+        '  dummy.aa.i = 1;',
+        '  dummy.Cc.i = 1;',
+        '  dummy.Dd.i = 1;',
+        '}',
+        ]
+
+    self._AssertFixes(original, expected, include_header=False)
+
+  def testMissingExtraAndUnsortedRequires(self):
+    """Tests handling of missing extra and unsorted goog.require statements."""
+    original = [
+        'goog.require(\'dummy.aa\');',
+        'goog.require(\'dummy.Cc\');',
+        'goog.require(\'dummy.Dd\');',
+        '',
+        'var x = new dummy.Bb();',
+        'dummy.Cc.someMethod();',
+        'dummy.aa.someMethod();',
+        ]
+
+    expected = [
+        'goog.require(\'dummy.Bb\');',
+        'goog.require(\'dummy.Cc\');',
+        'goog.require(\'dummy.aa\');',
+        '',
+        'var x = new dummy.Bb();',
+        'dummy.Cc.someMethod();',
+        'dummy.aa.someMethod();',
         ]
 
     self._AssertFixes(original, expected)
 
-  def testMissingExtraAndUnsortedProvides(self):
-    """Tests handling of missing extra and unsorted goog.provide statements."""
+  def testUnsortedProvides(self):
+    """Tests handling of unsorted goog.provide statements without header.
+
+       Bug 8398202.
+    """
     original = [
-        "goog.provide('dummy.aa');",
-        "goog.provide('dummy.Cc');",
-        "goog.provide('dummy.Dd');",
-        "",
-        "dummy.Cc = function() {};",
-        "dummy.Bb = function() {};",
-        "dummy.aa.someMethod = function();",
+        'goog.provide(\'dummy.aa\');',
+        'goog.provide(\'dummy.Cc\');',
+        'goog.provide(\'dummy.Dd\');',
+        '',
+        'dummy.aa = function() {};'
+        'dummy.Cc = function() {};'
+        'dummy.Dd = function() {};'
         ]
 
     expected = [
-        "goog.provide('dummy.Bb');",
-        "goog.provide('dummy.Cc');",
-        "goog.provide('dummy.aa');",
-        "",
-        "dummy.Cc = function() {};",
-        "dummy.Bb = function() {};",
-        "dummy.aa.someMethod = function();",
+        'goog.provide(\'dummy.Cc\');',
+        'goog.provide(\'dummy.Dd\');',
+        'goog.provide(\'dummy.aa\');',
+        '',
+        'dummy.aa = function() {};'
+        'dummy.Cc = function() {};'
+        'dummy.Dd = function() {};'
+        ]
+
+    self._AssertFixes(original, expected, include_header=False)
+
+  def testMissingExtraAndUnsortedProvides(self):
+    """Tests handling of missing extra and unsorted goog.provide statements."""
+    original = [
+        'goog.provide(\'dummy.aa\');',
+        'goog.provide(\'dummy.Cc\');',
+        'goog.provide(\'dummy.Dd\');',
+        '',
+        'dummy.Cc = function() {};',
+        'dummy.Bb = function() {};',
+        'dummy.aa.someMethod = function();',
+        ]
+
+    expected = [
+        'goog.provide(\'dummy.Bb\');',
+        'goog.provide(\'dummy.Cc\');',
+        'goog.provide(\'dummy.aa\');',
+        '',
+        'dummy.Cc = function() {};',
+        'dummy.Bb = function() {};',
+        'dummy.aa.someMethod = function();',
         ]
 
     self._AssertFixes(original, expected)
@@ -124,21 +181,21 @@ class FixJsStyleTest(googletest.TestCase):
   def testNoRequires(self):
     """Tests positioning of missing requires without existing requires."""
     original = [
-        "goog.provide('dummy.Something');",
-        "",
-        "dummy.Something = function() {};",
-        "",
-        "var x = new dummy.Bb();",
+        'goog.provide(\'dummy.Something\');',
+        '',
+        'dummy.Something = function() {};',
+        '',
+        'var x = new dummy.Bb();',
         ]
 
     expected = [
-        "goog.provide('dummy.Something');",
-        "",
-        "goog.require('dummy.Bb');",
-        "",
-        "dummy.Something = function() {};",
-        "",
-        "var x = new dummy.Bb();",
+        'goog.provide(\'dummy.Something\');',
+        '',
+        'goog.require(\'dummy.Bb\');',
+        '',
+        'dummy.Something = function() {};',
+        '',
+        'var x = new dummy.Bb();',
         ]
 
     self._AssertFixes(original, expected)
@@ -146,21 +203,21 @@ class FixJsStyleTest(googletest.TestCase):
   def testNoProvides(self):
     """Tests positioning of missing provides without existing provides."""
     original = [
-        "goog.require('dummy.Bb');",
-        "",
-        "dummy.Something = function() {};",
-        "",
-        "var x = new dummy.Bb();",
+        'goog.require(\'dummy.Bb\');',
+        '',
+        'dummy.Something = function() {};',
+        '',
+        'var x = new dummy.Bb();',
         ]
 
     expected = [
-        "goog.provide('dummy.Something');",
-        "",
-        "goog.require('dummy.Bb');",
-        "",
-        "dummy.Something = function() {};",
-        "",
-        "var x = new dummy.Bb();",
+        'goog.provide(\'dummy.Something\');',
+        '',
+        'goog.require(\'dummy.Bb\');',
+        '',
+        'dummy.Something = function() {};',
+        '',
+        'var x = new dummy.Bb();',
         ]
 
     self._AssertFixes(original, expected)
@@ -233,6 +290,22 @@ class FixJsStyleTest(googletest.TestCase):
 
     self._AssertFixes(original, expected)
 
+  def testEndsWithIdentifier(self):
+    """Tests Handling case where script ends with identifier. Bug 7643404."""
+    original = [
+        'goog.provide(\'xyz\');',
+        '',
+        'abc'
+        ]
+
+    expected = [
+        'goog.provide(\'xyz\');',
+        '',
+        'abc;'
+        ]
+
+    self._AssertFixes(original, expected)
+
   def _AssertFixes(self, original, expected, include_header=True):
     """Asserts that the error fixer corrects original to expected."""
     if include_header:
@@ -250,13 +323,13 @@ class FixJsStyleTest(googletest.TestCase):
   def _GetHeader(self):
     """Returns a fake header for a JavaScript file."""
     return [
-        "// Copyright 2011 Google Inc. All Rights Reserved.",
-        "",
-        "/**",
-        " * @fileoverview Fake file overview.",
-        " * @author fake@google.com (Fake Person)",
-        " */",
-        ""
+        '// Copyright 2011 Google Inc. All Rights Reserved.',
+        '',
+        '/**',
+        ' * @fileoverview Fake file overview.',
+        ' * @author fake@google.com (Fake Person)',
+        ' */',
+        ''
         ]
 
 

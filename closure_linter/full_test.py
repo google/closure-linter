@@ -84,6 +84,7 @@ _TEST_FILES = [
     'spaces.js',
     'tokenizer.js',
     'unparseable.js',
+    'unused_local_variables.js',
     'unused_private_members.js',
     'utf8.html',
 ]

@@ -37,6 +37,7 @@ goog.require('goog.package.ClassName');
 goog.require('goog.package.OtherClassName');
 /** @suppress {extraRequire} Legacy dependency on enum */
 goog.require('goog.package.OuterClassName.InnerClassName');
+goog.require('goog.super.long.DependencyNameThatForcesMethodDefinitionToSpanMultipleLinesFooBar');
 goog.require('goog.super.long.DependencyNameThatForcesTheLineToBeOverEightyCharacters2');
 goog.require('goog.super.long.DependencyNameThatForcesTheLineToBeOverEightyCharacters3');
 goog.require('notInClosurizedNamespacesSoNotExtra');
@@ -111,7 +112,8 @@ goog.something.private_ = 10;
 goog.something.usePrivateVariables = function() {
   var x = [
     goog.something.private_,
-    goog.Class.privateProperty_
+    goog.Class.privateProperty_,
+    x
   ];
 };
 
@@ -128,6 +130,19 @@ goog.super.long.DependencyNameThatForcesTheLineToBeOverEightyCharacters =
       DependencyNameThatForcesTheLineToBeOverEightyCharacters2();
   var x = new goog.super.long
       .DependencyNameThatForcesTheLineToBeOverEightyCharacters3();
+  // Use x to avoid a warning.
+  var x = [x];
+};
+
+
+/**
+ * A really long class name to to force a method definition to be greater than
+ * 80 lines. We should be grabbing the whole identifier regardless of how many
+ * lines it is on.
+ */
+goog.super.long.
+    DependencyNameThatForcesMethodDefinitionToSpanMultipleLinesFooBar.
+        prototype.someMethod = function() {
 };
 
 
@@ -144,11 +159,11 @@ goog.something.staticFunction = function() {
   goog.package.OtherClassName.property = 1;
 
   // Test case where inner class needs to be required explicitly.
-  var innerClass = new goog.package.OuterClassName.InnerClassName();
+  new goog.package.OuterClassName.InnerClassName();
 
   // Don't just use goog.bar for missing namespace, hard coded to never require
   // goog since it's never provided.
-  var mockConstructor = control.createConstructorMock(
+  control.createConstructorMock(
       /** @suppress {missingRequire} */ goog.foo.bar, 'Baz');
 
   goog.require('goog.shouldBeIgnored');
@@ -162,8 +177,7 @@ goog.something.staticFunction = function() {
  */
 goog.something.Else = function() {
   /** @suppress {missingRequire} */
-  var mockConstructor = this.control.createConstructorMock(
-      goog.foo.bar, 'Baz');
+  this.control.createConstructorMock(goog.foo.bar, 'Baz');
 };
 
 

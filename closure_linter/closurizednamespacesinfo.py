@@ -136,9 +136,6 @@ class ClosurizedNamespacesInfo(object):
       True if the given token corresponds to an unnecessary goog.provide
       statement, otherwise False.
     """
-    if self._scopified_file:
-      return False
-
     namespace = tokenutil.Search(token, TokenType.STRING_TEXT).string
 
     base_namespace = namespace.split('.', 1)[0]
@@ -165,9 +162,6 @@ class ClosurizedNamespacesInfo(object):
       True if the given token corresponds to an unnecessary goog.require
       statement, otherwise False.
     """
-    if self._scopified_file:
-      return False
-
     namespace = tokenutil.Search(token, TokenType.STRING_TEXT).string
 
     base_namespace = namespace.split('.', 1)[0]
@@ -204,9 +198,6 @@ class ClosurizedNamespacesInfo(object):
       string(key) is a namespace that should be provided by this file, but is
       not and integer(value) is first line number where it's defined.
     """
-    if self._scopified_file:
-      return dict()
-
     missing_provides = dict()
     for namespace, identifier, line_number in self._created_namespaces:
       if (not self._IsPrivateIdentifier(identifier) and
@@ -237,9 +228,6 @@ class ClosurizedNamespacesInfo(object):
       string(key) is a namespace that should be required by this file, but is
       not and integer(value) is first line number where it's used.
     """
-    if self._scopified_file:
-      return dict()
-
     external_dependencies = set(self._required_namespaces)
 
     # Assume goog namespace is always available.
@@ -359,26 +347,42 @@ class ClosurizedNamespacesInfo(object):
                 self._AddCreatedNamespace(state_tracker, message, token.line_number)
 
             break
-
       else:
         jsdoc = state_tracker.GetDocComment()
+        if token.metadata and token.metadata.aliased_symbol:
+          whole_identifier_string = token.metadata.aliased_symbol
         if jsdoc and jsdoc.HasFlag('typedef'):
           self._AddCreatedNamespace(state_tracker, whole_identifier_string,
                                     token.line_number,
                                     self.GetClosurizedNamespace(
                                         whole_identifier_string))
         else:
-          self._AddUsedNamespace(state_tracker, whole_identifier_string,
-                                 token.line_number)
+          if not (token.metadata and token.metadata.is_alias_definition):
+            self._AddUsedNamespace(state_tracker, whole_identifier_string,
+                                   token.line_number)
 
     elif token.type == TokenType.SIMPLE_LVALUE:
       identifier = token.values['identifier']
-      namespace = self.GetClosurizedNamespace(identifier)
-      if state_tracker.InFunction():
-        self._AddUsedNamespace(state_tracker, identifier, token.line_number)
-      elif namespace and namespace != 'goog':
-        self._AddCreatedNamespace(state_tracker, identifier, token.line_number,
-                                  namespace)
+      start_token = tokenutil.GetIdentifierStart(token)
+      if start_token and start_token != token:
+        # Multi-line identifier being assigned. Get the whole identifier.
+        identifier = tokenutil.GetIdentifierForToken(start_token)
+      else:
+        start_token = token
+      # If an alias is defined on the start_token, use it instead.
+      if (start_token and
+          start_token.metadata and
+          start_token.metadata.aliased_symbol and
+          not start_token.metadata.is_alias_definition):
+        identifier = start_token.metadata.aliased_symbol
+
+      if identifier:
+        namespace = self.GetClosurizedNamespace(identifier)
+        if state_tracker.InFunction():
+          self._AddUsedNamespace(state_tracker, identifier, token.line_number)
+        elif namespace and namespace != 'goog':
+          self._AddCreatedNamespace(state_tracker, identifier,
+                                    token.line_number, namespace)
 
     elif token.type == TokenType.DOC_FLAG:
       flag_type = token.attached_object.flag_type
