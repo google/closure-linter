@@ -167,9 +167,10 @@ class RequireProvideSorter(object):
       if token.type == Type.IDENTIFIER:
         if token.string == token_string:
           tokens.append(token)
-        elif token.string not in ['goog.require', 'goog.provide']:
-          # The goog.provide and goog.require identifiers are at the top of the
-          # file. So if any other identifier is encountered, return.
+        elif token.string not in [
+            'goog.provide', 'goog.require', 'goog.setTestOnly']:
+          # These 3 identifiers are at the top of the file. So if any other
+          # identifier is encountered, return.
           break
       token = token.next
 

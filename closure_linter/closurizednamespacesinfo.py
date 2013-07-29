@@ -29,7 +29,7 @@ import re
 from closure_linter import javascripttokens
 from closure_linter import tokenutil
 
-# pylint: disable-msg=C6409
+# pylint: disable=g-bad-name
 TokenType = javascripttokens.JavaScriptTokenType
 
 DEFAULT_EXTRA_NAMESPACES = [
@@ -433,7 +433,8 @@ class ClosurizedNamespacesInfo(object):
       return
 
     namespace = self.GetClosurizedNamespace(identifier)
-    if namespace:
+    # b/5362203 If its a variable in scope then its not a required namespace.
+    if namespace and not state_tracker.IsVariableInScope(namespace):
       self._used_namespaces.append([namespace, identifier, line_number])
 
   def GetClosurizedNamespace(self, identifier):

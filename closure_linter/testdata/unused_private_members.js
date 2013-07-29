@@ -36,6 +36,13 @@ dummy.Something = function() {
    * @private
    */
   this.unusedVariable_ = 1;
+
+  /**
+   * @type {number}
+   * @private
+   * @suppress {unusedPrivateMembers}
+   */
+  this.suppressedUnusedVariable_ = 1;
 };
 
 
@@ -57,6 +64,14 @@ dummy.Something.UNUSED_CONSTANT_ = 1;
 /**
  * @type {number}
  * @private
+ * @suppress {unusedPrivateMembers}
+ */
+dummy.Something.SUPPRESSED_UNUSED_CONSTANT_ = 1;
+
+
+/**
+ * @type {number}
+ * @private
  */
 dummy.Something.normalStaticVariable_ = 1;
 
@@ -72,6 +87,14 @@ dummy.Something.unusedStaticVariable_ = 1;
 /**
  * @type {number}
  * @private
+ * @suppress {unusedPrivateMembers}
+ */
+dummy.Something.suppressedUnusedStaticVariable_ = 1;
+
+
+/**
+ * @type {number}
+ * @private
  */
 dummy.Something.prototype.normalVariableOnPrototype_ = 1;
 
@@ -82,6 +105,14 @@ dummy.Something.prototype.normalVariableOnPrototype_ = 1;
  * @private
  */
 dummy.Something.prototype.unusedVariableOnPrototype_ = 1;
+
+
+/**
+ * @type {number}
+ * @private
+ * @suppress {unusedPrivateMembers}
+ */
+dummy.Something.prototype.suppressedUnusedVariableOnPrototype_ = 1;
 
 
 /**
@@ -127,6 +158,16 @@ dummy.Something.unusedStaticMethod_ = function() {
 
 
 /**
+ * Unused static method.
+ * @private
+ * @suppress {unusedPrivateMembers}
+ */
+dummy.Something.suppressedUnusedStaticMethod_ = function() {
+  // Do nothing.
+};
+
+
+/**
  * Normal static method.
  * @private
  */
@@ -141,6 +182,16 @@ dummy.Something.normalStaticMethod_ = function() {
  * @private
  */
 dummy.Something.prototype.unusedMethod_ = function() {
+  // Do nothing.
+};
+
+
+/**
+ * Unused non-static method that is suppressed.
+ * @private
+ * @suppress {unusedPrivateMembers}
+ */
+dummy.Something.prototype.suppressedUnusedMethod_ = function() {
   // Do nothing.
 };
 

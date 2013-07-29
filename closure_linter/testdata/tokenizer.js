@@ -55,6 +55,10 @@ if (x) {
 // recognized as operators.
 a -= b; a -= c; a ^= c >>> 13; a >>>= 1;
 
+// Regression test as xor was not allowed on the end of a line.
+x = 1000 ^
+    45;
+
 // Regression test for proper number parsing.  If parsed incorrectly, some of
 // these notations can lead to missing spaces errors.
 var x = 1e-6 + 1e+6 + 0. + .5 + 0.5 + 0.e-6 + .5e-6 + 0.5e-6 + 0x123abc +

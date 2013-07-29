@@ -69,4 +69,4 @@ def ShouldReportError(error):
       errors.MISSING_MEMBER_DOCUMENTATION,
       errors.MISSING_PRIVATE,
       errors.MISSING_JSDOC_TAG_THIS)) and
-          not FLAGS.disable or error not in disabled_error_nums)
+          (not FLAGS.disable or error not in disabled_error_nums))

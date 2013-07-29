@@ -109,6 +109,7 @@ class DocFlag(object):
       'accessControls',
       'ambiguousFunctionDecl',
       'checkRegExp',
+      'checkStructDictInheritance',
       'checkTypes',
       'checkVars',
       'const',
@@ -134,6 +135,7 @@ class DocFlag(object):
       'undefinedVars',
       'underscore',
       'unknownDefines',
+      'unusedPrivateMembers',
       'uselessCode',
       'visibility',
       'with'])
@@ -144,9 +146,10 @@ class DocFlag(object):
 
   HAS_TYPE = frozenset([
       'define', 'enum', 'extends', 'implements', 'param', 'return', 'type',
-      'suppress'])
+      'suppress', 'const'])
 
-  TYPE_ONLY = frozenset(['enum', 'extends', 'implements', 'suppress', 'type'])
+  TYPE_ONLY = frozenset(['enum', 'extends', 'implements', 'suppress', 'type',
+                         'const'])
 
   HAS_NAME = frozenset(['param'])
 
@@ -187,13 +190,14 @@ class DocFlag(object):
     self.name = None
     if self.flag_type in self.HAS_NAME:
       # Handle bad case, name could be immediately after flag token.
-      self.name_token = _GetNextIdentifierToken(flag_token)
+      self.name_token = _GetNextPartialIdentifierToken(flag_token)
 
       # Handle good case, if found token is after type start, look for
-      # identifier after type end, since types contain identifiers.
+      # a identifier (substring to cover cases like [cnt] b/4197272) after
+      # type end, since types contain identifiers.
       if (self.type and self.name_token and
           tokenutil.Compare(self.name_token, self.type_start_token) > 0):
-        self.name_token = _GetNextIdentifierToken(self.type_end_token)
+        self.name_token = _GetNextPartialIdentifierToken(self.type_end_token)
 
       if self.name_token:
         self.name = self.name_token.string
@@ -543,28 +547,25 @@ def _GetMatchingEndBraceAndContents(start_brace):
   return token, ''.join(contents)
 
 
-def _GetNextIdentifierToken(start_token):
-  """Searches for and returns the first identifier at the beginning of a token.
+def _GetNextPartialIdentifierToken(start_token):
+  """Returns the first token having identifier as substring after a token.
 
-  Searches each token after the start to see if it starts with an identifier.
-  If found, will split the token into at most 3 piecies: leading whitespace,
-  identifier, rest of token, returning the identifier token. If no identifier is
-  found returns None and changes no tokens. Search is abandoned when a
-  FLAG_ENDING_TYPE token is found.
+  Searches each token after the start to see if it contains an identifier.
+  If found, token is returned. If no identifier is found returns None.
+  Search is abandoned when a FLAG_ENDING_TYPE token is found.
 
   Args:
     start_token: The token to start searching after.
 
   Returns:
-    The identifier token is found, None otherwise.
+    The token found containing identifier, None otherwise.
   """
   token = start_token.next
 
-  while token and not token.type in Type.FLAG_ENDING_TYPES:
-    match = javascripttokenizer.JavaScriptTokenizer.IDENTIFIER.match(
+  while token and token.type not in Type.FLAG_ENDING_TYPES:
+    match = javascripttokenizer.JavaScriptTokenizer.IDENTIFIER.search(
         token.string)
-    if (match is not None and token.type == Type.COMMENT and
-        len(token.string) == len(match.group(0))):
+    if match is not None and token.type == Type.COMMENT:
       return token
 
     token = token.next
@@ -701,6 +702,7 @@ class StateTracker(object):
     self._last_line = None
     self._first_token = None
     self._documented_identifiers = set()
+    self._variables_in_scope = []
 
   def InFunction(self):
     """Returns true if the current token is within a function.
@@ -963,6 +965,29 @@ class StateTracker(object):
     """Return the very first token in the file."""
     return self._first_token
 
+  def IsVariableInScope(self, token_string):
+    """Checks if string is variable in current scope.
+
+    For given string it checks whether the string is a defined variable
+    (including function param) in current state.
+
+    E.g. if variables defined (variables in current scope) is docs
+    then docs, docs.length etc will be considered as variable in current
+    scope. This will help in avoding extra goog.require for variables.
+
+    Args:
+      token_string: String to check if its is a variable in current scope.
+
+    Returns:
+      true if given string is a variable in current scope.
+    """
+    for variable in self._variables_in_scope:
+      if (token_string == variable
+          or token_string.startswith(variable + '.')):
+        return True
+
+    return False
+
   def HandleToken(self, token, last_non_space_token):
     """Handles the given token and updates state.
 
@@ -984,6 +1009,12 @@ class StateTracker(object):
       # whether a block is a CODE or OBJECT_LITERAL block varies significantly
       # by language.
       self._block_types.append(self.GetBlockType(token))
+
+      # When entering a function body, record its parameters.
+      if self.InFunction():
+        function = self._function_stack[-1]
+        if self._block_depth == function.block_depth + 1:
+          function.parameters = self.GetParams()
 
     # Track block depth.
     elif type == Type.END_BLOCK:
@@ -1057,11 +1088,17 @@ class StateTracker(object):
       self._function_stack.append(function)
       self._functions_by_name[name] = function
 
+      # Add a delimiter in stack for scope variables to define start of
+      # function. This helps in popping variables of this function when
+      # function declaration ends.
+      self._variables_in_scope.append('')
+
     elif type == Type.START_PARAMETERS:
       self._cumulative_params = ''
 
     elif type == Type.PARAMETERS:
       self._cumulative_params += token.string
+      self._variables_in_scope.extend(self.GetParams())
 
     elif type == Type.KEYWORD and token.string == 'return':
       next_token = tokenutil.SearchExcept(token, Type.NON_CODE_TYPES)
@@ -1074,6 +1111,17 @@ class StateTracker(object):
       function = self.GetFunction()
       if function:
         function.has_throw = True
+
+    elif type == Type.KEYWORD and token.string == 'var':
+      function = self.GetFunction()
+      next_token = tokenutil.Search(token, [Type.IDENTIFIER,
+                                            Type.SIMPLE_LVALUE])
+
+      if next_token:
+        if next_token.type == Type.SIMPLE_LVALUE:
+          self._variables_in_scope.append(next_token.values['identifier'])
+        else:
+          self._variables_in_scope.append(next_token.string)
 
     elif type == Type.SIMPLE_LVALUE:
       identifier = token.values['identifier']
@@ -1134,8 +1182,16 @@ class StateTracker(object):
       if self.InFunction() and self.IsFunctionClose():
         # TODO(robbyw): Detect the function's name for better errors.
         function = self._function_stack.pop()
-        function.parameters = self.GetParams()
         function.end_token = token
+
+        # Pop all variables till delimiter ('') those were defined in the
+        # function being closed so make them out of scope.
+        while self._variables_in_scope and self._variables_in_scope[-1]:
+          self._variables_in_scope.pop()
+
+        # Pop delimiter
+        if self._variables_in_scope:
+          self._variables_in_scope.pop()
 
     elif type == Type.END_PARAMETERS and self._doc_comment:
       self._doc_comment = None

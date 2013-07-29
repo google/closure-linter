@@ -16,7 +16,7 @@
 """Pass that scans for goog.scope aliases and lint/usage errors."""
 
 # Allow non-Google copyright
-# pylint: disable-msg=C6304
+# pylint: disable=g-bad-file-header
 
 __author__ = ('nnaze@google.com (Nathan Naze)')
 

@@ -215,6 +215,13 @@ def DeleteToken(token):
   Args:
     token: The token to delete
   """
+  # When deleting a token, we do not update the deleted token itself to make
+  # sure the previous and next pointers are still pointing to tokens which are
+  # not deleted.  Also it is very hard to keep track of all previously deleted
+  # tokens to update them when their pointers become invalid.  So we add this
+  # flag that any token linked list iteration logic can skip deleted node safely
+  # when its current token is deleted.
+  token.is_deleted = True
   if token.previous:
     token.previous.next = token.next
 

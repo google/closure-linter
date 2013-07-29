@@ -16,7 +16,7 @@
 """Unit tests for the error_fixer module."""
 
 # Allow non-Google copyright
-# pylint: disable-msg=C6304
+# pylint: disable=g-bad-file-header
 
 
 

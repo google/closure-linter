@@ -89,19 +89,6 @@ x = function() {
 };
 
 
-/**
- * @param {string} a <code>Add a period before tag code.</code>
- * @param {Object} b An object with the following properties:
- *     <ul>
- *       <li>'name' - The human readable name of the object.</li>
- *       <li>'id' - The unique id fo the object: missing period.</li>
- *     </ul>
- * @return {boolean} Add a period.
- */
-function xyz(a, b) {
-}
-
-
 
 /**
  * Missing a newline.
@@ -285,13 +272,6 @@ function someFunction() {}
 function someFunction() {}
 
 
-/**
- * This is to test punctuation mark injection in comments with HTML tags.
- * @param {string} v A value to be <a><code>ignored.</code></a>
- */
-function someFunction(v) {}
-
-
 // This is a comment.
 /**
  * This is to test that blank lines removed before a top level block skips any
@@ -306,9 +286,5 @@ function someFunction() {}
  * comments above the block.
  */
 function someFunction() {}
-
-// Previously, when auto-fixing the below line there would not be a space
-// between the . and the */
-/** @desc Single line description. */
 
 // File does not end with newline

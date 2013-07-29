@@ -24,6 +24,12 @@ goog.require('goog.events.EventHandler');
 
 var this_is_a_really_long_line = 100000000000000000000000000000000000000000000000; // LINE_TOO_LONG
 
+// Declaration in multiple lines.
+// Regression test for b/3009648
+var
+    a,
+    b = 10;
+
 // http://this.comment.should.be.allowed/because/it/is/a/URL/that/can't/be/broken/up
 
 
@@ -380,5 +386,13 @@ for (var i = 0; i < n; i++) {
 }
 
 myLabelA :  myLabelB : x > y ? 0 : 1; // EXTRA_SPACE, EXTRA_SPACE, EXTRA_SPACE
+
+// Regression test for bug 4269466.
+var a = new Scheme({default: 0});
+switch (foo) {
+  default:
+    var a = new Scheme({default: 0});
+    break;
+}
 
 /* comment not closed  // FILE_MISSING_NEWLINE, FILE_IN_BLOCK

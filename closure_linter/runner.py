@@ -16,7 +16,7 @@
 """Main lint function. Tokenizes file, runs passes, and feeds to checker."""
 
 # Allow non-Google copyright
-# pylint: disable-msg=C6304
+# pylint: disable=g-bad-file-header
 
 __author__ = 'nnaze@google.com (Nathan Naze)'
 
@@ -169,7 +169,7 @@ def RunMetaDataPass(start_token, metadata_pass, error_handler, filename=''):
                      'check the rest of file.'
                      '\nError "%s"' % (error_token, error_msg)), error_token))
     return error_token
-  except Exception:  # pylint: disable-msg=W0703
+  except Exception:  # pylint: disable=broad-except
     traceback.print_exc()
     error_handler.HandleError(
         error.Error(

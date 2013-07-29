@@ -16,7 +16,7 @@
 """Tools to match goog.scope alias statements."""
 
 # Allow non-Google copyright
-# pylint: disable-msg=C6304
+# pylint: disable=g-bad-file-header
 
 __author__ = ('nnaze@google.com (Nathan Naze)')
 

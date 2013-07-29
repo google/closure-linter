@@ -50,7 +50,7 @@ from closure_linter.common import simplefileflags as fileflags
 
 # Attempt import of multiprocessing (should be available in Python 2.6 and up).
 try:
-  # pylint: disable-msg=C6204
+  # pylint: disable=g-import-not-at-top
   import multiprocessing
 except ImportError:
   multiprocessing = None

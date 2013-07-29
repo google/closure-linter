@@ -23,7 +23,7 @@ from closure_linter import javascripttokens
 from closure_linter import requireprovidesorter
 from closure_linter import testutil
 
-# pylint: disable-msg=C6409
+# pylint: disable=g-bad-name
 TokenType = javascripttokens.JavaScriptTokenType
 
 
@@ -93,6 +93,51 @@ class RequireProvideSorterTest(googletest.TestCase):
     sorter.FixRequires(token)
 
     self.assertEquals(expected_lines, self._GetLines(token))
+
+  def fixRequiresTest_withTestOnly(self, position):
+    """Regression-tests sorting even with a goog.setTestOnly statement.
+
+    Args:
+      position: The position in the list where to insert the goog.setTestOnly
+                statement. Will be used to test all possible combinations for
+                this test.
+    """
+    input_lines = [
+        'goog.provide(\'package.subpackage.Whatever\');',
+        '',
+        'goog.require(\'package.subpackage.ClassB\');',
+        'goog.require(\'package.subpackage.ClassA\');'
+    ]
+    expected_lines = [
+        'goog.provide(\'package.subpackage.Whatever\');',
+        '',
+        'goog.require(\'package.subpackage.ClassA\');',
+        'goog.require(\'package.subpackage.ClassB\');'
+    ]
+    input_lines.insert(position, 'goog.setTestOnly();')
+    expected_lines.insert(position, 'goog.setTestOnly();')
+
+    token = testutil.TokenizeSourceAndRunEcmaPass(input_lines)
+
+    sorter = requireprovidesorter.RequireProvideSorter()
+    sorter.FixRequires(token)
+
+    self.assertEquals(expected_lines, self._GetLines(token))
+
+  def testFixRequires_withTestOnly(self):
+    """Regression-tests sorting even after a goog.setTestOnly statement."""
+
+    # goog.setTestOnly at first line.
+    self.fixRequiresTest_withTestOnly(position=0)
+
+    # goog.setTestOnly after goog.provide.
+    self.fixRequiresTest_withTestOnly(position=1)
+
+    # goog.setTestOnly before goog.require.
+    self.fixRequiresTest_withTestOnly(position=2)
+
+    # goog.setTestOnly after goog.require.
+    self.fixRequiresTest_withTestOnly(position=4)
 
   def _GetLines(self, token):
     """Returns an array of lines based on the specified token stream."""

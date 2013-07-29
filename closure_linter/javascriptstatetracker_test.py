@@ -16,7 +16,7 @@
 """Unit tests for the javascriptstatetracker module."""
 
 # Allow non-Google copyright
-# pylint: disable-msg=C6304
+# pylint: disable=g-bad-file-header
 
 __author__ = ('nnaze@google.com (Nathan Naze)')
 
@@ -42,6 +42,18 @@ function foo(aaa, bbb, ccc) {
 var bar = function(ddd, eee, fff) {
 
 };
+
+
+/**
+ * Verify that nested functions get their proper parameters recorded.
+ */
+var baz = function(ggg, hhh, iii) {
+  var qux = function(jjj, kkk, lll) {
+  };
+  // make sure that entering a new block does not change baz' parameters.
+  {};
+};
+
 """
 
 
@@ -49,15 +61,15 @@ class FunctionTest(googletest.TestCase):
 
   def testFunctionParse(self):
     functions, _ = testutil.ParseFunctionsAndComments(_FUNCTION_SCRIPT)
-    self.assertEquals(2, len(functions))
+    self.assertEquals(4, len(functions))
 
+    # First function
     function = functions[0]
     self.assertEquals(['aaa', 'bbb', 'ccc'], function.parameters)
 
     start_token = function.start_token
     end_token = function.end_token
 
-    # First function
     self.assertEquals(
         javascripttokens.JavaScriptTokenType.FUNCTION_DECLARATION,
         function.start_token.type)
@@ -74,13 +86,13 @@ class FunctionTest(googletest.TestCase):
 
     self.assertIsNone(function.doc)
 
+    # Second function
     function = functions[1]
     self.assertEquals(['ddd', 'eee', 'fff'], function.parameters)
 
     start_token = function.start_token
     end_token = function.end_token
 
-    # Second function
     self.assertEquals(
         javascripttokens.JavaScriptTokenType.FUNCTION_DECLARATION,
         function.start_token.type)
@@ -106,6 +118,51 @@ class FunctionTest(googletest.TestCase):
 
     self.assertEquals('JSDoc comment.',
                       tokenutil.TokensToString(comment_tokens).strip())
+
+    # Third function
+    function = functions[2]
+    self.assertEquals(['ggg', 'hhh', 'iii'], function.parameters)
+
+    start_token = function.start_token
+    end_token = function.end_token
+
+    self.assertEquals(
+        javascripttokens.JavaScriptTokenType.FUNCTION_DECLARATION,
+        function.start_token.type)
+
+    self.assertEquals('function', start_token.string)
+    self.assertEquals(19, start_token.line_number)
+    self.assertEquals(10, start_token.start_index)
+
+    self.assertEquals('}', end_token.string)
+    self.assertEquals(24, end_token.line_number)
+    self.assertEquals(0, end_token.start_index)
+
+    self.assertEquals('baz', function.name)
+    self.assertIsNotNone(function.doc)
+
+    # Fourth function (inside third function)
+    function = functions[3]
+    self.assertEquals(['jjj', 'kkk', 'lll'], function.parameters)
+
+    start_token = function.start_token
+    end_token = function.end_token
+
+    self.assertEquals(
+        javascripttokens.JavaScriptTokenType.FUNCTION_DECLARATION,
+        function.start_token.type)
+
+    self.assertEquals('function', start_token.string)
+    self.assertEquals(20, start_token.line_number)
+    self.assertEquals(12, start_token.start_index)
+
+    self.assertEquals('}', end_token.string)
+    self.assertEquals(21, end_token.line_number)
+    self.assertEquals(2, end_token.start_index)
+
+    self.assertEquals('qux', function.name)
+    self.assertIsNone(function.doc)
+
 
 
 class CommentTest(googletest.TestCase):

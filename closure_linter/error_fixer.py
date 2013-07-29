@@ -17,7 +17,7 @@
 """Main class responsible for automatically fixing simple style violations."""
 
 # Allow non-Google copyright
-# pylint: disable-msg=C6304
+# pylint: disable=g-bad-file-header
 
 __author__ = 'robbyw@google.com (Robert Walker)'
 
@@ -186,10 +186,6 @@ class ErrorFixer(errorhandler.ErrorHandler):
       if error.position:
         token.string = error.position.Set(token.string, '')
         self._AddFix(token)
-
-    elif code == errors.JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER:
-      token.string = error.position.Set(token.string, '.')
-      self._AddFix(token)
 
     elif code == errors.MISSING_LINE:
       if error.position.IsAtBeginning():

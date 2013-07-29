@@ -411,7 +411,8 @@ class EcmaMetaDataPass(object):
       self._AddContext(EcmaContext.SWITCH)
 
     elif (token_type == TokenType.KEYWORD and
-          token.string in ('case', 'default')):
+          token.string in ('case', 'default') and
+          self._context.type != EcmaContext.OBJECT_LITERAL):
       # Pop up to but not including the switch block.
       while self._context.parent.type != EcmaContext.SWITCH:
         self._PopContext()
@@ -504,11 +505,17 @@ class EcmaMetaDataPass(object):
       is_end_of_block = (token.type == TokenType.END_BLOCK and
           token.metadata.context.type != EcmaContext.OBJECT_LITERAL)
       is_multiline_string = token.type == TokenType.STRING_TEXT
+      is_continued_var_decl = (token.IsKeyword('var') and
+                               next_code and
+                               (next_code.type in [TokenType.IDENTIFIER,
+                                                   TokenType.SIMPLE_LVALUE]) and
+                               token.line_number < next_code.line_number)
       next_code_is_block = next_code and next_code.type == TokenType.START_BLOCK
       if (is_last_code_in_line and
           self._StatementCouldEndInContext() and
           not is_multiline_string and
           not is_end_of_block and
+          not is_continued_var_decl and
           not is_continued_identifier and
           not is_continued_operator and
           not is_continued_dot and

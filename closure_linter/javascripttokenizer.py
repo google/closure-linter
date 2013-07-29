@@ -159,8 +159,8 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
                    '!=', '<<=', '>>=', '<<', '>>', '>', '<', r'\+=', r'\+',
                    '--', '\^=', '-=', '-', '/=', '/', r'\*=', r'\*', '%=', '%',
                    '&&', r'\|\|', '&=', '&', r'\|=', r'\|', '=', '!', ':', '\?',
-                   r'\bdelete\b', r'\bin\b', r'\binstanceof\b', r'\bnew\b',
-                   r'\btypeof\b', r'\bvoid\b']
+                   r'\^', r'\bdelete\b', r'\bin\b', r'\binstanceof\b',
+                   r'\bnew\b', r'\btypeof\b', r'\bvoid\b']
   OPERATOR = re.compile('|'.join(OPERATOR_LIST))
 
   WHITESPACE = re.compile(r'\s+')

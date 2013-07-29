@@ -523,37 +523,6 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
         else:
           self._CheckForMissingSpaceBeforeToken(flag.description_start_token)
 
-          # We want punctuation to be inside of any tags ending a description,
-          # so strip tags before checking description. See bug 1127192. Note
-          # that depending on how lines break, the real description end token
-          # may consist only of stripped html and the effective end token can
-          # be different.
-          end_token = flag.description_end_token
-          end_string = htmlutil.StripTags(end_token.string).strip()
-          while (end_string == '' and not
-                 end_token.type in Type.FLAG_ENDING_TYPES):
-            end_token = end_token.previous
-            if end_token.type in Type.FLAG_DESCRIPTION_TYPES:
-              end_string = htmlutil.StripTags(end_token.string).rstrip()
-
-          if not (end_string.endswith('.') or end_string.endswith('?') or
-              end_string.endswith('!')):
-            # Find the position for the missing punctuation, inside of any html
-            # tags.
-            desc_str = end_token.string.rstrip()
-            while desc_str.endswith('>'):
-              start_tag_index = desc_str.rfind('<')
-              if start_tag_index < 0:
-                break
-              desc_str = desc_str[:start_tag_index].rstrip()
-            end_position = Position(len(desc_str), 0)
-
-            self._HandleError(
-                errors.JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER,
-                ('%s descriptions must end with valid punctuation such as a '
-                 'period.' % token.string),
-                end_token, end_position)
-
       if flag.flag_type in state.GetDocFlag().HAS_TYPE:
         if flag.type_start_token is not None:
           self._CheckForMissingSpaceBeforeToken(

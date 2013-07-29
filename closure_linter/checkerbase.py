@@ -17,7 +17,7 @@
 """Base classes for writing checkers that operate on tokens."""
 
 # Allow non-Google copyright
-# pylint: disable-msg=C6304
+# pylint: disable=g-bad-file-header
 
 __author__ = ('robbyw@google.com (Robert Walker)',
               'ajp@google.com (Andy Perelson)',
@@ -173,13 +173,20 @@ class CheckerBase(object):
 
     self._state_tracker.Reset()
     while token:
+      # When we are looking at a token and decided to delete the whole line, we
+      # will delete all of them in the "HandleToken()" below.  So the current
+      # token and subsequent ones may already be deleted here.  The way we
+      # delete a token does not wipe out the previous and next pointers of the
+      # deleted token.  So we need to check the token itself to make sure it is
+      # not deleted.
+      if not token.is_deleted:
+        # End the pass at the stop token
+        if stop_token and token is stop_token:
+          return
 
-      # End the pass at the stop token
-      if stop_token and token is stop_token:
-        return
+        self._state_tracker.HandleToken(
+            token, self._state_tracker.GetLastNonSpaceToken())
+        pass_function(token)
+        self._state_tracker.HandleAfterToken(token)
 
-      self._state_tracker.HandleToken(
-          token, self._state_tracker.GetLastNonSpaceToken())
-      pass_function(token)
-      self._state_tracker.HandleAfterToken(token)
       token = token.next

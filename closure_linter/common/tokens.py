@@ -70,6 +70,7 @@ class Token(object):
     self.line_number = line_number
     self.orig_line_number = orig_line_number
     self.values = values
+    self.is_deleted = False
 
     # These parts can only be computed when the file is fully tokenized
     self.previous = None

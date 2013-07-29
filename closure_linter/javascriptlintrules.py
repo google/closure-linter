@@ -111,7 +111,9 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
         if identifier.endswith('_') and not identifier.endswith('__'):
           doc_comment = state.GetDocComment()
           suppressed = (doc_comment and doc_comment.HasFlag('suppress') and
-                        doc_comment.GetFlag('suppress').type == 'underscore')
+                        (doc_comment.GetFlag('suppress').type == 'underscore' or
+                         doc_comment.GetFlag('suppress').type ==
+                         'unusedPrivateMembers'))
           if not suppressed:
             # Look for static members defined on a provided namespace.
             if namespaces_info:
@@ -180,8 +182,8 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
       if flag.flag_type in state.GetDocFlag().HAS_TYPE:
         # Check for both missing type token and empty type braces '{}'
         # Missing suppress types are reported separately and we allow enums
-        # without types.
-        if (flag.flag_type not in ('suppress', 'enum') and
+        # and const without types.
+        if (flag.flag_type not in ('suppress', 'enum', 'const') and
             (not flag.type or flag.type.isspace())):
           self._HandleError(errors.MISSING_JSDOC_TAG_TYPE,
                             'Missing type in %s tag' % token.string, token)
@@ -224,7 +226,11 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
         is_constructor = (
             doc_comment.HasFlag('constructor') or
             doc_comment.HasFlag('interface'))
-        is_file_overview = doc_comment.HasFlag('fileoverview')
+        # @fileoverview is an optional tag so if the dosctring is the first
+        # token in the file treat it as a file level docstring.
+        is_file_level_comment = (
+            doc_comment.HasFlag('fileoverview') or
+            not doc_comment.start_token.previous)
 
         # If the comment is not a file overview, and it does not immediately
         # precede some code, skip it.
@@ -232,7 +238,8 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
         # behavior at the top of a file.
         next_token = token.next
         if (not next_token or
-            (not is_file_overview and next_token.type in Type.NON_CODE_TYPES)):
+            (not is_file_level_comment and
+             next_token.type in Type.NON_CODE_TYPES)):
           return
 
         # Don't require extra blank lines around suppression of extra
@@ -245,7 +252,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
         # Find the start of this block (include comments above the block, unless
         # this is a file overview).
         block_start = doc_comment.start_token
-        if not is_file_overview:
+        if not is_file_level_comment:
           token = block_start.previous
           while token and token.type in Type.COMMENT_TYPES:
             block_start = token
@@ -269,14 +276,15 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
 
         # Only need blank line before file overview if it is not the beginning
         # of the file, e.g. copyright is first.
-        if is_file_overview and blank_lines == 0 and block_start.previous:
+        if is_file_level_comment and blank_lines == 0 and block_start.previous:
           error_message = 'Should have a blank line before a file overview.'
           expected_blank_lines = 1
         elif is_constructor and blank_lines != 3:
           error_message = (
               'Should have 3 blank lines before a constructor/interface.')
           expected_blank_lines = 3
-        elif not is_file_overview and not is_constructor and blank_lines != 2:
+        elif (not is_file_level_comment and not is_constructor and
+              blank_lines != 2):
           error_message = 'Should have 2 blank lines between top-level blocks.'
           expected_blank_lines = 2
 

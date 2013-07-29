@@ -60,7 +60,6 @@ function badTags() {
 }
 
 
-// +4: JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER
 // +4: MISSING_JSDOC_TAG_DESCRIPTION
 /**
  * @license Description.
@@ -660,6 +659,22 @@ class.useTypeWithConst = functionWithUntypedReturnValue();
 
 
 /**
+ * Another constant property, but using type with const if the type can't
+ * be inferred.
+ * @const {string}
+ */
+class.useTypeWithConst = functionWithUntypedReturnValue();
+
+
+// +3: MISSING_BRACES_AROUND_TYPE
+/**
+ * Constant property without proper type.
+ * @const string
+ */
+class.useImproperTypeWithConst = functionWithUntypedReturnValue();
+
+
+/**
  * @define {boolean} A define.
  */
 var COMPILED = false;
@@ -744,70 +759,6 @@ class.goodOverrideDocs = function() {
 };
 
 
-// +6: JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER
-// +9: JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER
-// +19: JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER
-/**
- * Test for no periods at end of param and return docs.
- * @param {string} a Simple case.
- * @param {string} b Simple error
- * @param {string} c Long long long long long long long long long long long long
- *     long long long long long long long long good case.
- * @param {string} d Long long long long long long long long long long long long
- *     long long long long long long long long error
- * @param {string} e This case is good.  Even though it has two periods in it.
- * @param {string} f This long long long * long * long long long case is good.
- *     Even though it has a period at the end of another line.
- * @param {string} g This one is ok. {@code Inline} tags are no problem.
- * @param {string} h This description is ok even though it spans several lines.
- *     It should continue to stay that way because regressions are bad and we
- *     constantly try to avoid them. So there!
- * @param {string} i This description is bad even though it contains some.
- *     punctuation at, random places?!? This is because we expect every
- *     description to end with punctuation. Isn't that picky? Yes it is but it's
- *     still the way we are going to do it
- *
- *
- * Note: This isn't part of any description. Good grammar here shouldn't count
- * towards proper ending punctuation for the last parameter.
- */
-x.y = function(a, b, c, d, e, f, g, h, i) {
-};
-
-
-// +7: JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER
-/**
- * More tests for ending descriptions with proper punctuation.
- * @param {string} a Accept any valid punctuation ending?
- * @param {Object} b An object with the following properties:
- *     <ul>
- *       <li>'name' - The human readable name of the object.</li>
- *       <li>'id' - The unique id fo the object</li>
- *     </ul>
- * @param {string} c A regression test for bug 1381054 where {@code stuff}
- *     inline tags and multi-line descriptions mixed to not have valid
- *     punctuation detection working.
- * @return {boolean} Whether {@code a} was a string?
- *
- * Note: This is a regression test shouldn't check this period as part of
- * checking the return flag
- */
-x.z = function(a, b, c) {
-  return false;
-};
-
-
-// +3: JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER
-/**
- * @param {string} a Should still be missing valid punctuation ending even
- *     even though next line is missing the standard '*'
-
- * NOTE: This good punctuation shouldn't help.
- */
-x.a = function(a) {
-};
-
-
 /**
  * Test that flags embedded in docs don't trigger ends with invalid character
  * error.
@@ -840,7 +791,6 @@ x.z.a = function() {
 };
 
 
-// +4: JSDOC_TAG_DESCRIPTION_ENDS_WITH_INVALID_CHARACTER
 /**
  * @bug 1492606 HTML parse error for JSDoc descriptions grashed gjslint.
  * @param {string} description a long email or common name, e.g.,

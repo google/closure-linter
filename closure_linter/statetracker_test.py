@@ -16,7 +16,7 @@
 """Unit tests for the statetracker module."""
 
 # Allow non-Google copyright
-# pylint: disable-msg=C6304
+# pylint: disable=g-bad-file-header
 
 __author__ = ('nnaze@google.com (Nathan Naze)')
 
@@ -26,6 +26,7 @@ import unittest as googletest
 
 from closure_linter import javascripttokens
 from closure_linter import statetracker
+from closure_linter import testutil
 
 
 class _FakeDocFlag(object):
@@ -102,6 +103,20 @@ class DocCommentTest(googletest.TestCase):
         '<DocComment: [\'foo\', \'bar\'], [@param foo, @param bar]>',
         repr(comment))
 
+  def testDocFlagParam(self):
+    comment = self._ParseComment("""
+    /**
+     * @param {string} [name] Name of customer.
+     */""")
+    flag = comment.GetFlag('param')
+    self.assertEquals('string', flag.type)
+    self.assertEquals('[name]', flag.name)
+
+  def _ParseComment(self, script):
+    """Parse a script that contains one comment and return it."""
+    _, comments = testutil.ParseFunctionsAndComments(script)
+    self.assertEquals(1, len(comments))
+    return comments[0]
 
 if __name__ == '__main__':
   googletest.main()

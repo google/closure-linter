@@ -294,6 +294,8 @@ class IndentationRules(object):
       elif token_type == Type.PARAMETERS and token.string.endswith(','):
         # Parameter lists.
         self._Add(TokenInfo(token))
+      elif token.IsKeyword('var'):
+        self._Add(TokenInfo(token))
       elif token.metadata.is_implied_semicolon:
         self._PopTransient()
     elif token.IsAssignment():

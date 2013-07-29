@@ -27,7 +27,7 @@ from closure_linter import javascripttokens
 from closure_linter import testutil
 from closure_linter import tokenutil
 
-# pylint: disable-msg=C6409
+# pylint: disable=g-bad-name
 TokenType = javascripttokens.JavaScriptTokenType
 
 
@@ -414,6 +414,45 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
     self.assertEquals(1, len(namespaces_info.GetMissingRequires()),
                       'The whole class, not the object, should be required.')
 
+  def testGetMissingRequires_variableWithSameName(self):
+    """Tests that we should not goog.require variables and parameters.
+
+    b/5362203 Variables in scope are not missing namespaces.
+    """
+    input_lines = [
+        'goog.provide(\'Foo\');',
+        'Foo.A = function();',
+        'Foo.A.prototype.method = function(ab) {',
+        '  if (ab) {',
+        '    var docs;',
+        '    var lvalue = new Obj();',
+        '    // Variable in scope hence not goog.require here.',
+        '    docs.foo.abc = 1;',
+        '    lvalue.next();',
+        '  }',
+        '  // Since js is function scope this should also not goog.require.',
+        '  docs.foo.func();',
+        '  // Its not a variable in scope hence goog.require.',
+        '  dummy.xyz.reset();',
+        ' return this.method2();',
+        '};',
+        'Foo.A.prototype.method1 = function(docs, abcd, xyz) {',
+        '  // Parameter hence not goog.require.',
+        '  docs.nodes.length = 2;',
+        '  lvalue.abc.reset();',
+        '};'
+    ]
+
+    namespaces_info = self._GetNamespacesInfoForScript(input_lines, ['Foo',
+                                                                     'docs',
+                                                                     'lvalue',
+                                                                     'dummy'])
+    missing_requires = namespaces_info.GetMissingRequires()
+    self.assertEquals(2, len(missing_requires))
+    self.assertItemsEqual(
+        {'dummy.xyz': 14,
+         'lvalue.abc': 20}, missing_requires)
+
   def testIsFirstProvide(self):
     """Tests operation of the isFirstProvide method."""
     input_lines = [
@@ -542,7 +581,9 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
     alias_pass.Process(token)
 
     while token:
+      state_tracker.HandleToken(token, state_tracker.GetLastNonSpaceToken())
       namespaces_info.ProcessToken(token, state_tracker)
+      state_tracker.HandleAfterToken(token)
       token = token.next
 
     return namespaces_info
