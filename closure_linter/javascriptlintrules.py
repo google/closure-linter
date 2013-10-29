@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#
 # Copyright 2011 The Closure Linter Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,7 +88,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
 
     # For @param don't ignore record type.
     if (self.__ContainsRecordType(token) and
-        not token.attached_object.flag_type == 'param'):
+        token.attached_object.flag_type != 'param'):
       # We should bail out and not emit any warnings for this annotation.
       # TODO(nicksantos): Support record types for real.
       state.GetDocComment().Invalidate()
@@ -124,7 +123,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
               provided_namespaces = set()
 
             # Skip cases of this.something_.somethingElse_.
-            regex = re.compile('^this\.[a-zA-Z_]+$')
+            regex = re.compile(r'^this\.[a-zA-Z_]+$')
             if namespace in provided_namespaces or regex.match(identifier):
               variable = identifier.split('.')[-1]
               self._declared_private_member_tokens[variable] = token
@@ -152,7 +151,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
           if error_check.ShouldCheck(Rule.VARIABLE_ARG_MARKER):
             # Check for variable arguments marker in type.
             if (flag.type.startswith('...') and
-                not flag.name == 'var_args'):
+                flag.name != 'var_args'):
               self._HandleError(errors.JSDOC_MISSING_VAR_ARGS_NAME,
                                 'Variable length argument %s must be renamed '
                                 'to var_args.' % flag.name,
@@ -207,7 +206,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
             errors.UNNECESSARY_DOUBLE_QUOTED_STRING,
             'Single-quoted string preferred over double-quoted string.',
             token,
-            Position.All(token.string))
+            position=Position.All(token.string))
 
     elif token.type == Type.END_DOC_COMMENT:
       doc_comment = state.GetDocComment()
@@ -291,8 +290,8 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
         if error_message:
           self._HandleError(
               errors.WRONG_BLANK_LINE_COUNT, error_message,
-              block_start, Position.AtBeginning(),
-              expected_blank_lines - blank_lines)
+              block_start, position=Position.AtBeginning(),
+              fix_data=expected_blank_lines - blank_lines)
 
     elif token.type == Type.END_BLOCK:
       if state.InFunction() and state.IsFunctionClose():
@@ -310,7 +309,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
             self._HandleError(
                 errors.MISSING_RETURN_DOCUMENTATION,
                 'Missing @return JsDoc in function with non-trivial return',
-                function.doc.end_token, Position.AtBeginning())
+                function.doc.end_token, position=Position.AtBeginning())
           elif (not function.has_return and
                 not function.has_throw and
                 function.doc and
@@ -324,7 +323,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
               self._HandleError(
                   errors.UNNECESSARY_RETURN_DOCUMENTATION,
                   'Found @return JsDoc on function that returns nothing',
-                  return_flag.flag_token, Position.AtBeginning())
+                  return_flag.flag_token, position=Position.AtBeginning())
 
         # b/4073735. Method in object literal definition of prototype can
         # safely reference 'this'.
@@ -353,14 +352,14 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
         # case it should be '='.
         if block_start:
           previous_code = tokenutil.SearchExcept(block_start,
-                                                 Type.NON_CODE_TYPES, None,
-                                                 True)
+                                                 Type.NON_CODE_TYPES,
+                                                 reverse=True)
 
         # If previous token to block is '=' then get its previous token.
         if previous_code and previous_code.IsOperator('='):
           previous_previous_code = tokenutil.SearchExcept(previous_code,
                                                           Type.NON_CODE_TYPES,
-                                                          None, True)
+                                                          reverse=True)
 
         # If variable/token before '=' ends with '.prototype' then its above
         # case of prototype defined with object literal.
@@ -380,7 +379,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
               'this usually means you are trying to reference "this" in '
               'a static function, or you have forgotten to mark a '
               'constructor with @constructor)',
-              function.doc.end_token, Position.AtBeginning())
+              function.doc.end_token, position=Position.AtBeginning())
 
     elif token.type == Type.IDENTIFIER:
       if token.string == 'goog.inherits' and not state.InFunction():
@@ -389,7 +388,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
               errors.MISSING_LINE,
               'Missing newline between constructor and goog.inherits',
               token,
-              Position.AtBeginning())
+              position=Position.AtBeginning())
 
         extra_space = state.GetLastNonSpaceToken().next
         while extra_space != token:
@@ -406,16 +405,19 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
       elif (token.string == 'goog.provide' and
             not state.InFunction() and
             namespaces_info is not None):
-        namespace = tokenutil.Search(token, Type.STRING_TEXT).string
+        namespace = tokenutil.GetStringAfterToken(token)
 
         # Report extra goog.provide statement.
-        if namespaces_info.IsExtraProvide(token):
-          msg = 'Unnecessary goog.provide: ' +  namespace
+        if not namespace or namespaces_info.IsExtraProvide(token):
+          if not namespace:
+            msg = 'Empty namespace in goog.provide'
+          else:
+            msg = 'Unnecessary goog.provide: ' +  namespace
 
-          # Hint to user if this is a Test namespace.
-          if namespace.endswith('Test'):
-            msg += (' *Test namespaces must be mentioned in the '
-                    'goog.setTestOnly() call')
+            # Hint to user if this is a Test namespace.
+            if namespace.endswith('Test'):
+              msg += (' *Test namespaces must be mentioned in the '
+                      'goog.setTestOnly() call')
 
           self._HandleError(
               errors.EXTRA_GOOG_PROVIDE,
@@ -444,7 +446,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
       elif (token.string == 'goog.require' and
             not state.InFunction() and
             namespaces_info is not None):
-        namespace = tokenutil.Search(token, Type.STRING_TEXT).string
+        namespace = tokenutil.GetStringAfterToken(token)
 
         # If there are no provide statements, missing provides should be
         # reported before the first require.
@@ -458,11 +460,15 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
                 True)
 
         # Report extra goog.require statement.
-        if namespaces_info.IsExtraRequire(token):
+        if not namespace or namespaces_info.IsExtraRequire(token):
+          if not namespace:
+            msg = 'Empty namespace in goog.require'
+          else:
+            msg = 'Unnecessary goog.require: ' + namespace
 
           self._HandleError(
               errors.EXTRA_GOOG_REQUIRE,
-              'Unnecessary goog.require: ' + namespace,
+              msg,
               token, position=Position.AtBeginning())
 
         # Report missing goog.require statements.
@@ -484,14 +490,14 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
       if (not token.metadata.IsUnaryOperator() and not last_in_line
           and not token.next.IsComment()
           and not token.next.IsOperator(',')
-          and not token.next.type in (Type.WHITESPACE, Type.END_PAREN,
+          and token.next.type not in (Type.WHITESPACE, Type.END_PAREN,
                                       Type.END_BRACKET, Type.SEMICOLON,
                                       Type.START_BRACKET)):
         self._HandleError(
             errors.MISSING_SPACE,
             'Missing space after "%s"' % token.string,
             token,
-            Position.AtEnd(token.string))
+            position=Position.AtEnd(token.string))
     elif token.type == Type.WHITESPACE:
       first_in_line = token.IsFirstInLine()
       last_in_line = token.IsLastInLine()
@@ -506,18 +512,24 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
               errors.EXTRA_SPACE,
               'Extra space after "%s"' % token.previous.string,
               token,
-              Position.All(token.string))
+              position=Position.All(token.string))
     elif token.type == Type.SEMICOLON:
-      previous_token = tokenutil.SearchExcept(token, Type.NON_CODE_TYPES, None,
-                                              True)
-      if (previous_token.type == Type.KEYWORD and
-          not previous_token.string in ['break', 'continue', 'return']):
+      previous_token = tokenutil.SearchExcept(token, Type.NON_CODE_TYPES,
+                                              reverse=True)
+      if not previous_token:
+        self._HandleError(
+            errors.REDUNDANT_SEMICOLON,
+            'Semicolon without any statement',
+            token,
+            position=Position.AtEnd(token.string))
+      elif (previous_token.type == Type.KEYWORD and
+            previous_token.string not in ['break', 'continue', 'return']):
         self._HandleError(
             errors.REDUNDANT_SEMICOLON,
             ('Semicolon after \'%s\' without any statement.'
              ' Looks like an error.' % previous_token.string),
             token,
-            Position.AtEnd(token.string))
+            position=Position.AtEnd(token.string))
 
   def _CheckUnusedLocalVariables(self, token, state):
     """Checks for unused local variables in function blocks.
@@ -527,9 +539,9 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
       state: The state tracker.
     """
     # We don't use state.InFunction because that disregards scope functions.
-    inFunction = state.FunctionDepth() > 0;
+    in_function = state.FunctionDepth() > 0
     if token.type == Type.SIMPLE_LVALUE or token.type == Type.IDENTIFIER:
-      if inFunction:
+      if in_function:
         identifier = token.string
         # Check whether the previous token was var.
         previous_code_token = tokenutil.CustomSearch(
@@ -548,7 +560,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
           # variable.
           self._MarkLocalVariableUsed(token)
     elif token.type == Type.START_BLOCK:
-      if inFunction and state.IsFunctionOpen():
+      if in_function and state.IsFunctionOpen():
         # Push a new map onto the stack
         self._unused_local_variables_by_scope.append({})
     elif token.type == Type.END_BLOCK:
@@ -556,13 +568,16 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
         # Pop the stack and report any remaining locals as unused.
         unused_local_variables = self._unused_local_variables_by_scope.pop()
         for unused_token in unused_local_variables.values():
-          self._HandleError(errors.UNUSED_LOCAL_VARIABLE,
+          self._HandleError(
+              errors.UNUSED_LOCAL_VARIABLE,
               'Unused local variable: %s.' % unused_token.string,
               unused_token)
 
   def _MarkLocalVariableUsed(self, token):
-    """Marks the local variable in the scope nearest to the current scope that
-    matches the given token as used.
+    """Marks the local variable as used in the relevant scope.
+
+    Marks the local variable as used in the scope nearest to the current
+    scope that matches the given token.
 
     Args:
       token: The token representing the potential usage of a local variable.

@@ -272,4 +272,16 @@ function someFunction() {}
  */
 function someFunction() {}
 
+
+/**
+ * Parameters don't have proper spaces.
+ * @param {number} a
+ * @param {number} b
+ * @param {number} d
+ * @param {number} e
+ * @param {number} f
+ */
+function someFunction(a, b,d,   e, f) {
+}
+
 // File does not end with newline

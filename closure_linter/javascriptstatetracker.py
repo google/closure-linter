@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#
 # Copyright 2008 The Closure Linter Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -121,8 +120,7 @@ class JavaScriptStateTracker(statetracker.StateTracker):
     Returns:
       Code block type for current token.
     """
-    last_code = tokenutil.SearchExcept(token, Type.NON_CODE_TYPES, None,
-                                       True)
+    last_code = tokenutil.SearchExcept(token, Type.NON_CODE_TYPES, reverse=True)
     if last_code.type in (Type.END_PARAMETERS, Type.END_PAREN,
                           Type.KEYWORD) and not last_code.IsKeyword('return'):
       return self.CODE
@@ -145,7 +143,7 @@ class JavaScriptStateTracker(statetracker.StateTracker):
 
     Args:
       token: The token to handle.
-      last_non_space_token:
+      last_non_space_token: The last non space token encountered
     """
     if token.type == Type.START_BLOCK:
       self._block_stack.append(token)

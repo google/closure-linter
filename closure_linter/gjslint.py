@@ -226,7 +226,7 @@ def _FormatTime(t):
     return '%.2fs' % t
 
 
-def main(argv = None):
+def main(argv=None):
   """Main function.
 
   Args:

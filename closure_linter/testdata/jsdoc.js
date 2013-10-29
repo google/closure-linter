@@ -206,6 +206,21 @@ function unnecessaryMissingReturnDoc() {
 }
 
 
+/**
+ * Return doc is present, but the function doesn't have a 'return' statement.
+ * The "suppress" causes the compiler to ignore the error.
+ * @suppress {missingReturn}
+ * @return {string}
+ */
+function unnecessaryMissingReturnDocWithSuppress() {
+  if (false) {
+    return '';
+  } else {
+    // Missing return statement in this branch.
+  }
+}
+
+
 // +3: MISSING_JSDOC_TAG_TYPE
 // +2: UNNECESSARY_RETURN_DOCUMENTATION
 /**
@@ -493,6 +508,16 @@ class.dom_ = function() {
 };
 
 
+/**
+ * Allow compound suppression.
+ * @private
+ */
+class.dom_ = function() {
+  /** @suppress {visibility,with} */
+  with ({}) {}
+};
+
+
 // +4: UNNECESSARY_SUPPRESS
 /**
  * Some docs.
@@ -503,22 +528,45 @@ class.unnecessarySuppress_ = function() {
 };
 
 
+/**
+ * Some docs.
+ * @public
+ */
+class.goodProtected = function() {
+};
+
+
+/**
+ * Some docs.
+ * @public
+ */
+class.badProtected_ = function() { // MISSING_PRIVATE
+};
+
+
+/**
+ * Example of a legacy name.
+ * @public
+ * @suppress {underscore}
+ */
+class.dom_ = function() {
+};
+
+
+// +5: JSDOC_PREFER_QUESTION_TO_PIPE_NULL
 // +7: JSDOC_PREFER_QUESTION_TO_PIPE_NULL
-// +7: JSDOC_ILLEGAL_QUESTION_WITH_PIPE
-// +8: JSDOC_PREFER_QUESTION_TO_PIPE_NULL
-// +8: JSDOC_ILLEGAL_QUESTION_WITH_PIPE
 /**
  * Check JsDoc type annotations.
  * @param {Object?} good A good one.
  * @param {Object|null} bad A bad one.
- * @param {Object|Element?} ugly Another bad one.
- * @param {Object|Element|null} ok The right way to do the above.
+ * @param {Object|Element?} ok1 This is acceptable.
+ * @param {Object|Element|null} right The right way to do the above.
  * @param {null|Object} bad2 Another bad one.
- * @param {Object?|Element} ugly2 Another bad one.
+ * @param {Object?|Element} ok2 Not good but acceptable.
  * @param {Array.<string|number>?} complicated A good one that was reported as
  *     bad.  See bug 1154506.
  */
-class.sampleFunction = function(good, bad, ugly, ok, bad2, ugly2,
+class.sampleFunction = function(good, bad, ok1, right, bad2, ok2,
     complicated) {
 };
 
@@ -540,9 +588,8 @@ class.badReturn = function() {
 };
 
 
-// +2: JSDOC_ILLEGAL_QUESTION_WITH_PIPE
 /**
- * @return {Object|Element?} An ugly return.
+ * @return {Object|Element?} An not so pretty return, but acceptable.
  */
 class.uglyReturn = function() {
   return something;
@@ -583,7 +630,8 @@ class.complexGoodType = goog.nullFunction;
 
 /**
  * A complex bad type that we can catch, though there are many we can't.
- * @type {Array.<string>|string?} // JSDOC_ILLEGAL_QUESTION_WITH_PIPE
+ * Its acceptable.
+ * @type {Array.<string>|string?}
  */
 class.complexBadType = x || 'foo';
 
@@ -620,9 +668,8 @@ class.badType = null;
 class.badType = null;
 
 
-// +3: JSDOC_ILLEGAL_QUESTION_WITH_PIPE
 /**
- * An ugly type.
+ * An not pretty type, but acceptable.
  * @type {Object|Element?}
  */
 class.uglyType = null;
@@ -647,6 +694,14 @@ class.maybeOkType = null;
  * @const
  */
 class.okWithoutType = 'stout';
+
+
+/**
+ * Const property without type and text in next line. b/10407058.
+ * @const
+ * TODO(user): Nothing to do, just for scenario.
+ */
+class.okWithoutType = 'string';
 
 
 /**

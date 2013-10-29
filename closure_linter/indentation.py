@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#
 # Copyright 2010 The Closure Linter Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +17,8 @@
 
 __author__ = ('robbyw@google.com (Robert Walker)')
 
+import gflags as flags
+
 from closure_linter import ecmametadatapass
 from closure_linter import errors
 from closure_linter import javascripttokens
@@ -25,7 +26,6 @@ from closure_linter import tokenutil
 from closure_linter.common import error
 from closure_linter.common import position
 
-import gflags as flags
 
 flags.DEFINE_boolean('debug_indentation', False,
                      'Whether to print debugging information for indentation.')
@@ -89,7 +89,7 @@ class TokenInfo(object):
     self.overridden_by = None
     self.is_permanent_override = False
     self.is_block = is_block
-    self.is_transient = not is_block and not token.type in (
+    self.is_transient = not is_block and token.type not in (
         Type.START_PAREN, Type.START_PARAMETERS)
     self.line_number = token.line_number
 
@@ -121,7 +121,7 @@ class IndentationRules(object):
     if self._stack:
       old_stack = self._stack
       self._stack = []
-      raise Exception("INTERNAL ERROR: indentation stack is not empty: %r" %
+      raise Exception('INTERNAL ERROR: indentation stack is not empty: %r' %
                       old_stack)
 
   def CheckToken(self, token, state):
@@ -230,7 +230,8 @@ class IndentationRules(object):
 
     # Add tokens that could increase indentation.
     if token_type == Type.START_BRACKET:
-      self._Add(TokenInfo(token=token,
+      self._Add(TokenInfo(
+          token=token,
           is_block=token.metadata.context.type == Context.ARRAY_LITERAL))
 
     elif token_type == Type.START_BLOCK or token.metadata.is_implied_block:
@@ -255,10 +256,10 @@ class IndentationRules(object):
     if is_last:
       if token_type == Type.OPERATOR:
         if token.string == ':':
-          if (stack and stack[-1].token.string == '?'):
+          if stack and stack[-1].token.string == '?':
             # When a ternary : is on a different line than its '?', it doesn't
             # add indentation.
-            if (token.line_number == stack[-1].token.line_number):
+            if token.line_number == stack[-1].token.line_number:
               self._Add(TokenInfo(token))
           elif token.metadata.context.type == Context.CASE_BLOCK:
             # Pop transient tokens from say, line continuations, e.g.,
@@ -323,6 +324,12 @@ class IndentationRules(object):
   def _IsHardStop(self, token):
     """Determines if the given token can have a hard stop after it.
 
+    Args:
+      token: token to examine
+
+    Returns:
+      Whether the token can have a hard stop after it.
+
     Hard stops are indentations defined by the position of another token as in
     indentation lined up with return, (, [, and ?.
     """
@@ -367,7 +374,8 @@ class IndentationRules(object):
       # Handle hard stops after (, [, return, =, and ?
       if self._IsHardStop(token):
         override_is_hard_stop = (token_info.overridden_by and
-            self._IsHardStop(token_info.overridden_by.token))
+                                 self._IsHardStop(
+                                     token_info.overridden_by.token))
         if not override_is_hard_stop:
           start_index = token.start_index
           if token.line_number in self._start_index_offset:
@@ -379,7 +387,7 @@ class IndentationRules(object):
           elif token.string == 'return' and not token_info.overridden_by:
             hard_stops.add(start_index + 7)
 
-          elif (token.type == Type.START_BRACKET):
+          elif token.type == Type.START_BRACKET:
             hard_stops.add(start_index + 1)
 
           elif token.IsAssignment():

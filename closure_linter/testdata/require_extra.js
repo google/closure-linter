@@ -17,6 +17,7 @@
  *
  */
 
+goog.require(''); // EXTRA_GOOG_REQUIRE
 goog.require('dummy.Aa');
 goog.require('dummy.Aa.CONSTANT'); // EXTRA_GOOG_REQUIRE
 goog.require('dummy.Aa.Enum'); // EXTRA_GOOG_REQUIRE

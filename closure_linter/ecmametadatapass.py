@@ -243,21 +243,21 @@ class EcmaMetaDataPass(object):
     self._AddContext(EcmaContext.ROOT)
     self._last_code = None
 
-  def _CreateContext(self, type):
+  def _CreateContext(self, context_type):
     """Overridable by subclasses to create the appropriate context type."""
-    return EcmaContext(type, self._token, self._context)
+    return EcmaContext(context_type, self._token, self._context)
 
   def _CreateMetaData(self):
     """Overridable by subclasses to create the appropriate metadata type."""
     return EcmaMetaData()
 
-  def _AddContext(self, type):
+  def _AddContext(self, context_type):
     """Adds a context of the given type to the context stack.
 
     Args:
-      type: The type of context to create
+      context_type: The type of context to create
     """
-    self._context  = self._CreateContext(type)
+    self._context = self._CreateContext(context_type)
 
   def _PopContext(self):
     """Moves up one level in the context stack.
@@ -280,7 +280,7 @@ class EcmaMetaDataPass(object):
     """Pops the context stack until a context of the given type is popped.
 
     Args:
-      stop_types: The types of context to pop to - stops at the first match.
+      *stop_types: The types of context to pop to - stops at the first match.
 
     Returns:
       The context object of the given type that was popped.
@@ -437,9 +437,9 @@ class EcmaMetaDataPass(object):
       # ternary_false > ternary_true > statement > root
       elif (self._context.type == EcmaContext.TERNARY_FALSE and
             self._context.parent.type == EcmaContext.TERNARY_TRUE):
-           self._PopContext() # Leave current ternary false context.
-           self._PopContext() # Leave current parent ternary true
-           self._AddContext(EcmaContext.TERNARY_FALSE)
+        self._PopContext()  # Leave current ternary false context.
+        self._PopContext()  # Leave current parent ternary true
+        self._AddContext(EcmaContext.TERNARY_FALSE)
 
       elif self._context.parent.type == EcmaContext.SWITCH:
         self._AddContext(EcmaContext.CASE_BLOCK)
@@ -502,7 +502,8 @@ class EcmaMetaDataPass(object):
       is_continued_dot = token.string == '.'
       next_code_is_operator = next_code and next_code.type == TokenType.OPERATOR
       next_code_is_dot = next_code and next_code.string == '.'
-      is_end_of_block = (token.type == TokenType.END_BLOCK and
+      is_end_of_block = (
+          token.type == TokenType.END_BLOCK and
           token.metadata.context.type != EcmaContext.OBJECT_LITERAL)
       is_multiline_string = token.type == TokenType.STRING_TEXT
       is_continued_var_decl = (token.IsKeyword('var') and
@@ -527,7 +528,7 @@ class EcmaMetaDataPass(object):
         self._EndStatement()
 
   def _StatementCouldEndInContext(self):
-    """Returns whether the current statement (if any) may end in this context."""
+    """Returns if the current statement (if any) may end in this context."""
     # In the basic statement or variable declaration context, statement can
     # always end in this context.
     if self._context.type in (EcmaContext.STATEMENT, EcmaContext.VAR):

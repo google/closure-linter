@@ -93,7 +93,7 @@ class ErrorRulesTest(googletest.TestCase):
 
     # Trap gjslint's output parse it to get messages added.
     error_accumulator = erroraccumulator.ErrorAccumulator()
-    runner.Run('testing.js', error_accumulator, original)
+    runner.Run('testing.js', error_accumulator, source=original)
     error_nums = [e.code for e in error_accumulator.GetErrors()]
 
     error_nums.sort()

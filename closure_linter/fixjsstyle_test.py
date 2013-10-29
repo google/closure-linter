@@ -306,6 +306,44 @@ class FixJsStyleTest(googletest.TestCase):
 
     self._AssertFixes(original, expected)
 
+  def testFileStartsWithSemicolon(self):
+    """Tests handling files starting with semicolon.
+
+      b/10062516
+    """
+    original = [
+        ';goog.provide(\'xyz\');',
+        '',
+        'abc;'
+        ]
+
+    expected = [
+        'goog.provide(\'xyz\');',
+        '',
+        'abc;'
+        ]
+
+    self._AssertFixes(original, expected, include_header=False)
+
+  def testCodeStartsWithSemicolon(self):
+    """Tests handling code in starting with semicolon after comments.
+
+      b/10062516
+    """
+    original = [
+        ';goog.provide(\'xyz\');',
+        '',
+        'abc;'
+        ]
+
+    expected = [
+        'goog.provide(\'xyz\');',
+        '',
+        'abc;'
+        ]
+
+    self._AssertFixes(original, expected)
+
   def _AssertFixes(self, original, expected, include_header=True):
     """Asserts that the error fixer corrects original to expected."""
     if include_header:

@@ -33,9 +33,10 @@ from closure_linter import tokenutil
 TokenType = javascripttokens.JavaScriptTokenType
 
 DEFAULT_EXTRA_NAMESPACES = [
-  'goog.testing.asserts',
-  'goog.testing.jsunit',
+    'goog.testing.asserts',
+    'goog.testing.jsunit',
 ]
+
 
 class ClosurizedNamespacesInfo(object):
   """Dependency information for closurized JavaScript files.
@@ -136,7 +137,7 @@ class ClosurizedNamespacesInfo(object):
       True if the given token corresponds to an unnecessary goog.provide
       statement, otherwise False.
     """
-    namespace = tokenutil.Search(token, TokenType.STRING_TEXT).string
+    namespace = tokenutil.GetStringAfterToken(token)
 
     base_namespace = namespace.split('.', 1)[0]
     if base_namespace not in self._closurized_namespaces:
@@ -162,7 +163,7 @@ class ClosurizedNamespacesInfo(object):
       True if the given token corresponds to an unnecessary goog.require
       statement, otherwise False.
     """
-    namespace = tokenutil.Search(token, TokenType.STRING_TEXT).string
+    namespace = tokenutil.GetStringAfterToken(token)
 
     base_namespace = namespace.split('.', 1)[0]
     if base_namespace not in self._closurized_namespaces:
@@ -302,7 +303,7 @@ class ClosurizedNamespacesInfo(object):
       # just ignore it (e.g. dynamic loading in test runners).
       if token.string == 'goog.require' and not state_tracker.InFunction():
         self._require_tokens.append(token)
-        namespace = tokenutil.Search(token, TokenType.STRING_TEXT).string
+        namespace = tokenutil.GetStringAfterToken(token)
         if namespace in self._required_namespaces:
           self._duplicate_require_tokens.append(token)
         else:
@@ -317,7 +318,7 @@ class ClosurizedNamespacesInfo(object):
 
       elif token.string == 'goog.provide':
         self._provide_tokens.append(token)
-        namespace = tokenutil.Search(token, TokenType.STRING_TEXT).string
+        namespace = tokenutil.GetStringAfterToken(token)
         if namespace in self._provided_namespaces:
           self._duplicate_provide_tokens.append(token)
         else:
@@ -344,7 +345,8 @@ class ClosurizedNamespacesInfo(object):
               # consider it created.
               base_namespace = message.split('.', 1)[0]
               if base_namespace in self._closurized_namespaces:
-                self._AddCreatedNamespace(state_tracker, message, token.line_number)
+                self._AddCreatedNamespace(state_tracker, message,
+                                          token.line_number)
 
             break
       else:
@@ -354,7 +356,7 @@ class ClosurizedNamespacesInfo(object):
         if jsdoc and jsdoc.HasFlag('typedef'):
           self._AddCreatedNamespace(state_tracker, whole_identifier_string,
                                     token.line_number,
-                                    self.GetClosurizedNamespace(
+                                    namespace=self.GetClosurizedNamespace(
                                         whole_identifier_string))
         else:
           if not (token.metadata and token.metadata.is_alias_definition):
@@ -382,7 +384,7 @@ class ClosurizedNamespacesInfo(object):
           self._AddUsedNamespace(state_tracker, identifier, token.line_number)
         elif namespace and namespace != 'goog':
           self._AddCreatedNamespace(state_tracker, identifier,
-                                    token.line_number, namespace)
+                                    token.line_number, namespace=namespace)
 
     elif token.type == TokenType.DOC_FLAG:
       flag_type = token.attached_object.flag_type

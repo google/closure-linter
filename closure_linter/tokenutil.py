@@ -658,6 +658,37 @@ def GetIdentifierForToken(token):
     return ''.join([t.string for t in symbol_tokens])
 
 
+def GetStringAfterToken(token):
+  """Get string after token.
+
+  Args:
+    token: Search will be done after this token.
+
+  Returns:
+    String if found after token else None (empty string will also
+    return None).
+
+  Search until end of string as in case of empty string Type.STRING_TEXT is not
+  present/found and don't want to return next string.
+  E.g.
+  a = '';
+  b = 'test';
+  When searching for string after 'a' if search is not limited by end of string
+  then it will return 'test' which is not desirable as there is a empty string
+  before that.
+
+  This will return None for cases where string is empty or no string found
+  as in both cases there is no Type.STRING_TEXT.
+  """
+  string_token = SearchUntil(token, JavaScriptTokenType.STRING_TEXT,
+                             [JavaScriptTokenType.SINGLE_QUOTE_STRING_END,
+                              JavaScriptTokenType.DOUBLE_QUOTE_STRING_END])
+  if string_token:
+    return string_token.string
+  else:
+    return None
+
+
 def _IsDot(token):
   """Whether the token represents a "dot" operator (foo.bar)."""
   return token.type is tokens.TokenType.NORMAL and token.string == '.'

@@ -23,7 +23,6 @@ devtools/javascript/gpylint/full_test.py
 __author__ = ('robbyw@google.com (Robert Walker)',
               'ajp@google.com (Andy Perelson)')
 
-import re
 import os
 import sys
 import unittest
@@ -31,8 +30,8 @@ import unittest
 import gflags as flags
 import unittest as googletest
 
-from closure_linter import errors
 from closure_linter import error_check
+from closure_linter import errors
 from closure_linter import runner
 from closure_linter.common import filetestcase
 
@@ -80,6 +79,7 @@ _TEST_FILES = [
     'require_provide_blank.js',
     'require_provide_missing.js',
     'require_provide_ok.js',
+    'semicolon_missing.js',
     'simple.html',
     'spaces.js',
     'tokenizer.js',

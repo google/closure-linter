@@ -32,7 +32,7 @@ flags.DEFINE_list('additional_extensions', None, 'List of additional file '
                   'JavaScript files.')
 
 
-def main(argv = None):
+def main(argv=None):
   """Main function.
 
   Args:

@@ -40,12 +40,12 @@ END_OF_FLAG_TYPE = re.compile(r'(}?\s*)$')
 # Regex to represent common mistake inverting author name and email as
 # @author User Name (user@company)
 INVERTED_AUTHOR_SPEC = re.compile(r'(?P<leading_whitespace>\s*)'
-                                  '(?P<name>[^(]+)'
-                                  '(?P<whitespace_after_name>\s+)'
-                                  '\('
-                                  '(?P<email>[^\s]+@[^)\s]+)'
-                                  '\)'
-                                  '(?P<trailing_characters>.*)')
+                                  r'(?P<name>[^(]+)'
+                                  r'(?P<whitespace_after_name>\s+)'
+                                  r'\('
+                                  r'(?P<email>[^\s]+@[^)\s]+)'
+                                  r'\)'
+                                  r'(?P<trailing_characters>.*)')
 
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean('disable_indentation_fixing', False,
@@ -173,7 +173,10 @@ class ErrorFixer(errorhandler.ErrorHandler):
       self._AddFix(token)
 
     elif code == errors.MISSING_SPACE:
-      if error.position:
+      if error.fix_data:
+        token.string = error.fix_data
+        self._AddFix(token)
+      elif error.position:
         if error.position.IsAtBeginning():
           tokenutil.InsertSpaceTokenAfter(token.previous)
         elif error.position.IsAtEnd(token.string):

@@ -194,7 +194,7 @@ class RequireProvideSorter(object):
     """
     token_strings = []
     for token in tokens:
-      name = tokenutil.Search(token, Type.STRING_TEXT).string
+      name = tokenutil.GetStringAfterToken(token)
       token_strings.append(name)
     return token_strings
 
@@ -229,7 +229,7 @@ class RequireProvideSorter(object):
     """
     tokens_map = {}
     for token in tokens:
-      object_name = tokenutil.Search(token, Type.STRING_TEXT).string
+      object_name = tokenutil.GetStringAfterToken(token)
       # If the previous line starts with a comment, presume that the comment
       # relates to the goog.require or goog.provide and keep them together when
       # sorting.

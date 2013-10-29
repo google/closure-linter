@@ -82,6 +82,7 @@ class DocFlag(object):
       'preserve',
       'private',
       'protected',
+      'public',
       'return',
       'see',
       'stableIdGenerator',
@@ -127,6 +128,7 @@ class DocFlag(object):
       'missingProperties',
       'missingProvide',
       'missingRequire',
+      'missingReturn',
       'nonStandardJsDocs',
       'strictModuleDepCheck',
       'tweakValidation',
@@ -178,7 +180,11 @@ class DocFlag(object):
         self.type_start_token = brace
         self.type_end_token = end_token
       elif (self.flag_type in self.TYPE_ONLY and
-          flag_token.next.type not in Type.FLAG_ENDING_TYPES):
+            flag_token.next.type not in Type.FLAG_ENDING_TYPES and
+            flag_token.line_number == flag_token.next.line_number):
+        # b/10407058. If the flag is expected to be followed by a type then
+        # search for type in same line only. If no token after flag in same
+        # line then conclude that no type is specified.
         self.type_start_token = flag_token.next
         self.type_end_token, self.type = _GetEndTokenAndContents(
             self.type_start_token)
@@ -931,7 +937,8 @@ class StateTracker(object):
         Type.DOC_FLAG, Type.DOC_INLINE_FLAG, Type.DOC_PREFIX):
       f = tokenutil.SearchUntil(t, [Type.DOC_FLAG], [Type.START_DOC_COMMENT],
                                 None, True)
-      if f and f.attached_object.type_start_token is not None:
+      if (f and f.attached_object.type_start_token is not None and
+          f.attached_object.type_end_token is not None):
         return (tokenutil.Compare(t, f.attached_object.type_start_token) > 0 and
                 tokenutil.Compare(t, f.attached_object.type_end_token) < 0)
     return False

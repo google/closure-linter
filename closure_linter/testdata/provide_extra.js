@@ -17,6 +17,8 @@
  *
  */
 
+goog.provide(''); // EXTRA_GOOG_PROVIDE
+
 goog.provide('dummy.AnotherThingTest'); // ok since mentioned in setTestOnly
 
 goog.provide('dummy.Something');

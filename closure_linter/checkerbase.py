@@ -139,7 +139,7 @@ class CheckerBase(object):
     """
 
     self._lint_rules.Initialize(self, limited_doc_checks, is_html)
-    self._ExecutePass(start_token, self._LintPass, stop_token)
+    self._ExecutePass(start_token, self._LintPass, stop_token=stop_token)
     self._lint_rules.Finalize(self._state_tracker)
 
   def _LintPass(self, token):
