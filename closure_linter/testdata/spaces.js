@@ -45,6 +45,9 @@ x += 10;
 
 throw Error('Selector not supported yet('+ opt_selector + ')'); // MISSING_SPACE
 throw Error('Selector not supported yet(' +opt_selector + ')'); // MISSING_SPACE
+throw Error(
+    'Selector not supported yet' +
+    '(' +(opt_selector ? 'foo' : 'bar') + ')'); // MISSING_SPACE
 
 x++;
 x ++; // EXTRA_SPACE

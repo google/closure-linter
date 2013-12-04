@@ -17,14 +17,8 @@
  * @author robbyw@google.com (Robby Walker)
  * @author  robbyw@google.com  (Robby Walker)
  * @author robbyw@google.com(Robby Walker)
- * @author Robby Walker (robbyw@google.com)
- * @author Robby (robbyw@google.com)
- * @author Robby Walker robbyw@google.com
- * @author Robby Walker robbyw
- * @author Robby Walker (@google.com)
  * @author robbyw@google.com
  * @author robbyw@google.com Robby
- * @author robbyw (Robby Walker)
  */
 
 goog.provide('w');

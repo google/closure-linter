@@ -92,6 +92,8 @@ class DocFlag(object):
       'this',
       'type',
       'typedef',
+      'wizaction',  # This annotation is specific to Wiz.
+      'wizmodule',  # This annotation is specific to Wiz.
       ])
 
   ANNOTATION = frozenset(['preserveTry', 'suppress'])

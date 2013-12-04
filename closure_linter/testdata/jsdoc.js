@@ -20,18 +20,18 @@
  * @author  robbyw@google.com  (Robby Walker) // EXTRA_SPACE, EXTRA_SPACE
  * @author robbyw@google.com(Robby Walker) // MISSING_SPACE
  *
- * @author // INVALID_AUTHOR_TAG_DESCRIPTION
  * @author robbyw@google.com () // INVALID_AUTHOR_TAG_DESCRIPTION
  * @author robbyw@google.com  // INVALID_AUTHOR_TAG_DESCRIPTION
- * @author Robby Walker (robbyw@google.com) // INVALID_AUTHOR_TAG_DESCRIPTION
  *
  * @owner  ajp@google.com (Andy Perelson)
  * @badtag   // INVALID_JSDOC_TAG
  * @customtag This tag is passed as a flag in full_test.py
  * @requires anotherCustomTagPassedInFromFullTestThatShouldAllowASingleWordLongerThan80Lines
  * @requires firstWord, secondWordWhichShouldMakeThisLineTooLongSinceThereIsAFirstWord
+ * @wizmodule
+ * @wizModule // INVALID_JSDOC_TAG
  */
-// -2: LINE_TOO_LONG
+// -4: LINE_TOO_LONG
 
 goog.provide('MyClass');
 goog.provide('goog.NumberLike');
@@ -55,6 +55,7 @@ goog.require('goog.math.Vec2');
  * @params  // INVALID_JSDOC_TAG
  * @defines // INVALID_JSDOC_TAG
  * @nginject // INVALID_JSDOC_TAG
+ * @wizAction // INVALID_JSDOC_TAG
  */
 function badTags() {
 }
@@ -83,6 +84,7 @@ function goodTags() {
  *
  * @param {Object} object Good docs.
  * @ngInject
+ * @wizaction
  */
 function good(object) {
 }

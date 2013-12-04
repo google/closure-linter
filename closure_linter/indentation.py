@@ -487,8 +487,10 @@ class IndentationRules(object):
             #   a: 10
             # },
             # 30);
+            # b/11450054. If a string is not closed properly then close_block
+            # could be null.
             close_block = token_info.token.metadata.context.end_token
-            stack_info.is_permanent_override = (
+            stack_info.is_permanent_override = close_block and (
                 close_block.line_number != token_info.token.line_number)
         elif (token_info.token.type == Type.START_BLOCK and
               token_info.token.metadata.context.type == Context.BLOCK and

@@ -218,6 +218,36 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
           token,
           position=Position.AtBeginning())
 
+  def _CheckOperator(self, token):
+    """Checks an operator for spacing and line style.
+
+    Args:
+      token: The operator token.
+    """
+    last_code = token.metadata.last_code
+
+    if not self._ExpectSpaceBeforeOperator(token):
+      if (token.previous and token.previous.type == Type.WHITESPACE and
+          last_code and last_code.type in (Type.NORMAL, Type.IDENTIFIER)):
+        self._HandleError(
+            errors.EXTRA_SPACE, 'Extra space before "%s"' % token.string,
+            token.previous, position=Position.All(token.previous.string))
+
+    elif (token.previous and
+          not token.previous.IsComment() and
+          token.previous.type in Type.EXPRESSION_ENDER_TYPES):
+      self._HandleError(errors.MISSING_SPACE,
+                        'Missing space before "%s"' % token.string, token,
+                        position=Position.AtBeginning())
+
+    # Check that binary operators are not used to start lines.
+    if ((not last_code or last_code.line_number != token.line_number) and
+        not token.metadata.IsUnaryOperator()):
+      self._HandleError(
+          errors.LINE_STARTS_WITH_OPERATOR,
+          'Binary operator should go on previous line "%s"' % token.string,
+          token)
+
   def _ExpectSpaceBeforeOperator(self, token):
     """Returns whether a space should appear before the given operator token.
 
@@ -440,30 +470,7 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
               position=Position(1, len(token.string) - 1))
 
     elif token_type == Type.OPERATOR:
-      last_code = token.metadata.last_code
-
-      if not self._ExpectSpaceBeforeOperator(token):
-        if (token.previous and token.previous.type == Type.WHITESPACE and
-            last_code and last_code.type in (Type.NORMAL, Type.IDENTIFIER)):
-          self._HandleError(
-              errors.EXTRA_SPACE, 'Extra space before "%s"' % token.string,
-              token.previous, position=Position.All(token.previous.string))
-
-      elif (token.previous and
-            not token.previous.IsComment() and
-            token.previous.type in Type.EXPRESSION_ENDER_TYPES):
-        self._HandleError(errors.MISSING_SPACE,
-                          'Missing space before "%s"' % token.string, token,
-                          position=Position.AtBeginning())
-
-      # Check that binary operators are not used to start lines.
-      if ((not last_code or last_code.line_number != token.line_number) and
-          not token.metadata.IsUnaryOperator()):
-        self._HandleError(
-            errors.LINE_STARTS_WITH_OPERATOR,
-            'Binary operator should go on previous line "%s"' % token.string,
-            token)
-
+      self._CheckOperator(token)
     elif token_type == Type.DOC_FLAG:
       flag = token.attached_object
 

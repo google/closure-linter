@@ -140,15 +140,8 @@ NEW_ERRORS = frozenset([
     # Errors added after 2.0.2:
     WRONG_INDENTATION,
     MISSING_SEMICOLON,
-    # Errors added after 2.3.4:
-    MISSING_END_OF_SCOPE_COMMENT,
-    MALFORMED_END_OF_SCOPE_COMMENT,
-    UNUSED_PRIVATE_MEMBER,
-    # Errors added after 2.3.5:
-    INVALID_USE_OF_GOOG_SCOPE,
-    EXTRA_GOOG_SCOPE_USAGE,
     # Errors added after 2.3.9:
     JSDOC_MISSING_VAR_ARGS_TYPE,
     JSDOC_MISSING_VAR_ARGS_NAME,
-    # Errors added after 2.3.12:
+    # Errors added after 2.3.13:
     ])
