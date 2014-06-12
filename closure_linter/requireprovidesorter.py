@@ -121,7 +121,7 @@ class RequireProvideSorter(object):
     first_token = tokens[0]
     last_token = tokens[-1]
     i = last_token
-    while i != first_token:
+    while i != first_token and i is not None:
       if i.type is Type.BLANK_LINE:
         tokenutil.DeleteToken(i)
       i = i.previous
@@ -194,8 +194,9 @@ class RequireProvideSorter(object):
     """
     token_strings = []
     for token in tokens:
-      name = tokenutil.GetStringAfterToken(token)
-      token_strings.append(name)
+      if not token.is_deleted:
+        name = tokenutil.GetStringAfterToken(token)
+        token_strings.append(name)
     return token_strings
 
   def _GetTokensMap(self, tokens):

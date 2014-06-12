@@ -127,6 +127,32 @@ class FixJsStyleTest(googletest.TestCase):
 
     self._AssertFixes(original, expected)
 
+  def testExtraRequireOnFirstLine(self):
+    """Tests handling of extra goog.require statement on the first line.
+
+       There was a bug when fixjsstyle quits with an exception. It happened if
+        - the first line of the file is an extra goog.require() statement,
+        - goog.require() statements are not sorted.
+    """
+    original = [
+        'goog.require(\'dummy.aa\');',
+        'goog.require(\'dummy.cc\');',
+        'goog.require(\'dummy.bb\');',
+        '',
+        'var x = new dummy.bb();',
+        'var y = new dummy.cc();',
+        ]
+
+    expected = [
+        'goog.require(\'dummy.bb\');',
+        'goog.require(\'dummy.cc\');',
+        '',
+        'var x = new dummy.bb();',
+        'var y = new dummy.cc();',
+        ]
+
+    self._AssertFixes(original, expected, include_header=False)
+
   def testUnsortedProvides(self):
     """Tests handling of unsorted goog.provide statements without header.
 

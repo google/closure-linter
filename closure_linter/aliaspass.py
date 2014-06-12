@@ -92,6 +92,9 @@ class AliasPass(object):
       start_token: The first token in the stream.
     """
 
+    if start_token is None:
+      return
+
     # TODO(nnaze): Add more goog.scope usage checks.
     self._CheckGoogScopeCalls(start_token)
 
@@ -196,7 +199,7 @@ class AliasPass(object):
         # If this is a alias statement in the goog.scope block.
         if (token_context.type == ecmametadatapass.EcmaContext.VAR and
             token_context.parent.parent is scope_block):
-          match = scopeutil.MatchAlias(token_context.parent)
+          match = scopeutil.MatchAlias(token_context)
 
           # If this is an alias, remember it in the map.
           if match:

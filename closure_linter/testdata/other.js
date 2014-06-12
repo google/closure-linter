@@ -48,6 +48,34 @@ x.z = 1000;
 x.z = function(fn) {
 };
 
+
+/**
+ * Visibility tags are allowed to have type, therefore they allowed to be long.
+ * @private {function(ReallyReallyReallyReallyLongType, AnotherExtremelyLongType) : LongReturnType}
+ */
+x.z_ = 1000;
+
+
+/**
+ * Visibility tags are allowed to have type, therefore they allowed to be long.
+ * @public {function(ReallyReallyReallyReallyLongType, AnotherExtremelyLongType) : LongReturnType}
+ */
+x.z = 1000;
+
+
+/**
+ * Visibility tags are allowed to have type, therefore they allowed to be long.
+ * @protected {function(ReallyReallyReallyReallyLongType, AnotherExtremelyLongType) : LongReturnType}
+ */
+x.z = 1000;
+
+
+/**
+ * Visibility tags are allowed to have type, therefore they allowed to be long.
+ * @package {function(ReallyReallyReallyReallyLongType, AnotherExtremelyLongType) : LongReturnType}
+ */
+x.z = 1000;
+
 // +2: LINE_TOO_LONG
 var x =
     a.b.c.d.a.b.c.d.a.b.c.d.a.b.c.d.a.b.c.d.a.b.c.d.a.b.c.d.a.b.c.d.a.b.c.d.a.b.c.d.a.b.c.d.tooLongEvenThoughNoSpaces;

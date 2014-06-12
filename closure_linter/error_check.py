@@ -72,7 +72,9 @@ flags.DEFINE_multistring('jslint_error', [],
                          ' - ' + Rule.OPTIONAL_TYPE_MARKER + ': checks correct '
                          'use of optional marker = in param types.\n'
                          ' - ' + Rule.UNUSED_PRIVATE_MEMBERS + ': checks for '
-                         'unused private variables.\n')
+                         'unused private variables.\n'
+                         ' - ' + Rule.UNUSED_LOCAL_VARIABLES + ': checks for '
+                         'unused local variables.\n')
 
 
 def ShouldCheck(rule):

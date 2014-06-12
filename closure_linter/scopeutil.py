@@ -126,13 +126,16 @@ def MatchAlias(context):
   Example alias: var MyClass = proj.longNamespace.MyClass.
 
   Args:
-    context: An EcmaContext of type EcmaContext.STATEMENT.
+    context: An EcmaContext of type EcmaContext.VAR.
 
   Returns:
     If a valid alias, returns a tuple of alias and symbol, otherwise None.
   """
+  if context.type != ecmametadatapass.EcmaContext.VAR:
+    return
 
-  if context.type != ecmametadatapass.EcmaContext.STATEMENT:
+  # The var's parent is a STATEMENT, which should be directly below goog.scope.
+  if not IsGoogScopeBlock(context.parent.parent):
     return
 
   # Get the tokens in this statement.
@@ -152,29 +155,18 @@ def MatchAlias(context):
   if code_tokens and code_tokens[-1].IsType(JavaScriptTokenType.SEMICOLON):
     code_tokens.pop()
 
-  if not (len(code_tokens) == 4 and
-          code_tokens[0].IsKeyword('var') and
-          (code_tokens[0].metadata.context.type ==
-           ecmametadatapass.EcmaContext.VAR)):
+  if len(code_tokens) < 4:
     return
-
-  # Verify the only code tokens in this statement are part of the var
-  # declaration.
-  var_context = code_tokens[0].metadata.context
-  for token in code_tokens:
-    if token.metadata.context is not var_context:
-      return
 
   # Verify that this is of the form "var lvalue = identifier;".
-  if not(code_tokens[0].IsKeyword('var') and
-         code_tokens[1].IsType(JavaScriptTokenType.SIMPLE_LVALUE) and
-         code_tokens[2].IsOperator('=') and
-         code_tokens[3].IsType(JavaScriptTokenType.IDENTIFIER)):
-    return
+  # The identifier may span multiple lines and could be multiple tokens.
+  if (code_tokens[0].IsKeyword('var') and
+      code_tokens[1].IsType(JavaScriptTokenType.SIMPLE_LVALUE) and
+      code_tokens[2].IsOperator('=') and
+      all(t.IsType(JavaScriptTokenType.IDENTIFIER) for t in code_tokens[3:])):
+    alias, symbol = code_tokens[1], code_tokens[3]
+    # Mark both tokens as an alias definition to avoid counting them as usages.
+    alias.metadata.is_alias_definition = True
+    symbol.metadata.is_alias_definition = True
 
-  alias, symbol = code_tokens[1], code_tokens[3]
-  # Mark both tokens as an alias definition to avoid counting them as usages.
-  alias.metadata.is_alias_definition = True
-  symbol.metadata.is_alias_definition = True
-
-  return alias.string, symbol.string
+    return alias.string, tokenutil.GetIdentifierForToken(symbol)

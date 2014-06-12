@@ -486,10 +486,15 @@ class ErrorFixer(errorhandler.ErrorHandler):
 
       f = self._external_file
       if not f:
-        print 'Fixed %d errors in %s' % (self._file_fix_count, self._file_name)
+        error_noun = 'error' if self._file_fix_count == 1 else 'errors'
+        print 'Fixed %d %s in %s' % (
+            self._file_fix_count, error_noun, self._file_name)
         f = open(self._file_name, 'w')
 
       token = self._file_token
+      # Finding the first not deleted token.
+      while token.is_deleted:
+        token = token.next
       # If something got inserted before first token (e.g. due to sorting)
       # then move to start. Bug 8398202.
       while token.previous:

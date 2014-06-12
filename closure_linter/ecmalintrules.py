@@ -139,7 +139,7 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
     line = line.rstrip('\n\r\f')
     try:
       length = len(unicode(line, 'utf-8'))
-    except LookupError:
+    except (LookupError, UnicodeDecodeError):
       # Unknown encoding. The line length may be wrong, as was originally the
       # case for utf-8 (see bug 1735846). For now just accept the default
       # length, but as we find problems we can either add test for other

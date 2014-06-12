@@ -78,6 +78,7 @@ class DocFlag(object):
       'nosideeffects',
       'override',
       'owner',
+      'package',
       'param',
       'preserve',
       'private',
@@ -92,8 +93,7 @@ class DocFlag(object):
       'this',
       'type',
       'typedef',
-      'wizaction',  # This annotation is specific to Wiz.
-      'wizmodule',  # This annotation is specific to Wiz.
+      'unrestricted',
       ])
 
   ANNOTATION = frozenset(['preserveTry', 'suppress'])
@@ -139,6 +139,7 @@ class DocFlag(object):
       'undefinedVars',
       'underscore',
       'unknownDefines',
+      'unnecessaryCasts',
       'unusedPrivateMembers',
       'uselessCode',
       'visibility',
@@ -150,10 +151,13 @@ class DocFlag(object):
 
   HAS_TYPE = frozenset([
       'define', 'enum', 'extends', 'implements', 'param', 'return', 'type',
-      'suppress', 'const'])
+      'suppress', 'const', 'package', 'private', 'protected', 'public'])
+
+  CAN_OMIT_TYPE = frozenset(['enum', 'const', 'package', 'private',
+      'protected', 'public'])
 
   TYPE_ONLY = frozenset(['enum', 'extends', 'implements', 'suppress', 'type',
-                         'const'])
+      'const', 'package', 'private', 'protected', 'public'])
 
   HAS_NAME = frozenset(['param'])
 

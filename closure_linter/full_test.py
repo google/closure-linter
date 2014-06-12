@@ -51,6 +51,7 @@ _TEST_FILES = [
     'all_js_wrapped.js',
     'blank_lines.js',
     'ends_with_block.js',
+    'empty_file.js',
     'externs.js',
     'externs_jsdoc.js',
     'goog_scope.js',

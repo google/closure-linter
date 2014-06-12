@@ -20,6 +20,7 @@
 goog.provide(''); // EXTRA_GOOG_PROVIDE
 
 goog.provide('dummy.AnotherThingTest'); // ok since mentioned in setTestOnly
+goog.provide('dummy.AnotherTrulyLongNamespaceToMakeItExceedEightyCharactersThingTest');
 
 goog.provide('dummy.Something');
 goog.provide('dummy.Something'); // EXTRA_GOOG_PROVIDE
@@ -28,6 +29,7 @@ goog.provide('dummy.SomethingElse'); // EXTRA_GOOG_PROVIDE
 goog.provide('dummy.YetAnotherThingTest'); // EXTRA_GOOG_PROVIDE
 
 goog.setTestOnly('dummy.AnotherThingTest');
+goog.setTestOnly('dummy.AnotherTrulyLongNamespaceToMakeItExceedEightyCharactersThingTest');
 
 
 

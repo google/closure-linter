@@ -60,22 +60,22 @@ class AliasPassTest(googletest.TestCase):
     alias_token = _GetTokenByLineAndString(start_token, 'Event', 4)
     self.assertTrue(alias_token.metadata.is_alias_definition)
 
-    my_class_token = _GetTokenByLineAndString(start_token, 'myClass', 8)
+    my_class_token = _GetTokenByLineAndString(start_token, 'myClass', 9)
     self.assertIsNone(my_class_token.metadata.aliased_symbol)
 
-    component_token = _GetTokenByLineAndString(start_token, 'Component', 16)
+    component_token = _GetTokenByLineAndString(start_token, 'Component', 17)
     self.assertEquals('goog.ui.Component',
                       component_token.metadata.aliased_symbol)
 
-    event_token = _GetTokenByLineAndString(start_token, 'Event.Something', 16)
+    event_token = _GetTokenByLineAndString(start_token, 'Event.Something', 17)
     self.assertEquals('goog.events.Event.Something',
                       event_token.metadata.aliased_symbol)
 
     non_closurized_token = _GetTokenByLineAndString(
-        start_token, 'NonClosurizedClass', 17)
+        start_token, 'NonClosurizedClass', 18)
     self.assertIsNone(non_closurized_token.metadata.aliased_symbol)
 
-    long_start_token = _GetTokenByLineAndString(start_token, 'Event.', 20)
+    long_start_token = _GetTokenByLineAndString(start_token, 'Event.', 21)
     self.assertEquals('goog.events.Event.MultilineIdentifier.someMethod',
                       long_start_token.metadata.aliased_symbol)
 
@@ -110,7 +110,8 @@ class AliasPassTest(googletest.TestCase):
 _TEST_ALIAS_SCRIPT = """
 goog.scope(function() {
 var events = goog.events; // scope alias
-var Event = events.Event; // nested scope alias
+var Event = events.
+    Event; // nested multiline scope alias
 
 // This should not be registered as an aliased identifier because
 // it appears before the alias.

@@ -306,6 +306,24 @@ function OkNoReturnWithConstructor() {
 }
 
 
+/**
+ * Type of array is known, so the cast is unnecessary.
+ * @suppress {unnecessaryCasts}
+ */
+function unnecessaryCastWithSuppress() {
+  var numberArray = /** @type {!Array.<number>} */ ([]);
+  /** @type {number} */ (goog.array.peek(numberArray));
+}
+
+
+
+/**
+ * Make sure the 'unrestricted' annotation is accepted.
+ * @constructor @unrestricted
+ */
+function UnrestrictedClass() {}
+
+
 
 /**
  * Check definition of fields in constructors.
@@ -462,6 +480,22 @@ class.extraPrivate = function() { // EXTRA_PRIVATE
  * Anything ending with two underscores is not treated as private.
  */
 class.__iterator__ = function() {
+};
+
+
+/**
+ * Some docs.
+ * @package
+ */
+class.goodPackage = function() {
+};
+
+
+/**
+ * Some docs.
+ * @package
+ */
+class.badPackage_ = function() { // MISSING_PRIVATE
 };
 
 

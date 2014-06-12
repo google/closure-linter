@@ -25,7 +25,9 @@ import traceback
 import gflags as flags
 
 from closure_linter import checker
+from closure_linter import ecmalintrules
 from closure_linter import ecmametadatapass
+from closure_linter import error_check
 from closure_linter import errors
 from closure_linter import javascriptstatetracker
 from closure_linter import javascripttokenizer
@@ -41,6 +43,9 @@ flags.DEFINE_list('limited_doc_files', ['dummy.js', 'externs.js'],
                   'matching return statement.')
 flags.DEFINE_boolean('error_trace', False,
                      'Whether to show error exceptions.')
+flags.ADOPT_module_key_flags(checker)
+flags.ADOPT_module_key_flags(ecmalintrules)
+flags.ADOPT_module_key_flags(error_check)
 
 
 def _GetLastNonWhiteSpaceToken(start_token):

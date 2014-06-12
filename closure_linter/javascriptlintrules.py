@@ -78,6 +78,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
         token.attached_object.type is not None and
         token.attached_object.type.find('{') != token.string.rfind('{'))
 
+  # pylint: disable=too-many-statements
   def CheckToken(self, token, state):
     """Checks a token, given the current parser_state, for warnings and errors.
 
@@ -180,9 +181,12 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
 
       if flag.flag_type in state.GetDocFlag().HAS_TYPE:
         # Check for both missing type token and empty type braces '{}'
-        # Missing suppress types are reported separately and we allow enums
-        # and const without types.
-        if (flag.flag_type not in ('suppress', 'enum', 'const') and
+        # Missing suppress types are reported separately and we allow enums,
+        # const, private, public and protected without types.
+        allowed_flags = set(['suppress']).union(
+            state.GetDocFlag().CAN_OMIT_TYPE)
+
+        if (flag.flag_type not in allowed_flags and
             (not flag.type or flag.type.isspace())):
           self._HandleError(errors.MISSING_JSDOC_TAG_TYPE,
                             'Missing type in %s tag' % token.string, token)
@@ -734,5 +738,6 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
     return [
         re.compile(r'goog\.require\(.+\);?\s*$'),
         re.compile(r'goog\.provide\(.+\);?\s*$'),
+        re.compile(r'goog\.setTestOnly\(.+\);?\s*$'),
         re.compile(r'[\s/*]*@visibility\s*{.*}[\s*/]*$'),
         ]

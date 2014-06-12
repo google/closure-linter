@@ -37,7 +37,9 @@ __author__ = ('robbyw@google.com (Robert Walker)',
 
 import errno
 import itertools
+import os
 import platform
+import re
 import sys
 import time
 
@@ -60,6 +62,9 @@ flags.DEFINE_boolean('unix_mode', False,
                      'Whether to emit warnings in standard unix format.')
 flags.DEFINE_boolean('beep', True, 'Whether to beep when errors are found.')
 flags.DEFINE_boolean('time', False, 'Whether to emit timing statistics.')
+flags.DEFINE_boolean('quiet', False, 'Whether to minimize logged messages. '
+                     'Most useful for per-file linting, such as that performed '
+                     'by the presubmit linter service.')
 flags.DEFINE_boolean('check_html', False,
                      'Whether to check javascript in html files.')
 flags.DEFINE_boolean('summary', False,
@@ -74,10 +79,13 @@ flags.DEFINE_boolean('multiprocess',
                      'if the multiprocessing module is present (Python 2.6+). '
                      'Otherwise disabled by default. '
                      'Disabling may make debugging easier.')
+flags.ADOPT_module_key_flags(fileflags)
+flags.ADOPT_module_key_flags(runner)
 
 
 GJSLINT_ONLY_FLAGS = ['--unix_mode', '--beep', '--nobeep', '--time',
-                      '--check_html', '--summary']
+                      '--check_html', '--summary', '--quiet']
+
 
 
 def _MultiprocessCheckPaths(paths):
@@ -188,13 +196,20 @@ def _PrintSummary(paths, error_records):
   error_paths_count = len(error_paths)
   no_error_paths_count = all_paths_count - error_paths_count
 
-  if error_count or new_error_count:
-    print ('Found %d errors, including %d new errors, in %d files '
-           '(%d files OK).' % (
-               error_count,
-               new_error_count,
-               error_paths_count,
-               no_error_paths_count))
+  if (error_count or new_error_count) and not FLAGS.quiet:
+    error_noun = 'error' if error_count == 1 else 'errors'
+    new_error_noun = 'error' if new_error_count == 1 else 'errors'
+    error_file_noun = 'file' if error_paths_count == 1 else 'files'
+    ok_file_noun = 'file' if no_error_paths_count == 1 else 'files'
+    print ('Found %d %s, including %d new %s, in %d %s (%d %s OK).' %
+           (error_count,
+            error_noun,
+            new_error_count,
+            new_error_noun,
+            error_paths_count,
+            error_file_noun,
+            no_error_paths_count,
+            ok_file_noun))
 
 
 def _PrintErrorRecords(error_records):
@@ -224,6 +239,8 @@ def _FormatTime(t):
     return '%dms' % round(t * 1000)
   else:
     return '%.2fs' % t
+
+
 
 
 def main(argv=None):
@@ -284,7 +301,8 @@ def main(argv=None):
       else:
         fix_args.append(flag)
 
-    print """
+    if not FLAGS.quiet:
+      print """
 Some of the errors reported by GJsLint may be auto-fixable using the script
 fixjsstyle. Please double check any changes it makes and report any bugs. The
 script can be run by executing:
