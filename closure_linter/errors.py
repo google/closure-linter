@@ -147,6 +147,8 @@ NEW_ERRORS = frozenset([
     JSDOC_MISSING_VAR_ARGS_TYPE,
     JSDOC_MISSING_VAR_ARGS_NAME,
     # Errors added after 2.3.15:
+    ALIAS_STMT_NEEDS_GOOG_REQUIRE,
     JSDOC_DOES_NOT_PARSE,
     LINE_ENDS_WITH_DOT,
+    # Errors added after 2.3.16:
     ])
