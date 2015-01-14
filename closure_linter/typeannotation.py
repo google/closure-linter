@@ -60,8 +60,8 @@ class TypeAnnotation(object):
 
   def IsConstructor(self):
     """Determines whether this is a function definition for a constructor."""
-    return (self.IsFunction() and self.sub_types and
-            self.sub_type.keyword == 'new')
+    key_type = self.sub_types and self.sub_types[0].key_type
+    return self.IsFunction() and key_type.identifier == 'new'
 
   def IsRecordType(self):
     """Returns True if this type is a record type."""
