@@ -541,11 +541,6 @@ class ClosurizedNamespacesInfo(object):
       if not identifier.startswith(namespace + '.'):
         continue
 
-      last_part = parts[-1]
-      if not last_part:
-        # TODO(robbyw): Handle this: it's a multi-line identifier.
-        return None
-
       # The namespace for a class is the shortest prefix ending in a class
       # name, which starts with a capital letter but is not a capitalized word.
       #

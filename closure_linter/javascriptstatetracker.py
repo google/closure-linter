@@ -35,7 +35,8 @@ class JsDocFlag(statetracker.DocFlag):
       including braces.
     type_end_token: The last token specifying the flag JS type,
       including braces.
-    type: The JavaScript type spec.
+    type: The type spec string.
+    jstype: The type spec, a TypeAnnotation instance.
     name_token: The token specifying the flag name.
     name: The flag name
     description_start_token: The first token in the description.
