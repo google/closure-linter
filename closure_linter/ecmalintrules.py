@@ -530,7 +530,7 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
               'Invalid suppress syntax: should be @suppress {errortype}. '
               'Spaces matter.', token)
         else:
-          for suppress_type in re.split(r'\||,', flag.type):
+          for suppress_type in flag.jstype.IterIdentifiers():
             if suppress_type not in state.GetDocFlag().SUPPRESS_TYPES:
               self._HandleError(
                   errors.INVALID_SUPPRESS_TYPE,

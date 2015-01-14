@@ -348,12 +348,9 @@ class DocComment(object):
     Args:
       token: The suppression flag token.
     """
-    #TODO(user): Error if no braces
-    brace = tokenutil.SearchUntil(token, [Type.DOC_START_BRACE],
-                                  [Type.DOC_FLAG])
-    if brace:
-      end_token, contents = _GetMatchingEndBraceAndContents(brace)
-      for suppression in contents.split('|'):
+    flag = token and token.attached_object
+    if flag and flag.jstype:
+      for suppression in flag.jstype.IterIdentifiers():
         self.suppressions[suppression] = token
 
   def SuppressionOnly(self):
