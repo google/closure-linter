@@ -50,6 +50,9 @@ INVERTED_AUTHOR_SPEC = re.compile(r'(?P<leading_whitespace>\s*)'
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean('disable_indentation_fixing', False,
                      'Whether to disable automatic fixing of indentation.')
+flags.DEFINE_list('fix_error_codes', [], 'A list of specific error codes to '
+                  'fix. Defaults to all supported error codes when empty. '
+                  'See errors.py for a list of error codes.')
 
 
 class ErrorFixer(errorhandler.ErrorHandler):
@@ -67,6 +70,12 @@ class ErrorFixer(errorhandler.ErrorHandler):
     self._file_name = None
     self._file_token = None
     self._external_file = external_file
+
+    try:
+      self._fix_error_codes = set([errors.ByName(error.upper()) for error in
+                                   FLAGS.fix_error_codes])
+    except KeyError as ke:
+      raise ValueError('Unknown error code ' + ke.args[0])
 
   def HandleFile(self, filename, first_token):
     """Notifies this ErrorPrinter that subsequent errors are in filename.
@@ -102,6 +111,9 @@ class ErrorFixer(errorhandler.ErrorHandler):
     """
     code = error.code
     token = error.token
+
+    if self._fix_error_codes and code not in self._fix_error_codes:
+      return
 
     if code == errors.JSDOC_PREFER_QUESTION_TO_PIPE_NULL:
       iterator = token.attached_object.type_start_token
