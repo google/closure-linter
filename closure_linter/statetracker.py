@@ -111,6 +111,7 @@ class DocFlag(object):
   SUPPRESS_TYPES = frozenset([
       'accessControls',
       'ambiguousFunctionDecl',
+      'checkDebuggerStatement',
       'checkRegExp',
       'checkStructDictInheritance',
       'checkTypes',

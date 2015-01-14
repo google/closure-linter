@@ -209,6 +209,15 @@ function unnecessaryMissingReturnDoc() {
 
 
 /**
+ * The "suppress" causes the compiler to ignore the 'debugger' statement.
+ * @suppress {checkDebuggerStatement}
+ */
+function checkDebuggerStatementWithSuppress() {
+  debugger;
+}
+
+
+/**
  * Return doc is present, but the function doesn't have a 'return' statement.
  * The "suppress" causes the compiler to ignore the error.
  * @suppress {missingReturn}
