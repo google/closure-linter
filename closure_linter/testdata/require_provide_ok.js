@@ -16,7 +16,7 @@
  * @fileoverview There is nothing wrong w/ this javascript.
  *
  */
-
+goog.module('goog.super.long.DependencyNameThatForcesMethodDefinitionToSpanMultipleLinesFooBar');
 goog.provide('goog.something');
 goog.provide('goog.something.Else');
 goog.provide('goog.something.Else.Enum');
