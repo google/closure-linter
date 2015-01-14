@@ -441,4 +441,15 @@ x.z_ = 200;
 /** @private {number} Some text is allowed after tag but not the long oneeeeeeeeeeeeeeee. */ // LINE_TOO_LONG
 x.z_ = 200;
 
+// Regression tests for b/16298424.
+var z = function() {}.bind();
+window.alert(function() {}.bind());
+function() {
+}.bind();
+var y = function() {
+}.bind();
+var y = function() {
+        }
+        .bind();
+
 /* comment not closed  // FILE_MISSING_NEWLINE, FILE_IN_BLOCK

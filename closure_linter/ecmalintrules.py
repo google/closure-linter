@@ -329,8 +329,6 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
             position=Position.All(last_code.string))
 
       if state.InFunction() and state.IsFunctionClose():
-        is_immediately_called = (token.next and
-                                 token.next.type == Type.START_PAREN)
         if state.InTopLevelFunction():
           # A semicolons should not be included at the end of a function
           # declaration.
@@ -342,10 +340,13 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
                   token.next, position=Position.All(token.next.string))
 
         # A semicolon should be included at the end of a function expression
-        # that is not immediately called.
-        if state.InAssignedFunction():
-          if not is_immediately_called and (
-              last_in_line or token.next.type != Type.SEMICOLON):
+        # that is not immediately called or used by a dot operator.
+        if (state.InAssignedFunction() and token.next
+            and token.next.type != Type.SEMICOLON):
+          next_token = tokenutil.GetNextCodeToken(token)
+          is_immediately_used = next_token.type == Type.START_PAREN or (
+              next_token.type == Type.NORMAL and next_token.string == '.')
+          if not is_immediately_used:
             self._HandleError(
                 errors.MISSING_SEMICOLON_AFTER_FUNCTION,
                 'Missing semicolon after function assigned to a variable',
