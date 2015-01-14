@@ -343,16 +343,7 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
       self._CheckForMissingSpaceBeforeToken(token)
 
     elif token_type == Type.END_BLOCK:
-      # This check is for object literal end block tokens, but there is no need
-      # to test that condition since a comma at the end of any other kind of
-      # block is undoubtedly a parse error.
       last_code = token.metadata.last_code
-      if last_code.IsOperator(','):
-        self._HandleError(
-            errors.COMMA_AT_END_OF_LITERAL,
-            'Illegal comma at end of object literal', last_code,
-            position=Position.All(last_code.string))
-
       if state.InFunction() and state.IsFunctionClose():
         if state.InTopLevelFunction():
           # A semicolons should not be included at the end of a function
@@ -466,14 +457,6 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
             errors.EXTRA_SPACE, 'Extra space before "%s"' %
             token.string, token.previous,
             position=Position.All(token.previous.string))
-
-      if token.type == Type.END_BRACKET:
-        last_code = token.metadata.last_code
-        if last_code.IsOperator(','):
-          self._HandleError(
-              errors.COMMA_AT_END_OF_LITERAL,
-              'Illegal comma at end of array literal', last_code,
-              position=Position.All(last_code.string))
 
     elif token_type == Type.WHITESPACE:
       if self.ILLEGAL_TAB.search(token.string):

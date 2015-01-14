@@ -171,9 +171,9 @@ baz.baz = function() {
 
 TR_Node.splitDomTreeAt(splitNode, clone, /** @type {Node} */ (quoteNode));
 
-x = [1, 2, 3];
+x = [1, 2, 3,];
 x = {
-  a: 1
+  a: 1,
 };
 
 if (x) {

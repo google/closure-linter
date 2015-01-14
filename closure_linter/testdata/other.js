@@ -271,15 +271,16 @@ if (someCondition) {
   delete this.foo_[bar];
 }
 
-x = [1, 2, 3,]; // COMMA_AT_END_OF_LITERAL
-x = [1, 2, 3, /* A comment */]; // COMMA_AT_END_OF_LITERAL
+// Commas at the end of literals used to be forbidden.
+x = [1, 2, 3,];
+x = [1, 2, 3, /* A comment */];
 x = [
   1,
   2,
-  3, // COMMA_AT_END_OF_LITERAL
+  3,
 ];
 x = {
-  a: 1, // COMMA_AT_END_OF_LITERAL
+  a: 1,
 };
 
 // Make sure we don't screw up typing for Lvalues and think b:c is a type value
