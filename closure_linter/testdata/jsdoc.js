@@ -1427,6 +1427,23 @@ Foo.prototype = {
   }
 };
 
+/** Regression tests for annotation types with spaces. */
+
+
+/** @enum {goog.events.Event<string, number>} */
+var Bar;
+
+
+
+/**
+ * @constructor
+ * @implements {goog.dom.Range<string, number>}
+ */
+var Foo = function() {
+  /** @final {goog.events.Event<string, number>} */
+  this.bar = null;
+};
+
 /* Regression tests for not ending block comments. Keep at end of file! **/
 /**
  * When there are multiple asteriks. In the failure case we would get an

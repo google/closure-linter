@@ -247,7 +247,10 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
       r'(^|(?<=\s))@(?P<name>%s)\b' %
       '|'.join([
           'const',
+          'enum',
           'extends',
+          'final',
+          'implements',
           'param',
           'private',
           'protected',
