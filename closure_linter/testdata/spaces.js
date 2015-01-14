@@ -226,6 +226,25 @@ if (flag) {
 }
 
 
+/**
+ * Docs.
+ */
+x.finally = function() {
+};
+
+x.finally();
+x.
+    finally();
+x.finally (); // EXTRA_SPACE
+x.
+    finally (); // EXTRA_SPACE
+try {
+} finally (e) {
+}
+try {
+} finally(e) { // MISSING_SPACE
+}
+
 functionName(x , y); // EXTRA_SPACE
 functionName(x,y); // MISSING_SPACE
 functionName(x, y);

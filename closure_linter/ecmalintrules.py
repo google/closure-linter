@@ -402,13 +402,25 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
                             token, position=Position.All(token.string))
 
     elif token_type == Type.START_PAREN:
-      if token.previous and token.previous.type == Type.KEYWORD:
+      # Ensure that opening parentheses have a space before any keyword
+      # that is not being invoked like a member function.
+      if (token.previous and token.previous.type == Type.KEYWORD and
+          (not token.previous.metadata or
+           not token.previous.metadata.last_code or
+           not token.previous.metadata.last_code.string or
+           token.previous.metadata.last_code.string[-1:] != '.')):
         self._HandleError(errors.MISSING_SPACE, 'Missing space before "("',
                           token, position=Position.AtBeginning())
       elif token.previous and token.previous.type == Type.WHITESPACE:
         before_space = token.previous.previous
+        # Ensure that there is no extra space before a function invocation,
+        # even if the function being invoked happens to be a keyword.
         if (before_space and before_space.line_number == token.line_number and
-            before_space.type == Type.IDENTIFIER):
+            before_space.type == Type.IDENTIFIER or
+            (before_space.type == Type.KEYWORD and before_space.metadata and
+             before_space.metadata.last_code and
+             before_space.metadata.last_code.string and
+             before_space.metadata.last_code.string[-1:] == '.')):
           self._HandleError(
               errors.EXTRA_SPACE, 'Extra space before "("',
               token.previous, position=Position.All(token.previous.string))
