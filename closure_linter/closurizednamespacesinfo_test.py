@@ -557,6 +557,21 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
     self.assertEquals({}, missing_requires)
     self.assertEquals({'goog.events': 2}, _ToLineDict(illegal_alias_stmts))
 
+  def testScope_usedMultilevelAlias(self):
+    """Tests that an used alias symbol in a deep namespace is ok."""
+    input_lines = [
+        'goog.require(\'goog.Events\');',
+        'goog.scope(function() {',
+        'var Event = goog.Events.DeepNamespace.Event;',
+        'Event();',
+        '});'
+        ]
+
+    namespaces_info = self._GetNamespacesInfoForScript(input_lines, ['goog'])
+    missing_requires, illegal_alias_stmts = namespaces_info.GetMissingRequires()
+    self.assertEquals({}, missing_requires)
+    self.assertEquals({}, illegal_alias_stmts)
+
   def testScope_usedAlias(self):
     """Tests that aliased symbols result in correct requires."""
     input_lines = [

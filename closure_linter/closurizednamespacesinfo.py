@@ -267,18 +267,23 @@ class ClosurizedNamespacesInfo(object):
     missing_requires = dict()
     illegal_alias_statements = dict()
 
+    def ShouldRequireNamespace(namespace, identifier):
+      """Checks if a namespace would normally be required."""
+      return (
+          not self._IsPrivateIdentifier(identifier) and
+          namespace not in external_dependencies and
+          namespace not in self._provided_namespaces and
+          identifier not in external_dependencies and
+          identifier not in created_identifiers and
+          namespace not in missing_requires)
+
     # First check all the used identifiers where we know that their namespace
     # needs to be provided (unless they are optional).
     for ns in self._used_namespaces:
       namespace = ns.namespace
       identifier = ns.identifier
       if (not ns.alias_definition and
-          not self._IsPrivateIdentifier(identifier) and
-          namespace not in external_dependencies and
-          namespace not in self._provided_namespaces and
-          identifier not in external_dependencies and
-          identifier not in created_identifiers and
-          namespace not in missing_requires):
+          ShouldRequireNamespace(namespace, identifier)):
         missing_requires[namespace] = ns.GetLine()
 
     # Now that all required namespaces are known, we can check if the alias
@@ -286,12 +291,13 @@ class ClosurizedNamespacesInfo(object):
     # need explicit goog.require statements) are already covered. If not
     # the user shouldn't use the alias.
     for ns in self._used_namespaces:
-      if not ns.alias_definition: continue
+      if (not ns.alias_definition or
+          not ShouldRequireNamespace(ns.namespace, ns.identifier)):
+        continue
       if self._FindNamespace(ns.identifier, self._provided_namespaces,
                              created_identifiers, external_dependencies,
                              missing_requires):
         continue
-
       namespace = ns.identifier.rsplit('.', 1)[0]
       illegal_alias_statements[namespace] = ns.token
 
