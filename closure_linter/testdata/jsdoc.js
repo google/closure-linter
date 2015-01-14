@@ -624,6 +624,31 @@ class.goodReturn = function() {
 };
 
 
+/** @type {Array.<Object|null>} // JSDOC_PREFER_QUESTION_TO_PIPE_NULL */
+class.badType;
+
+
+/** @type {function():null|Object} */
+class.goodType;
+
+
+// As the syntax may look ambivalent: The function returns Object|null.
+/** @type {function():Object|null} // JSDOC_PREFER_QUESTION_TO_PIPE_NULL */
+class.badType;
+
+
+/** @type {(function():Object)|null} // JSDOC_PREFER_QUESTION_TO_PIPE_NULL */
+class.badType;
+
+
+/** @type {function(null,Object)} */
+class.goodType;
+
+
+/** @type {{a:null,b:Object}} */
+class.goodType;
+
+
 // +2: JSDOC_PREFER_QUESTION_TO_PIPE_NULL
 /**
  * @return {Object|null} A bad return.

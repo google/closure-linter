@@ -176,31 +176,27 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
             errors.LINE_TOO_LONG,
             'Line too long (%d characters).' % len(line), last_token)
 
-  def _CheckJsDocType(self, token):
+  def _CheckJsDocType(self, token, js_type):
     """Checks the given type for style errors.
 
     Args:
       token: The DOC_FLAG token for the flag whose type to check.
+      js_type: The flag's typeannotation.TypeAnnotation instance.
     """
-    flag = token.attached_object
-    flag_type = flag.type
-    if flag_type and flag_type is not None and not flag_type.isspace():
-      pieces = self.TYPE_SPLIT.split(flag_type)
-      if len(pieces) == 1 and flag_type.count('|') == 1 and (
-          flag_type.endswith('|null') or flag_type.startswith('null|')):
-        self._HandleError(
-            errors.JSDOC_PREFER_QUESTION_TO_PIPE_NULL,
-            'Prefer "?Type" to "Type|null": "%s"' % flag_type, token)
+    if not js_type: return
 
-      # TODO(user): We should do actual parsing of JsDoc types to report an
-      # error for wrong usage of '?' and '|' e.g. {?number|string|null} etc.
+    if js_type.type_group and len(js_type.sub_types) == 2:
+      for sub_type in js_type.sub_types:
+        if sub_type.identifier == 'null':
+          self._HandleError(
+              errors.JSDOC_PREFER_QUESTION_TO_PIPE_NULL,
+              'Prefer "?Type" to "Type|null": "%s"' % js_type, token)
 
-      if error_check.ShouldCheck(Rule.BRACES_AROUND_TYPE) and (
-          flag.type_start_token.type != Type.DOC_START_BRACE or
-          flag.type_end_token.type != Type.DOC_END_BRACE):
-        self._HandleError(
-            errors.MISSING_BRACES_AROUND_TYPE,
-            'Type must always be surrounded by curly braces.', token)
+    # TODO(user): We should report an error for wrong usage of '?' and '|'
+    # e.g. {?number|string|null} etc.
+
+    for sub_type in js_type.IterTypes():
+      self._CheckJsDocType(token, sub_type)
 
   def _CheckForMissingSpaceBeforeToken(self, token):
     """Checks for a missing space at the beginning of a token.
@@ -596,8 +592,15 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
           self._CheckForMissingSpaceBeforeToken(
               token.attached_object.type_start_token)
 
-        if flag.type and not flag.type.isspace():
-          self._CheckJsDocType(token)
+        if flag.jstype and not flag.jstype.IsEmpty():
+          self._CheckJsDocType(token, flag.jstype)
+
+          if error_check.ShouldCheck(Rule.BRACES_AROUND_TYPE) and (
+              flag.type_start_token.type != Type.DOC_START_BRACE or
+              flag.type_end_token.type != Type.DOC_END_BRACE):
+            self._HandleError(
+                errors.MISSING_BRACES_AROUND_TYPE,
+                'Type must always be surrounded by curly braces.', token)
 
     if token_type in (Type.DOC_FLAG, Type.DOC_INLINE_FLAG):
       if (token.values['name'] not in state.GetDocFlag().LEGAL_DOC and
