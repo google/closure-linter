@@ -376,6 +376,13 @@ class IndentationRules(object):
         override_is_hard_stop = (token_info.overridden_by and
                                  self._IsHardStop(
                                      token_info.overridden_by.token))
+        if token.type == Type.START_PAREN and token.previous:
+          # For someFunction(...) we allow to indent at the beginning of the
+          # identifier +4
+          prev = token.previous
+          if (prev.type == Type.IDENTIFIER and
+              prev.line_number == token.line_number):
+            hard_stops.add(prev.start_index + 4)
         if not override_is_hard_stop:
           start_index = token.start_index
           if token.line_number in self._start_index_offset:

@@ -395,6 +395,34 @@ if (true) {
   var x = 3;
 }
 
+// Regression tests for function indent + 4.
+// (The first example is from the styleguide.)
+if (veryLongFunctionNameA(
+        veryLongArgumentName) ||
+    veryLongFunctionNameB(
+    veryLongArgumentName)) {
+  veryLongFunctionNameC(veryLongFunctionNameD(
+      veryLongFunctioNameE(
+          veryLongFunctionNameF)));
+}
+
+if (outer(middle(
+        inner(first)))) {}
+if (outer(middle(
+              inner(second)),
+        outer_second)) {}
+if (nested.outer(
+        first)) {}
+if (nested.outer(nested.middle(
+                     first))) {}
+if (nested
+    .outer(nested.middle(
+        first))) {}
+if (nested.outer(first
+                     .middle(
+                         second),
+        third)) {}
+
 // goog.scope should not increase indentation.
 goog.scope(function() {
 var x = 5;
