@@ -456,6 +456,31 @@ class IndentationRules(object):
       if token.type not in Type.NON_CODE_TYPES:
         return False
 
+  def _AllFunctionPropertyAssignTokens(self, start_token, end_token):
+    """Checks if tokens are (likely) a valid function property assignment.
+
+    Args:
+      start_token: Start of the token range.
+      end_token: End of the token range.
+
+    Returns:
+      True if all tokens between start_token and end_token are legal tokens
+      within a function declaration and assignment into a property.
+    """
+    for token in tokenutil.GetTokenRange(start_token, end_token):
+      fn_decl_tokens = (Type.FUNCTION_DECLARATION,
+                        Type.PARAMETERS,
+                        Type.START_PARAMETERS,
+                        Type.END_PARAMETERS,
+                        Type.END_PAREN)
+      if (token.type not in fn_decl_tokens and
+          token.IsCode() and
+          not tokenutil.IsIdentifierOrDot(token) and
+          not token.IsAssignment() and
+          not (token.type == Type.OPERATOR and token.string == ',')):
+        return False
+    return True
+
   def _Add(self, token_info):
     """Adds the given token info to the stack.
 
@@ -469,9 +494,33 @@ class IndentationRules(object):
     if token_info.is_block or token_info.token.type == Type.START_PAREN:
       scope_token = tokenutil.GoogScopeOrNoneFromStartBlock(token_info.token)
       token_info.overridden_by = TokenInfo(scope_token) if scope_token else None
-      index = 1
-      while index <= len(self._stack):
-        stack_info = self._stack[-index]
+
+      if (token_info.token.type == Type.START_BLOCK and
+          token_info.token.metadata.context.type == Context.BLOCK):
+        # Handle function() {} assignments: their block contents get special
+        # treatment and are allowed to just indent by two whitespace.
+        # For example
+        # long.long.name = function(
+        #     a) {
+        # In this case the { and the = are on different lines.  But the
+        # override should still apply for all previous stack tokens that are
+        # part of an assignment of a block.
+
+        has_assignment = any(x for x in self._stack if x.token.IsAssignment())
+        if has_assignment:
+          last_token = token_info.token.previous
+          for stack_info in reversed(self._stack):
+            if (last_token and
+                not self._AllFunctionPropertyAssignTokens(stack_info.token,
+                                                          last_token)):
+              break
+            stack_info.overridden_by = token_info
+            stack_info.is_permanent_override = True
+            last_token = stack_info.token
+
+      index = len(self._stack) - 1
+      while index >= 0:
+        stack_info = self._stack[index]
         stack_token = stack_info.token
 
         if stack_info.line_number == token_info.line_number:
@@ -491,21 +540,9 @@ class IndentationRules(object):
             close_block = token_info.token.metadata.context.end_token
             stack_info.is_permanent_override = close_block and (
                 close_block.line_number != token_info.token.line_number)
-        elif (token_info.token.type == Type.START_BLOCK and
-              token_info.token.metadata.context.type == Context.BLOCK and
-              (stack_token.IsAssignment() or
-               tokenutil.IsIdentifierOrDot(stack_token))):
-          # When starting a function block, the override can transcend lines.
-          # For example
-          # long.long.name = function(
-          #     a) {
-          # In this case the { and the = are on different lines.  But the
-          # override should still apply.
-          stack_info.overridden_by = token_info
-          stack_info.is_permanent_override = True
         else:
           break
-        index += 1
+        index -= 1
 
     self._stack.append(token_info)
 

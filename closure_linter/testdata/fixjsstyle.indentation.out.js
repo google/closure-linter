@@ -71,6 +71,14 @@ x.reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongName
     .someMember = 10;
 
 
+// confused on allowed indentation in continued function assignments vs overlong
+// wrapped function calls.
+some.sample()  // LINE_ENDS_WITH_DOT
+    .then(function(response) {
+      return 1;
+    });
+
+
 /**
  * Some function.
  * @return {number} The number ten.
