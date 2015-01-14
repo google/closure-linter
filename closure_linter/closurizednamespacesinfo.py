@@ -231,6 +231,8 @@ class ClosurizedNamespacesInfo(object):
 
     # Assume goog namespace is always available.
     external_dependencies.add('goog')
+    # goog.module is treated as a builtin, too (for goog.module.get).
+    external_dependencies.add('goog.module')
 
     created_identifiers = set()
     for namespace, identifier, line_number in self._created_namespaces:

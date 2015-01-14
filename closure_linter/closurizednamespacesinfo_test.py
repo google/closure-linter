@@ -538,6 +538,52 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
     self.assertEquals({'goog.dom.classes': 4, 'goog.events.Event': 4},
                       missing_requires)
 
+  def testModule_alias(self):
+    """Tests that goog.module style aliases are supported."""
+    input_lines = [
+        'goog.module(\'test.module\');',
+        'var Unused = goog.require(\'goog.Unused\');',
+        'var AliasedClass = goog.require(\'goog.AliasedClass\');',
+        'var x = new AliasedClass();',
+        ]
+
+    namespaces_info = self._GetNamespacesInfoForScript(input_lines, ['goog'])
+    namespaceToken = self._GetRequireTokens('goog.AliasedClass')
+    self.assertFalse(namespaces_info.IsExtraRequire(namespaceToken),
+                     'AliasedClass should be marked as used')
+    unusedToken = self._GetRequireTokens('goog.Unused')
+    self.assertTrue(namespaces_info.IsExtraRequire(unusedToken),
+                    'Unused should be marked as not used')
+
+  def testModule_aliasInScope(self):
+    """Tests that goog.module style aliases are supported."""
+    input_lines = [
+        'goog.module(\'test.module\');',
+        'var AliasedClass = goog.require(\'goog.AliasedClass\');',
+        'goog.scope(function() {',
+        'var x = new AliasedClass();',
+        '});',
+        ]
+
+    namespaces_info = self._GetNamespacesInfoForScript(input_lines, ['goog'])
+    namespaceToken = self._GetRequireTokens('goog.AliasedClass')
+    self.assertFalse(namespaces_info.IsExtraRequire(namespaceToken),
+                     'AliasedClass should be marked as used')
+
+  def testModule_getAlwaysProvided(self):
+    """Tests that goog.module.get is recognized as a built-in."""
+    input_lines = [
+        'goog.provide(\'test.MyClass\');',
+        'goog.require(\'some.module\');',
+        'goog.scope(function() {',
+        'var module = goog.module.get(\'some.module\');',
+        'test.MyClass = function() {};',
+        '});',
+        ]
+
+    namespaces_info = self._GetNamespacesInfoForScript(input_lines, ['goog'])
+    self.assertEquals({}, namespaces_info.GetMissingRequires())
+
   def testScope_provides(self):
     """Tests that aliased symbols result in correct provides."""
     input_lines = [

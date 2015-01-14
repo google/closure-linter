@@ -736,7 +736,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
       A list of regexps, used as matches (rather than searches).
     """
     return [
-        re.compile(r'goog\.require\(.+\);?\s*$'),
+        re.compile(r'(var .+\s*=\s*)?goog\.require\(.+\);?\s*$'),
         re.compile(r'goog\.provide\(.+\);?\s*$'),
         re.compile(r'goog\.setTestOnly\(.+\);?\s*$'),
         re.compile(r'[\s/*]*@visibility\s*{.*}[\s*/]*$'),

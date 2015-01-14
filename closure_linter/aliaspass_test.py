@@ -79,6 +79,17 @@ class AliasPassTest(googletest.TestCase):
     self.assertEquals('goog.events.Event.MultilineIdentifier.someMethod',
                       long_start_token.metadata.aliased_symbol)
 
+  def testModuleAlias(self):
+    start_token = testutil.TokenizeSourceAndRunEcmaPass("""
+goog.module('goog.test');
+var Alias = goog.require('goog.Alias');
+Alias.use();
+""")
+    alias_pass = aliaspass.AliasPass(set(['goog']))
+    alias_pass.Process(start_token)
+    alias_token = _GetTokenByLineAndString(start_token, 'Alias', 3)
+    self.assertTrue(alias_token.metadata.is_alias_definition)
+
   def testMultipleGoogScopeCalls(self):
     start_token = testutil.TokenizeSourceAndRunEcmaPass(
         _TEST_MULTIPLE_SCOPE_SCRIPT)
