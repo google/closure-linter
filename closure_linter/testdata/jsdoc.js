@@ -628,11 +628,25 @@ class.goodReturn = function() {
 class.badType;
 
 
+/**
+ * For template types, the ?TYPE notation is not parsed correctly by the
+ * compiler, so don't warn here.
+ * @type {Array.<TYPE|null>}
+ * @template TYPE
+ */
+class.goodTemplateType;
+
+
+// As the syntax may look ambivalent: The function returns just null.
 /** @type {function():null|Object} */
 class.goodType;
 
 
-// As the syntax may look ambivalent: The function returns Object|null.
+/** @type {function():(null|Object)} // JSDOC_PREFER_QUESTION_TO_PIPE_NULL */
+class.badType;
+
+
+// As the syntax may look ambivalent: The function returns just Object.
 /** @type {function():Object|null} // JSDOC_PREFER_QUESTION_TO_PIPE_NULL */
 class.badType;
 

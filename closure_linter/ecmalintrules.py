@@ -186,8 +186,10 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
     if not js_type: return
 
     if js_type.type_group and len(js_type.sub_types) == 2:
-      for sub_type in js_type.sub_types:
-        if sub_type.identifier == 'null':
+      identifiers = [t.identifier for t in js_type.sub_types]
+      if 'null' in identifiers:
+        # Don't warn if the identifier is a template type (e.g. {TYPE|null}.
+        if not identifiers[0].isupper() and not identifiers[1].isupper():
           self._HandleError(
               errors.JSDOC_PREFER_QUESTION_TO_PIPE_NULL,
               'Prefer "?Type" to "Type|null": "%s"' % js_type, token)
