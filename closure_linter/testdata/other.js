@@ -205,6 +205,9 @@ var x = 100 + 100 + 100 + 100 + 100 + 100 + 100 + 100 + 100 + 100 + 100 + 100 +
 var x = z++
     + 20; // LINE_STARTS_WITH_OPERATOR
 
+var x = z. // LINE_ENDS_WITH_DOT
+    y();
+
 // Regression test: This line was incorrectly not reporting an error
 var marginHeight = x.layout.getSpacing_(elem, 'marginTop')
     + x.layout.getSpacing_(elem, 'marginBottom');
@@ -354,9 +357,9 @@ x = {
         40)
   ]
 } // MISSING_SEMICOLON
-x = a.
-    b.
-    c().
+x = a
+    .b
+    .c(). // LINE_ENDS_WITH_DOT
     d;
 
 // Test that blocks without braces don't generate incorrect semicolon and

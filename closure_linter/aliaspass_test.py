@@ -76,7 +76,7 @@ class AliasPassTest(googletest.TestCase):
         start_token, 'NonClosurizedClass', 18)
     self.assertIsNone(non_closurized_token.metadata.aliased_symbol)
 
-    long_start_token = _GetTokenByLineAndString(start_token, 'Event.', 24)
+    long_start_token = _GetTokenByLineAndString(start_token, 'Event', 24)
     self.assertEquals('goog.events.Event.MultilineIdentifier.someMethod',
                       long_start_token.metadata.aliased_symbol)
 

@@ -181,21 +181,11 @@ class IndentationRules(object):
     elif token_type == Type.KEYWORD and token.string in ('case', 'default'):
       self._Add(self._PopTo(Type.START_BLOCK))
 
-    elif is_first and token.string == '.':
-      # This token should have been on the previous line, so treat it as if it
-      # was there.
-      info = TokenInfo(token)
-      info.line_number = token.line_number - 1
-      self._Add(info)
-
     elif token_type == Type.SEMICOLON:
       self._PopTransient()
 
-    not_binary_operator = (token_type != Type.OPERATOR or
-                           token.metadata.IsUnaryOperator())
-    not_dot = token.string != '.'
-    if is_first and not_binary_operator and not_dot and token.type not in (
-        Type.COMMENT, Type.DOC_PREFIX, Type.STRING_TEXT):
+    if (is_first and
+        token_type not in (Type.COMMENT, Type.DOC_PREFIX, Type.STRING_TEXT)):
       if flags.FLAGS.debug_indentation:
         print 'Line #%d: stack %r' % (token.line_number, stack)
 
@@ -254,6 +244,9 @@ class IndentationRules(object):
     # Add some tokens only if they appear at the end of the line.
     is_last = self._IsLastCodeInLine(token)
     if is_last:
+      next_code_token = tokenutil.GetNextCodeToken(token)
+      # Increase required indentation if this is an overlong wrapped statement
+      # ending in an operator.
       if token_type == Type.OPERATOR:
         if token.string == ':':
           if stack and stack[-1].token.string == '?':
@@ -274,7 +267,6 @@ class IndentationRules(object):
             # When in an object literal, acts as operator indicating line
             # continuations.
             self._Add(TokenInfo(token))
-            pass
           else:
             # ':' might also be a statement label, no effect on indentation in
             # this case.
@@ -288,9 +280,10 @@ class IndentationRules(object):
             self._Add(TokenInfo(token))
           elif token.metadata.context.type != Context.PARAMETERS:
             self._PopTransient()
-
-      elif (token.string.endswith('.')
-            and token_type in (Type.IDENTIFIER, Type.NORMAL)):
+      # Increase required indentation if this is the end of a statement that's
+      # continued with an operator on the next line (e.g. the '.').
+      elif (next_code_token and next_code_token.type == Type.OPERATOR and
+            not next_code_token.metadata.IsUnaryOperator()):
         self._Add(TokenInfo(token))
       elif token_type == Type.PARAMETERS and token.string.endswith(','):
         # Parameter lists.
@@ -475,8 +468,8 @@ class IndentationRules(object):
       return
 
     if token_info.is_block or token_info.token.type == Type.START_PAREN:
-      token_info.overridden_by = (
-          tokenutil.GoogScopeOrNoneFromStartBlock(token_info.token))
+      scope_token = tokenutil.GoogScopeOrNoneFromStartBlock(token_info.token)
+      token_info.overridden_by = TokenInfo(scope_token) if scope_token else None
       index = 1
       while index <= len(self._stack):
         stack_info = self._stack[-index]
@@ -502,7 +495,7 @@ class IndentationRules(object):
         elif (token_info.token.type == Type.START_BLOCK and
               token_info.token.metadata.context.type == Context.BLOCK and
               (stack_token.IsAssignment() or
-               stack_token.type == Type.IDENTIFIER)):
+               tokenutil.IsIdentifierOrDot(stack_token))):
           # When starting a function block, the override can transcend lines.
           # For example
           # long.long.name = function(

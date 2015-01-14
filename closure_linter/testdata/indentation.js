@@ -67,8 +67,8 @@ callAFunction('abc' +
               'def' +
               'ghi');
 
-x.reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongName.
-    someMember = 10;
+x.reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongName
+    .someMember = 10;
 
 
 /**
@@ -147,8 +147,8 @@ switch (x) {
     }
     break;
 
-  case SadThatYouSwitch.
-      onSomethingLikeThis:
+  case SadThatYouSwitch
+      .onSomethingLikeThis:
     z = 10;
 
   case 40:
@@ -171,6 +171,17 @@ if (x) {
 /** @inheritDoc */
 goog.editor.SeamlessField.prototype.setupMutationEventHandlersGecko =
     function() {
+  var x = 10;
+  x++;
+};
+
+
+// Regression test for '.' at the end confusing the indentation checker if it is
+// not considered to be part of the identifier.
+/** @inheritDoc */
+goog.editor.SeamlessField.prototype.
+    setupMutationEventHandlersGecko = function() {
+  // -2: LINE_ENDS_WITH_DOT
   var x = 10;
   x++;
 };

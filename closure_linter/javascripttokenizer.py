@@ -51,7 +51,7 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
   """
 
   # Useful patterns for JavaScript parsing.
-  IDENTIFIER_CHAR = r'A-Za-z0-9_$.'
+  IDENTIFIER_CHAR = r'A-Za-z0-9_$'
 
   # Number patterns based on:
   # http://www.mozilla.org/js/language/js20-2000-07/formal/lexer-grammar.html
@@ -217,14 +217,15 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
       r'\bnew\b',
       r'\btypeof\b',
       r'\bvoid\b',
+      r'\.',
   ]
   OPERATOR = re.compile('|'.join(OPERATOR_LIST))
 
   WHITESPACE = re.compile(r'\s+')
   SEMICOLON = re.compile(r';')
   # Technically JavaScript identifiers can't contain '.', but we treat a set of
-  # nested identifiers as a single identifier.
-  NESTED_IDENTIFIER = r'[a-zA-Z_$][%s.]*' % IDENTIFIER_CHAR
+  # nested identifiers as a single identifier, except for trailing dots.
+  NESTED_IDENTIFIER = r'[a-zA-Z_$]([%s]|\.[a-zA-Z_$])*' % IDENTIFIER_CHAR
   IDENTIFIER = re.compile(NESTED_IDENTIFIER)
 
   SIMPLE_LVALUE = re.compile(r"""

@@ -41,6 +41,10 @@ from closure_linter.common import position
 
 FLAGS = flags.FLAGS
 flags.DEFINE_list('custom_jsdoc_tags', '', 'Extra jsdoc tags to allow')
+# TODO(user): When flipping this to True, remove logic from unit tests
+# that overrides this flag.
+flags.DEFINE_boolean('dot_on_next_line', False, 'Require dots to be'
+                     'placed on the next line for wrapped expressions')
 
 # TODO(robbyw): Check for extra parens on return statements
 # TODO(robbyw): Check for 0px in strings
@@ -128,8 +132,8 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
     while token and token.line_number == line_number:
       if state.IsTypeToken(token):
         line.insert(0, 'x' * len(token.string))
-      elif token.type in (Type.IDENTIFIER, Type.NORMAL):
-        # Dots are acceptable places to wrap.
+      elif token.type in (Type.IDENTIFIER, Type.OPERATOR):
+        # Dots are acceptable places to wrap (may be tokenized as identifiers).
         line.insert(0, token.string.replace('.', ' '))
       else:
         line.insert(0, token.string)
@@ -228,25 +232,48 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
 
     if not self._ExpectSpaceBeforeOperator(token):
       if (token.previous and token.previous.type == Type.WHITESPACE and
-          last_code and last_code.type in (Type.NORMAL, Type.IDENTIFIER)):
+          last_code and last_code.type in (Type.NORMAL, Type.IDENTIFIER) and
+          last_code.line_number == token.line_number):
         self._HandleError(
             errors.EXTRA_SPACE, 'Extra space before "%s"' % token.string,
             token.previous, position=Position.All(token.previous.string))
 
     elif (token.previous and
           not token.previous.IsComment() and
+          not tokenutil.IsDot(token) and
           token.previous.type in Type.EXPRESSION_ENDER_TYPES):
       self._HandleError(errors.MISSING_SPACE,
                         'Missing space before "%s"' % token.string, token,
                         position=Position.AtBeginning())
 
-    # Check that binary operators are not used to start lines.
-    if ((not last_code or last_code.line_number != token.line_number) and
+    # Check wrapping of operators.
+    next_code = tokenutil.GetNextCodeToken(token)
+
+    is_dot = tokenutil.IsDot(token)
+    wrapped_before = last_code and last_code.line_number != token.line_number
+    wrapped_after = next_code and next_code.line_number != token.line_number
+
+    if FLAGS.dot_on_next_line and is_dot and wrapped_after:
+      self._HandleError(
+          errors.LINE_ENDS_WITH_DOT,
+          '"." must go on the following line',
+          token)
+    if (not is_dot and wrapped_before and
         not token.metadata.IsUnaryOperator()):
       self._HandleError(
           errors.LINE_STARTS_WITH_OPERATOR,
-          'Binary operator should go on previous line "%s"' % token.string,
+          'Binary operator must go on previous line "%s"' % token.string,
           token)
+
+  def _IsLabel(self, token):
+    # A ':' token is considered part of a label if it occurs in a case
+    # statement, a plain label, or an object literal, i.e. is not part of a
+    # ternary.
+
+    return (token.string == ':' and
+            token.metadata.context.type in (Context.LITERAL_ELEMENT,
+                                            Context.CASE_BLOCK,
+                                            Context.STATEMENT))
 
   def _ExpectSpaceBeforeOperator(self, token):
     """Returns whether a space should appear before the given operator token.
@@ -260,13 +287,13 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
     if token.string == ',' or token.metadata.IsUnaryPostOperator():
       return False
 
+    if tokenutil.IsDot(token):
+      return False
+
     # Colons should appear in labels, object literals, the case of a switch
     # statement, and ternary operator. Only want a space in the case of the
     # ternary operator.
-    if (token.string == ':' and
-        token.metadata.context.type in (Context.LITERAL_ELEMENT,
-                                        Context.CASE_BLOCK,
-                                        Context.STATEMENT)):
+    if self._IsLabel(token):
       return False
 
     if token.metadata.IsUnaryOperator() and token.IsFirstInLine():
@@ -344,8 +371,8 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
         if (state.InAssignedFunction() and token.next
             and token.next.type != Type.SEMICOLON):
           next_token = tokenutil.GetNextCodeToken(token)
-          is_immediately_used = next_token.type == Type.START_PAREN or (
-              next_token.type == Type.NORMAL and next_token.string == '.')
+          is_immediately_used = (next_token.type == Type.START_PAREN or
+                                 tokenutil.IsDot(next_token))
           if not is_immediately_used:
             self._HandleError(
                 errors.MISSING_SEMICOLON_AFTER_FUNCTION,
