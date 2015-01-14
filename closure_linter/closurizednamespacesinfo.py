@@ -139,8 +139,7 @@ class ClosurizedNamespacesInfo(object):
     """
     namespace = tokenutil.GetStringAfterToken(token)
 
-    base_namespace = namespace.split('.', 1)[0]
-    if base_namespace not in self._closurized_namespaces:
+    if self.GetClosurizedNamespace(namespace) is None:
       return False
 
     if token in self._duplicate_provide_tokens:
@@ -165,8 +164,7 @@ class ClosurizedNamespacesInfo(object):
     """
     namespace = tokenutil.GetStringAfterToken(token)
 
-    base_namespace = namespace.split('.', 1)[0]
-    if base_namespace not in self._closurized_namespaces:
+    if self.GetClosurizedNamespace(namespace) is None:
       return False
 
     if namespace in self._ignored_extra_namespaces:

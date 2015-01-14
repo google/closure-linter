@@ -123,6 +123,16 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
     self.assertTrue(namespaces_info.IsExtraProvide(token),
                     'Should be extra since it is not created.')
 
+  def testIsExtraProvide_notCreatedMultipartClosurizedNamespace(self):
+    """Tests that provides for non-created namespaces are extra."""
+    input_lines = ['goog.provide(\'multi.part.namespace.Foo\');']
+
+    token, namespaces_info = self._GetStartTokenAndNamespacesInfoForScript(
+        input_lines, ['multi.part'])
+
+    self.assertTrue(namespaces_info.IsExtraProvide(token),
+                    'Should be extra since it is not created.')
+
   def testIsExtraProvide_duplicate(self):
     """Tests that providing a namespace twice makes the second one extra."""
     input_lines = [
@@ -182,6 +192,17 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
 
     token, namespaces_info = self._GetStartTokenAndNamespacesInfoForScript(
         input_lines, ['package'])
+
+    self.assertTrue(namespaces_info.IsExtraRequire(token),
+                    'Should be extra since it is not used.')
+
+  def testIsExtraRequire_notUsedMultiPartClosurizedNamespace(self):
+    """Tests unused require with multi-part closurized namespaces."""
+
+    input_lines = ['goog.require(\'multi.part.namespace.Foo\');']
+
+    token, namespaces_info = self._GetStartTokenAndNamespacesInfoForScript(
+        input_lines, ['multi.part'])
 
     self.assertTrue(namespaces_info.IsExtraRequire(token),
                     'Should be extra since it is not used.')
