@@ -144,9 +144,25 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
   #   delete, in, instanceof, new, typeof - included as operators.
   #   this - included in identifiers.
   #   null, undefined - not included, should go in some "special constant" list.
-  KEYWORD_LIST = ['break', 'case', 'catch', 'continue', 'default', 'do', 'else',
-      'finally', 'for', 'if', 'return', 'switch', 'throw', 'try', 'var',
-      'while', 'with']
+  KEYWORD_LIST = [
+      'break',
+      'case',
+      'catch',
+      'continue',
+      'default',
+      'do',
+      'else',
+      'finally',
+      'for',
+      'if',
+      'return',
+      'switch',
+      'throw',
+      'try',
+      'var',
+      'while',
+      'with',
+  ]
 
   # List of regular expressions to match as operators.  Some notes: for our
   # purposes, the comma behaves similarly enough to a normal operator that we
@@ -182,10 +198,21 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
   DOC_FLAG = re.compile(r'(^|(?<=\s))@(?P<name>[a-zA-Z]+)')
   # To properly parse parameter names and complex doctypes containing
   # whitespace, we need to tokenize whitespace into a token after certain
-  # doctags.
+  # doctags. All statetracker.HAS_TYPE that are not listed here must not contain
+  # any whitespace in their types.
   DOC_FLAG_LEX_SPACES = re.compile(
       r'(^|(?<=\s))@(?P<name>%s)\b' %
-      '|'.join(['param', 'typedef', 'private', 'protected', 'type']))
+      '|'.join([
+          'const',
+          'extends',
+          'param',
+          'private',
+          'protected',
+          'public',
+          'return',
+          'type',
+          'typedef'
+      ]))
 
   DOC_INLINE_FLAG = re.compile(r'(?<={)@(?P<name>[a-zA-Z]+)')
 
@@ -357,7 +384,7 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
             Matcher(cls.PARAMETERS, Type.PARAMETERS,
                     JavaScriptModes.PARAMETER_MODE)]}
 
-  def __init__(self, parse_js_doc = True):
+  def __init__(self, parse_js_doc=True):
     """Create a tokenizer object.
 
     Args:

@@ -863,7 +863,7 @@ class.goodOverrideDocs = function() {
  * Test that flags embedded in docs don't trigger ends with invalid character
  * error.
  * @bug 2983692
- * @deprecated Please use the {@code @typedef} annotation.
+ * @deprecated Please use the {@code @hidden} annotation.
  */
 function goodEndChar() {
 }

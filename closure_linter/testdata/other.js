@@ -72,7 +72,7 @@ x.z = 1000;
 
 /**
  * Visibility tags are allowed to have type, therefore they allowed to be long.
- * @package {function(ReallyReallyReallyReallyLongType, AnotherExtremelyLongType) : LongReturnType}
+ * @package {function(ReallyReallyReallyReallyLongType,AnotherExtremelyLongType):LongReturnType}
  */
 x.z = 1000;
 

@@ -145,23 +145,64 @@ class DocFlag(object):
       'unusedPrivateMembers',
       'uselessCode',
       'visibility',
-      'with'])
+      'with',
+  ])
 
   HAS_DESCRIPTION = frozenset([
-      'define', 'deprecated', 'desc', 'fileoverview', 'license', 'param',
-      'preserve', 'return', 'supported'])
+      'define',
+      'deprecated',
+      'desc',
+      'fileoverview',
+      'license',
+      'param',
+      'preserve',
+      'return',
+      'supported',
+  ])
 
+  # Docflags whose argument should be parsed using the typeannotation parser.
   HAS_TYPE = frozenset([
-      'define', 'enum', 'extends', 'final', 'implements', 'param', 'return',
-      'type', 'suppress', 'const', 'package', 'private', 'protected',
-      'public'])
+      'const',
+      'define',
+      'enum',
+      'extends',
+      'final',
+      'implements',
+      'mods',
+      'package',
+      'param',
+      'private',
+      'protected',
+      'public',
+      'return',
+      'suppress',
+      'type',
+      'typedef',
+  ])
 
-  CAN_OMIT_TYPE = frozenset(['enum', 'const', 'final', 'package', 'private',
-      'protected', 'public'])
+  # Docflags for which it's ok to omit the type (flag without an argument).
+  CAN_OMIT_TYPE = frozenset([
+      'const',
+      'enum',
+      'final',
+      'package',
+      'private',
+      'protected',
+      'public',
+      'suppress',  # We'll raise a separate INCORRECT_SUPPRESS_SYNTAX instead.
+  ])
 
+  # Docflags that only take a type as an argument and should not parse a
+  # following description.
   TYPE_ONLY = frozenset([
-      'enum', 'extends', 'implements', 'suppress', 'type',
-      'const', 'package'])
+      'const',
+      'enum',
+      'extends',
+      'implements',
+      'package',
+      'suppress',
+      'type',
+  ])
 
   HAS_NAME = frozenset(['param'])
 
