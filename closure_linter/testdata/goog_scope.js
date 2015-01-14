@@ -37,6 +37,9 @@ something.Something = function() {
    * @type {Else}
    */
   this.myElse = new Else();
+
+  /** @type {boolean} */
+  this.private_ = false;  // MISSING_PRIVATE, UNUSED_PRIVATE_MEMBER
 };
 
 /** // WRONG_BLANK_LINE_COUNT

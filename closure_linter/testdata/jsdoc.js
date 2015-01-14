@@ -142,6 +142,9 @@ function missingParamButInherit(object) {
  * @param {Object} object Docs.
  */
 function mismatchedParam(elem) { // WRONG_PARAMETER_DOCUMENTATION
+  /** @param {number} otherElem */
+  function nestedFunction(elem) { // WRONG_PARAMETER_DOCUMENTATION
+  };
 }
 
 

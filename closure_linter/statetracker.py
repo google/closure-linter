@@ -1144,8 +1144,8 @@ class StateTracker(object):
       last_code = tokenutil.SearchExcept(token, Type.NON_CODE_TYPES, None,
                                          True)
       doc = None
-      # Only functions outside of parens are eligible for documentation.
-      if not self._paren_depth:
+      # Only top-level functions are eligible for documentation.
+      if self.InTopLevel():
         doc = self._doc_comment
 
       name = ''
