@@ -152,10 +152,11 @@ class DocFlag(object):
       'preserve', 'return', 'supported'])
 
   HAS_TYPE = frozenset([
-      'define', 'enum', 'extends', 'implements', 'param', 'return', 'type',
-      'suppress', 'const', 'package', 'private', 'protected', 'public'])
+      'define', 'enum', 'extends', 'final', 'implements', 'param', 'return',
+      'type', 'suppress', 'const', 'package', 'private', 'protected',
+      'public'])
 
-  CAN_OMIT_TYPE = frozenset(['enum', 'const', 'package', 'private',
+  CAN_OMIT_TYPE = frozenset(['enum', 'const', 'final', 'package', 'private',
       'protected', 'public'])
 
   TYPE_ONLY = frozenset([
