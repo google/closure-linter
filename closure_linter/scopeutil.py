@@ -172,7 +172,7 @@ def MatchAlias(context):
   if code_tokens is None:
     return
 
-  if all(tokenutil.IsIdentifierOrDot(t) for t in code_tokens[3:]):
+  if all(t.IsType(JavaScriptTokenType.IDENTIFIER) for t in code_tokens[3:]):
     # var Foo = bar.Foo;
     alias, symbol = code_tokens[1], code_tokens[3]
     # Mark both tokens as an alias definition to not count them as usages.

@@ -560,11 +560,11 @@ def GetIdentifierStart(token):
 
   while (previous_code_token and (
       previous_code_token.IsType(JavaScriptTokenType.IDENTIFIER) or
-      IsDot(previous_code_token))):
+      _IsDot(previous_code_token))):
     start_token = previous_code_token
     previous_code_token = GetPreviousCodeToken(previous_code_token)
 
-  if IsDot(start_token):
+  if _IsDot(start_token):
     return None
 
   return start_token
@@ -593,7 +593,7 @@ def GetIdentifierForToken(token):
   prev_token = token.previous
   while prev_token:
     if (prev_token.IsType(JavaScriptTokenType.IDENTIFIER) or
-        IsDot(prev_token)):
+        _IsDot(prev_token)):
       return None
 
     if (prev_token.IsType(tokens.TokenType.WHITESPACE) or
@@ -629,15 +629,19 @@ def GetIdentifierForToken(token):
     for t in token.next:
       last_symbol_token = symbol_tokens[-1]
 
-      # A dot is part of the previous symbol.
-      if IsDot(t):
-        symbol_tokens.append(t)
-        continue
-
-      # An identifier is part of the previous symbol if the previous one was a
+      # An identifier is part of the previous symbol if it has a trailing
       # dot.
       if t.type in identifier_types:
-        if IsDot(last_symbol_token):
+        if last_symbol_token.string.endswith('.'):
+          symbol_tokens.append(t)
+          continue
+        else:
+          break
+
+      # A dot is part of the previous symbol if it does not have a trailing
+      # dot.
+      if _IsDot(t):
+        if not last_symbol_token.string.endswith('.'):
           symbol_tokens.append(t)
           continue
         else:
@@ -685,13 +689,6 @@ def GetStringAfterToken(token):
     return None
 
 
-def IsDot(token):
+def _IsDot(token):
   """Whether the token represents a "dot" operator (foo.bar)."""
-  return token.type is JavaScriptTokenType.OPERATOR and token.string == '.'
-
-
-def IsIdentifierOrDot(token):
-  """Whether the token is either an identifier or a '.'."""
-  return (token.type in [JavaScriptTokenType.IDENTIFIER,
-                         JavaScriptTokenType.SIMPLE_LVALUE] or
-          IsDot(token))
+  return token.type is tokens.TokenType.NORMAL and token.string == '.'

@@ -233,11 +233,11 @@ x.finally = function() {
 };
 
 x.finally();
-x
-    .finally();
+x.
+    finally();
 x.finally (); // EXTRA_SPACE
-x
-    .finally (); // EXTRA_SPACE
+x.
+    finally (); // EXTRA_SPACE
 try {
 } finally (e) {
 }

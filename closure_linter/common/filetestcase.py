@@ -25,7 +25,6 @@ __author__ = ('robbyw@google.com (Robert Walker)',
 
 import re
 
-import gflags as flags
 import unittest as googletest
 from closure_linter.common import erroraccumulator
 
@@ -55,12 +54,6 @@ class AnnotatedFileTestCase(googletest.TestCase):
     self._messages = []
     self._lint_callable = lint_callable
     self._converter = converter
-
-  def setUp(self):
-    flags.FLAGS.dot_on_next_line = True
-
-  def tearDown(self):
-    flags.FLAGS.dot_on_next_line = False
 
   def shortDescription(self):
     """Provides a description for the test."""

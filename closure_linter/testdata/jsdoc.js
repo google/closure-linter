@@ -1073,8 +1073,8 @@ test.x.y = function() {
  * parsed as being here.
  * @param {Event} e The event.
  */
-detroit.commands.ChangeOwnerCommand
-    .prototype.handleDocumentStoreCompleteEvent = function(e) {
+detroit.commands.ChangeOwnerCommand.
+    prototype.handleDocumentStoreCompleteEvent = function(e) {
   this.x = e.target;
 };
 
@@ -1258,18 +1258,18 @@ TypelessEnumTest = {
 // prototype.
 x.prototype = {};
 
-y
-    .prototype = {};
+y.
+    prototype = {};
 
-x.y
-    .z.prototype = {};
+x.y.
+    z.prototype = {};
 
 x.myprototype = {}; // MISSING_MEMBER_DOCUMENTATION
 
 x.prototype.y = 5; // MISSING_MEMBER_DOCUMENTATION
 
-x.prototype
-    .y.z = {}; // MISSING_MEMBER_DOCUMENTATION
+x.prototype.
+    y.z = {}; // MISSING_MEMBER_DOCUMENTATION
 
 
 /** @typedef {(string|number)} */

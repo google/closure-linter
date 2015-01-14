@@ -99,12 +99,8 @@ start1. // comment
         tokenutil.GetPreviousCodeToken(_GetTokenStartingWith('start1')))
 
     self.assertEquals(
-        '.',
+        'start1.',
         tokenutil.GetPreviousCodeToken(_GetTokenStartingWith('end1')).string)
-
-    self.assertEquals(
-        'start1',
-        tokenutil.GetPreviousCodeToken(_GetTokenStartingWith('.')).string)
 
   def testGetNextCodeToken(self):
 
@@ -120,12 +116,8 @@ start1. // comment
           return t
 
     self.assertEquals(
-        '.',
-        tokenutil.GetNextCodeToken(_GetTokenStartingWith('start1')).string)
-
-    self.assertEquals(
         'end1',
-        tokenutil.GetNextCodeToken(_GetTokenStartingWith('.')).string)
+        tokenutil.GetNextCodeToken(_GetTokenStartingWith('start1')).string)
 
     self.assertEquals(
         None,
