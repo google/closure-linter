@@ -92,7 +92,7 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
       ['@%s' % tag for tag in statetracker.DocFlag.HAS_TYPE])
 
   JSDOC_FLAGS_DESCRIPTION_NOT_REQUIRED = frozenset([
-      '@param', '@return', '@returns'])
+      '@fileoverview', '@param', '@return', '@returns'])
 
   def __init__(self):
     """Initialize this lint rule object."""
