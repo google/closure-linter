@@ -311,8 +311,7 @@ class ClosurizedNamespacesInfo(object):
 
         # If there is a suppression for the require, add a usage for it so it
         # gets treated as a regular goog.require (i.e. still gets sorted).
-        jsdoc = state_tracker.GetDocComment()
-        if jsdoc and ('extraRequire' in jsdoc.suppressions):
+        if self._HasSuppression(state_tracker, 'extraRequire'):
           self._suppressed_requires.append(namespace)
           self._AddUsedNamespace(state_tracker, namespace, token.line_number)
 
@@ -326,8 +325,7 @@ class ClosurizedNamespacesInfo(object):
 
         # If there is a suppression for the provide, add a creation for it so it
         # gets treated as a regular goog.provide (i.e. still gets sorted).
-        jsdoc = state_tracker.GetDocComment()
-        if jsdoc and ('extraProvide' in jsdoc.suppressions):
+        if self._HasSuppression(state_tracker, 'extraProvide'):
           self._AddCreatedNamespace(state_tracker, namespace, token.line_number)
 
       elif token.string == 'goog.scope':
@@ -353,6 +351,13 @@ class ClosurizedNamespacesInfo(object):
         jsdoc = state_tracker.GetDocComment()
         if token.metadata and token.metadata.aliased_symbol:
           whole_identifier_string = token.metadata.aliased_symbol
+        elif (token.string == 'goog.module.get' and
+              not self._HasSuppression(state_tracker, 'extraRequire')):
+          # Cannot use _AddUsedNamespace as this is not an identifier, but
+          # already the entire namespace that's required.
+          namespace = tokenutil.GetStringAfterToken(token)
+          self._used_namespaces.append(
+              [namespace, namespace, token.line_number])
         if jsdoc and jsdoc.HasFlag('typedef'):
           self._AddCreatedNamespace(state_tracker, whole_identifier_string,
                                     token.line_number,
@@ -413,8 +418,7 @@ class ClosurizedNamespacesInfo(object):
     if not namespace:
       namespace = identifier
 
-    jsdoc = state_tracker.GetDocComment()
-    if jsdoc and 'missingProvide' in jsdoc.suppressions:
+    if self._HasSuppression(state_tracker, 'missingProvide'):
       return
 
     self._created_namespaces.append([namespace, identifier, line_number])
@@ -430,14 +434,17 @@ class ClosurizedNamespacesInfo(object):
       identifier: An identifier which has been used.
       line_number: Line number where namespace is used.
     """
-    jsdoc = state_tracker.GetDocComment()
-    if jsdoc and 'missingRequire' in jsdoc.suppressions:
+    if self._HasSuppression(state_tracker, 'missingRequire'):
       return
 
     namespace = self.GetClosurizedNamespace(identifier)
     # b/5362203 If its a variable in scope then its not a required namespace.
     if namespace and not state_tracker.IsVariableInScope(namespace):
       self._used_namespaces.append([namespace, identifier, line_number])
+
+  def _HasSuppression(self, state_tracker, suppression):
+    jsdoc = state_tracker.GetDocComment()
+    return jsdoc and suppression in jsdoc.suppressions
 
   def GetClosurizedNamespace(self, identifier):
     """Given an identifier, returns the namespace that identifier is from.

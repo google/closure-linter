@@ -574,15 +574,29 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
     """Tests that goog.module.get is recognized as a built-in."""
     input_lines = [
         'goog.provide(\'test.MyClass\');',
-        'goog.require(\'some.module\');',
+        'goog.require(\'goog.someModule\');',
         'goog.scope(function() {',
-        'var module = goog.module.get(\'some.module\');',
+        'var someModule = goog.module.get(\'goog.someModule\');',
         'test.MyClass = function() {};',
         '});',
         ]
 
     namespaces_info = self._GetNamespacesInfoForScript(input_lines, ['goog'])
     self.assertEquals({}, namespaces_info.GetMissingRequires())
+
+  def testModule_requireForGet(self):
+    """Tests that goog.module.get needs a goog.require call."""
+    input_lines = [
+        'goog.provide(\'test.MyClass\');',
+        'function foo() {',
+        '  var someModule = goog.module.get(\'goog.someModule\');',
+        '  someModule.doSth();',
+        '}',
+        ]
+
+    namespaces_info = self._GetNamespacesInfoForScript(input_lines, ['goog'])
+    self.assertEquals({'goog.someModule': 3},
+                      namespaces_info.GetMissingRequires())
 
   def testScope_provides(self):
     """Tests that aliased symbols result in correct provides."""
