@@ -65,6 +65,7 @@ _TEST_FILES = [
     'provide_blank.js',
     'provide_extra.js',
     'provide_missing.js',
+    'require_alias.js',
     'require_all_caps.js',
     'require_blank.js',
     'require_extra.js',

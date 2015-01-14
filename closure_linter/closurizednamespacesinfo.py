@@ -38,6 +38,32 @@ DEFAULT_EXTRA_NAMESPACES = [
 ]
 
 
+class UsedNamespace(object):
+  """A type for information about a used namespace."""
+
+  def __init__(self, namespace, identifier, token, alias_definition):
+    """Initializes the instance.
+
+    Args:
+      namespace: the namespace of an identifier used in the file
+      identifier: the complete identifier
+      token: the token that uses the namespace
+      alias_definition: a boolean stating whether the namespace is only to used
+          for an alias definition and should not be required.
+    """
+    self.namespace = namespace
+    self.identifier = identifier
+    self.token = token
+    self.alias_definition = alias_definition
+
+  def GetLine(self):
+    return self.token.line_number
+
+  def __repr__(self):
+    return 'UsedNamespace(%s)' % ', '.join(
+        ['%s=%s' % (k, repr(v)) for k, v in self.__dict__.iteritems()])
+
+
 class ClosurizedNamespacesInfo(object):
   """Dependency information for closurized JavaScript files.
 
@@ -86,9 +112,7 @@ class ClosurizedNamespacesInfo(object):
     # the line number where it's created.
     self._created_namespaces = []
 
-    # A list of tuples where the first element is the namespace of an identifier
-    # used in the file, the second is the identifier itself and the third is the
-    # line number where it's used.
+    # A list of UsedNamespace instances.
     self._used_namespaces = []
 
     # A list of seemingly-unnecessary namespaces that are goog.required() and
@@ -183,8 +207,9 @@ class ClosurizedNamespacesInfo(object):
       return True
 
     # TODO(user): There's probably a faster way to compute this.
-    for used_namespace, used_identifier, _ in self._used_namespaces:
-      if namespace == used_namespace or namespace == used_identifier:
+    for ns in self._used_namespaces:
+      if (not ns.alias_definition and (
+          namespace == ns.namespace or namespace == ns.identifier)):
         return False
 
     return True
@@ -235,23 +260,64 @@ class ClosurizedNamespacesInfo(object):
     external_dependencies.add('goog.module')
 
     created_identifiers = set()
-    for namespace, identifier, line_number in self._created_namespaces:
+    for unused_namespace, identifier, unused_line_number in (
+        self._created_namespaces):
       created_identifiers.add(identifier)
 
     missing_requires = dict()
-    for namespace, identifier, line_number in self._used_namespaces:
-      if (not self._IsPrivateIdentifier(identifier) and
+    illegal_alias_statements = dict()
+
+    # First check all the used identifiers where we know that their namespace
+    # needs to be provided (unless they are optional).
+    for ns in self._used_namespaces:
+      namespace = ns.namespace
+      identifier = ns.identifier
+      if (not ns.alias_definition and
+          not self._IsPrivateIdentifier(identifier) and
           namespace not in external_dependencies and
           namespace not in self._provided_namespaces and
           identifier not in external_dependencies and
           identifier not in created_identifiers and
           namespace not in missing_requires):
-        missing_requires[namespace] = line_number
+        missing_requires[namespace] = ns.GetLine()
 
-    return missing_requires
+    # Now that all required namespaces are known, we can check if the alias
+    # definitions (that are likely being used for typeannotations that don't
+    # need explicit goog.require statements) are already covered. If not
+    # the user shouldn't use the alias.
+    for ns in self._used_namespaces:
+      if not ns.alias_definition: continue
+      if self._FindNamespace(ns.identifier, self._provided_namespaces,
+                             created_identifiers, external_dependencies,
+                             missing_requires):
+        continue
+
+      namespace = ns.identifier.rsplit('.', 1)[0]
+      illegal_alias_statements[namespace] = ns.token
+
+    return missing_requires, illegal_alias_statements
+
+  def _FindNamespace(self, identifier, *namespaces_list):
+    """Finds the namespace of an identifier given a list of other namespaces.
+
+    Args:
+      identifier: An identifier whose parent needs to be defined.
+          e.g. for goog.bar.foo we search something that provides
+          goog.bar.
+      *namespaces_list: var args of iterables of namespace identifiers
+    Returns:
+      The namespace that the given identifier is part of or None.
+    """
+    identifier = identifier.rsplit('.', 1)[0]
+    identifier_prefix = identifier + '.'
+    for namespaces in namespaces_list:
+      for namespace in namespaces:
+        if namespace == identifier or namespace.startswith(identifier_prefix):
+          return namespace
+    return None
 
   def _IsPrivateIdentifier(self, identifier):
-    """Returns whether the given identifer is private."""
+    """Returns whether the given identifier is private."""
     pieces = identifier.split('.')
     for piece in pieces:
       if piece.endswith('_'):
@@ -313,7 +379,7 @@ class ClosurizedNamespacesInfo(object):
         # gets treated as a regular goog.require (i.e. still gets sorted).
         if self._HasSuppression(state_tracker, 'extraRequire'):
           self._suppressed_requires.append(namespace)
-          self._AddUsedNamespace(state_tracker, namespace, token.line_number)
+          self._AddUsedNamespace(state_tracker, namespace, token)
 
       elif token.string == 'goog.provide':
         self._provide_tokens.append(token)
@@ -356,17 +422,19 @@ class ClosurizedNamespacesInfo(object):
           # Cannot use _AddUsedNamespace as this is not an identifier, but
           # already the entire namespace that's required.
           namespace = tokenutil.GetStringAfterToken(token)
-          self._used_namespaces.append(
-              [namespace, namespace, token.line_number])
+          namespace = UsedNamespace(namespace, namespace, token,
+                                    alias_definition=False)
+          self._used_namespaces.append(namespace)
         if jsdoc and jsdoc.HasFlag('typedef'):
           self._AddCreatedNamespace(state_tracker, whole_identifier_string,
                                     token.line_number,
                                     namespace=self.GetClosurizedNamespace(
                                         whole_identifier_string))
         else:
-          if not (token.metadata and token.metadata.is_alias_definition):
-            self._AddUsedNamespace(state_tracker, whole_identifier_string,
-                                   token.line_number)
+          is_alias_definition = (token.metadata and
+                                 token.metadata.is_alias_definition)
+          self._AddUsedNamespace(state_tracker, whole_identifier_string,
+                                 token, is_alias_definition)
 
     elif token.type == TokenType.SIMPLE_LVALUE:
       identifier = token.values['identifier']
@@ -386,7 +454,7 @@ class ClosurizedNamespacesInfo(object):
       if identifier:
         namespace = self.GetClosurizedNamespace(identifier)
         if state_tracker.InFunction():
-          self._AddUsedNamespace(state_tracker, identifier, token.line_number)
+          self._AddUsedNamespace(state_tracker, identifier, token)
         elif namespace and namespace != 'goog':
           self._AddCreatedNamespace(state_tracker, identifier,
                                     token.line_number, namespace=namespace)
@@ -399,7 +467,7 @@ class ClosurizedNamespacesInfo(object):
         if flag_type == 'implements' or (flag_type == 'extends'
                                          and is_interface):
           identifier = flag.jstype.alias or flag.jstype.identifier
-          self._AddUsedNamespace(state_tracker, identifier, token.line_number)
+          self._AddUsedNamespace(state_tracker, identifier, token)
           # Since we process doctypes only for implements and extends, the
           # type is a simple one and we don't need any iteration for subtypes.
 
@@ -425,7 +493,8 @@ class ClosurizedNamespacesInfo(object):
 
     self._created_namespaces.append([namespace, identifier, line_number])
 
-  def _AddUsedNamespace(self, state_tracker, identifier, line_number):
+  def _AddUsedNamespace(self, state_tracker, identifier, token,
+                        is_alias_definition=False):
     """Adds the namespace of an identifier to the list of used namespaces.
 
     If the identifier is annotated with a 'missingRequire' suppression, it is
@@ -434,7 +503,10 @@ class ClosurizedNamespacesInfo(object):
     Args:
       state_tracker: The JavaScriptStateTracker instance.
       identifier: An identifier which has been used.
-      line_number: Line number where namespace is used.
+      token: The token in which the namespace is used.
+      is_alias_definition: If the used namespace is part of an alias_definition.
+          Aliased symbols need their parent namespace to be available, if it is
+          not yet required through another symbol, an error will be thrown.
     """
     if self._HasSuppression(state_tracker, 'missingRequire'):
       return
@@ -442,7 +514,9 @@ class ClosurizedNamespacesInfo(object):
     namespace = self.GetClosurizedNamespace(identifier)
     # b/5362203 If its a variable in scope then its not a required namespace.
     if namespace and not state_tracker.IsVariableInScope(namespace):
-      self._used_namespaces.append([namespace, identifier, line_number])
+      namespace = UsedNamespace(namespace, identifier, token,
+                                is_alias_definition)
+      self._used_namespaces.append(namespace)
 
   def _HasSuppression(self, state_tracker, suppression):
     jsdoc = state_tracker.GetDocComment()

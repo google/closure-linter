@@ -75,8 +75,8 @@ dummy.Something = function() {
 
 goog.scope(function() {
 var unusedAlias = dummy.Something;   // UNUSED_LOCAL_VARIABLE
-var UsedTypeAlias = dummy.Something;  // UNUSED_LOCAL_VARIABLE
-var AnotherUsedTypeAlias = dummy.Something;  // UNUSED_LOCAL_VARIABLE
+var UsedTypeAlias = dummy.Something;
+var AnotherUsedTypeAlias = dummy.Something;
 
 
 /** @protected {AnotherUsedTypeAlias.Something|UsedTypeAlias} */

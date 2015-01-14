@@ -440,12 +440,15 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
           # If there are no require statements, missing requires should be
           # reported after the last provide.
           if not namespaces_info.GetRequiredNamespaces():
-            missing_requires = namespaces_info.GetMissingRequires()
+            missing_requires, illegal_alias_statements = (
+                namespaces_info.GetMissingRequires())
             if missing_requires:
               self._ReportMissingRequires(
                   missing_requires,
                   tokenutil.GetLastTokenInSameLine(token).next,
                   True)
+            if illegal_alias_statements:
+              self._ReportIllegalAliasStatement(illegal_alias_statements)
 
       elif (token.string == 'goog.require' and
             not state.InFunction() and
@@ -477,12 +480,15 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
 
         # Report missing goog.require statements.
         if namespaces_info.IsLastRequire(token):
-          missing_requires = namespaces_info.GetMissingRequires()
+          missing_requires, illegal_alias_statements = (
+              namespaces_info.GetMissingRequires())
           if missing_requires:
             self._ReportMissingRequires(
                 missing_requires,
                 tokenutil.GetLastTokenInSameLine(token).next,
                 False)
+          if illegal_alias_statements:
+            self._ReportIllegalAliasStatement(illegal_alias_statements)
 
     elif token.type == Type.OPERATOR:
       last_in_line = token.IsLastInLine()
@@ -559,11 +565,11 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
           self._unused_local_variables_by_scope[-1][identifier] = token
         elif token.type == Type.IDENTIFIER:
           # This covers most cases where the variable is used as an identifier.
-          self._MarkLocalVariableUsed(token)
+          self._MarkLocalVariableUsed(token.string)
         elif token.type == Type.SIMPLE_LVALUE and '.' in identifier:
           # This covers cases where a value is assigned to a property of the
           # variable.
-          self._MarkLocalVariableUsed(token)
+          self._MarkLocalVariableUsed(token.string)
     elif token.type == Type.START_BLOCK:
       if in_function and state.IsFunctionOpen():
         # Push a new map onto the stack
@@ -577,18 +583,40 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
               errors.UNUSED_LOCAL_VARIABLE,
               'Unused local variable: %s.' % unused_token.string,
               unused_token)
+    elif token.type == Type.DOC_FLAG:
+      # Flags that use aliased symbols should be counted.
+      flag = token.attached_object
+      js_type = flag and flag.jstype
+      if flag and flag.flag_type in state.GetDocFlag().HAS_TYPE and js_type:
+        self._MarkAliasUsed(js_type)
 
-  def _MarkLocalVariableUsed(self, token):
-    """Marks the local variable as used in the relevant scope.
+  def _MarkAliasUsed(self, js_type):
+    """Marks aliases in a type as used.
 
+    Recursively iterates over all subtypes in a jsdoc type annotation and
+    tracks usage of aliased symbols (which may be local variables).
     Marks the local variable as used in the scope nearest to the current
     scope that matches the given token.
 
     Args:
-      token: The token representing the potential usage of a local variable.
+      js_type: The jsdoc type, a typeannotation.TypeAnnotation object.
     """
+    if js_type.alias:
+      self._MarkLocalVariableUsed(js_type.identifier)
+    for sub_type in js_type.IterTypes():
+      self._MarkAliasUsed(sub_type)
 
-    identifier = token.string.split('.')[0]
+  def _MarkLocalVariableUsed(self, identifier):
+    """Marks the local variable as used in the relevant scope.
+
+    Marks the local variable in the scope nearest to the current scope that
+    matches the given identifier as used.
+
+    Args:
+      identifier: The identifier representing the potential usage of a local
+                  variable.
+    """
+    identifier = identifier.split('.', 1)[0]
     # Find the first instance of the identifier in the stack of function scopes
     # and mark it used.
     for unused_local_variables in reversed(
@@ -659,6 +687,15 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
         token, position=Position.AtBeginning(),
         fix_data=(missing_requires.keys(), need_blank_line))
 
+  def _ReportIllegalAliasStatement(self, illegal_alias_statements):
+    """Reports alias statements that would need a goog.require."""
+    for namespace, token in illegal_alias_statements.iteritems():
+      self._HandleError(
+          errors.ALIAS_STMT_NEEDS_GOOG_REQUIRE,
+          'The alias definition would need the namespace \'%s\' which is not '
+          'required through any other symbol.' % namespace,
+          token, position=Position.AtBeginning())
+
   def Finalize(self, state):
     """Perform all checks that need to occur after all lines are processed."""
     # Call the base class's Finalize function.
@@ -691,10 +728,12 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
           self._ReportMissingProvides(
               missing_provides, state.GetFirstToken(), None)
 
-        missing_requires = namespaces_info.GetMissingRequires()
+        missing_requires, illegal_alias = namespaces_info.GetMissingRequires()
         if missing_requires:
           self._ReportMissingRequires(
               missing_requires, state.GetFirstToken(), None)
+        if illegal_alias:
+          self._ReportIllegalAliasStatement(illegal_alias)
 
     self._CheckSortedRequiresProvides(state.GetFirstToken())
 
