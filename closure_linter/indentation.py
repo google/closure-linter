@@ -212,8 +212,7 @@ class IndentationRules(object):
         indentation_errors.append([
             errors.WRONG_INDENTATION,
             'Wrong indentation: expected any of {%s} but got %d' % (
-                ', '.join(
-                    ['%d' % x for x in expected]), actual),
+                ', '.join('%d' % x for x in expected if x < 80), actual),
             token,
             Position(actual, expected[0])])
         self._start_index_offset[token.line_number] = expected[0] - actual
