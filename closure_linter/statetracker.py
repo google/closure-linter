@@ -24,6 +24,7 @@ import re
 from closure_linter import javascripttokenizer
 from closure_linter import javascripttokens
 from closure_linter import tokenutil
+from closure_linter import typeannotation
 
 # Shorthand
 Type = javascripttokens.JavaScriptTokenType
@@ -39,7 +40,8 @@ class DocFlag(object):
       including braces.
     type_end_token: The last token specifying the flag type,
       including braces.
-    type: The type spec.
+    type: The type spec string.
+    jstype: The type spec, a TypeAnnotation instance.
     name_token: The token specifying the flag name.
     name: The flag name
     description_start_token: The first token in the description.
@@ -220,6 +222,7 @@ class DocFlag(object):
 
     # Extract type, if applicable.
     self.type = None
+    self.jstype = None
     self.type_start_token = None
     self.type_end_token = None
     if self.flag_type in self.HAS_TYPE:
@@ -228,6 +231,8 @@ class DocFlag(object):
       if brace:
         end_token, contents = _GetMatchingEndBraceAndContents(brace)
         self.type = contents
+        self.jstype = typeannotation.Parse(brace, end_token,
+                                           error_handler=None)
         self.type_start_token = brace
         self.type_end_token = end_token
       elif (self.flag_type in self.TYPE_ONLY and
@@ -241,6 +246,8 @@ class DocFlag(object):
             self.type_start_token)
         if self.type is not None:
           self.type = self.type.strip()
+          self.jstype = typeannotation.Parse(flag_token, self.type_end_token,
+                                             error_handler=None)
 
     # Extract name, if applicable.
     self.name_token = None
@@ -281,6 +288,9 @@ class DocFlag(object):
         self.description_start_token = interesting_token
         self.description_end_token, self.description = (
             _GetEndTokenAndContents(interesting_token))
+
+  def __repr__(self):
+    return '<Flag: %s, type:%s>' % (self.flag_type, repr(self.jstype))
 
 
 class DocComment(object):
@@ -1099,8 +1109,12 @@ class StateTracker(object):
       self._doc_comment.end_token = token
 
     elif type in (Type.DOC_FLAG, Type.DOC_INLINE_FLAG):
-      flag = self._doc_flag(token)
-      token.attached_object = flag
+      # Don't overwrite flags if they were already parsed in a previous pass.
+      if token.attached_object is None:
+        flag = self._doc_flag(token)
+        token.attached_object = flag
+      else:
+        flag = token.attached_object
       self._doc_comment.AddFlag(flag)
 
       if flag.flag_type == 'suppress':

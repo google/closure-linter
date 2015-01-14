@@ -6,9 +6,7 @@
 
 import unittest as googletest
 
-from closure_linter import statetracker
 from closure_linter import testutil
-from closure_linter import typeannotation
 
 CRAZY_TYPE = ('Array.<!function(new:X,{a:null},...(c|d)):'
               'function(...(Object.<string>))>')
@@ -26,10 +24,7 @@ class TypeParserTest(googletest.TestCase):
   def _ParseType(self, type_str):
     """Creates a comment to parse and returns the parsed type."""
     comment = self._ParseComment('/** @type {%s} **/' % type_str)
-    flag = comment.GetDocFlags()[0]
-    brace = flag.flag_token.next.next
-    end_token, _ = statetracker._GetMatchingEndBraceAndContents(brace)
-    return typeannotation.Parse(brace, end_token, None)
+    return comment.GetDocFlags()[0].jstype
 
   def assertProperReconstruction(self, type_str, matching_str=None):
     """Parses the type and asserts the its repr matches the type.
