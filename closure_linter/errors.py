@@ -150,5 +150,5 @@ NEW_ERRORS = frozenset([
     ALIAS_STMT_NEEDS_GOOG_REQUIRE,
     JSDOC_DOES_NOT_PARSE,
     LINE_ENDS_WITH_DOT,
-    # Errors added after 2.3.16:
+    # Errors added after 2.3.17:
     ])
