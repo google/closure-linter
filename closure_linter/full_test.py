@@ -73,6 +73,7 @@ _TEST_FILES = [
     'require_function_through_both.js',
     'require_function_through_namespace.js',
     'require_interface.js',
+    'require_interface_alias.js',
     'require_interface_base.js',
     'require_lower_case.js',
     'require_missing.js',

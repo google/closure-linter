@@ -392,14 +392,16 @@ class ClosurizedNamespacesInfo(object):
                                     token.line_number, namespace=namespace)
 
     elif token.type == TokenType.DOC_FLAG:
-      flag_type = token.attached_object.flag_type
-      doc_comment = state_tracker.GetDocComment()
-      is_interface = doc_comment.HasFlag('interface')
-      if flag_type == 'implements' or (flag_type == 'extends' and is_interface):
-        # Interfaces should be goog.require'd.
-        doc_flag = doc_comment.GetFlag(flag_type)
-        self._AddUsedNamespace(state_tracker, doc_flag.type,
-                               token.line_number)
+      flag = token.attached_object
+      flag_type = flag.flag_type
+      if flag and flag.HasType() and flag.jstype:
+        is_interface = state_tracker.GetDocComment().HasFlag('interface')
+        if flag_type == 'implements' or (flag_type == 'extends'
+                                         and is_interface):
+          identifier = flag.jstype.alias or flag.jstype.identifier
+          self._AddUsedNamespace(state_tracker, identifier, token.line_number)
+          # Since we process doctypes only for implements and extends, the
+          # type is a simple one and we don't need any iteration for subtypes.
 
   def _AddCreatedNamespace(self, state_tracker, identifier, line_number,
                            namespace=None):

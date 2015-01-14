@@ -424,6 +424,19 @@ class ClosurizedNamespacesInfoTest(googletest.TestCase):
     namespaces_info = self._GetNamespacesInfoForScript(input_lines, ['package'])
     self.assertEquals(0, len(namespaces_info.GetMissingRequires()))
 
+  def testGetMissingRequires_implements(self):
+    """Tests that a parametrized type requires the correct identifier."""
+    input_lines = [
+        '/** @constructor @implements {package.Bar<T>} */',
+        'package.Foo = function();',
+    ]
+
+    namespaces_info = self._GetNamespacesInfoForScript(input_lines, ['package'])
+    missing_requires = namespaces_info.GetMissingRequires()
+    self.assertEquals(1, len(missing_requires))
+    missing_require = missing_requires.popitem()
+    self.assertEquals('package.Bar', missing_require[0])
+
   def testGetMissingRequires_objectOnClass(self):
     """Tests that we should require a class, not the object on the class."""
     input_lines = [
