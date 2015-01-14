@@ -78,9 +78,8 @@ class FixJsStyleTest(googletest.TestCase):
       actual.seek(0)
       expected = open(golden_filename, 'r')
 
-      # Uncomment to generate new golden files:
-      # print actual.read()
-      # sys.stdout.flush()
+      # Uncomment to generate new golden files and run
+      # open('/'.join(golden_filename.split('/')[4:]), 'w').write(actual.read())
       # actual.seek(0)
 
       self.assertEqual(actual.readlines(), expected.readlines())

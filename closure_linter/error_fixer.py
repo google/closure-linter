@@ -103,6 +103,44 @@ class ErrorFixer(errorhandler.ErrorHandler):
       for token in tokens:
         self._file_changed_lines.add(token.line_number)
 
+  def _FixJsDocPipeNull(self, js_type):
+    """Change number|null or null|number to ?number.
+
+    Args:
+      js_type: The typeannotation.TypeAnnotation instance to fix.
+    """
+
+    # Recurse into all sub_types if the error was at a deeper level.
+    map(self._FixJsDocPipeNull, js_type.IterTypes())
+
+    if js_type.type_group and len(js_type.sub_types) == 2:
+      # Find and remove the null sub_type:
+      sub_type = None
+      for sub_type in js_type.sub_types:
+        if sub_type.identifier == 'null':
+          map(tokenutil.DeleteToken, sub_type.tokens)
+          self._AddFix(sub_type.tokens)
+          break
+      else:
+        return
+
+      first_token = js_type.FirstToken()
+      question_mark = Token('?', Type.DOC_TYPE_MODIFIER, first_token.line,
+                            first_token.line_number)
+      tokenutil.InsertTokenBefore(question_mark, first_token)
+      js_type.tokens.insert(0, question_mark)
+      js_type.tokens.remove(sub_type)
+      js_type.or_null = True
+
+      # Now also remove the separator, which is in the parent's token list,
+      # either before or after the sub_type, there is exactly one. Scan for it.
+      for token in js_type.tokens:
+        if (token and isinstance(token, Token) and
+            token.type == Type.DOC_TYPE_MODIFIER and token.string == '|'):
+          tokenutil.DeleteToken(token)
+          self._AddFix(token)
+          break
+
   def HandleError(self, error):
     """Attempts to fix the error.
 
@@ -116,27 +154,7 @@ class ErrorFixer(errorhandler.ErrorHandler):
       return
 
     if code == errors.JSDOC_PREFER_QUESTION_TO_PIPE_NULL:
-      iterator = token.attached_object.type_start_token
-      if iterator.type == Type.DOC_START_BRACE or iterator.string.isspace():
-        iterator = iterator.next
-
-      leading_space = len(iterator.string) - len(iterator.string.lstrip())
-      iterator.string = '%s?%s' % (' ' * leading_space,
-                                   iterator.string.lstrip())
-
-      # Cover the no outer brace case where the end token is part of the type.
-      while iterator and iterator != token.attached_object.type_end_token.next:
-        if iterator.next and (
-            (iterator.string == '|' and iterator.next.string == 'null') or
-            (iterator.string == 'null' and iterator.next.string == '|')):
-          iterator.string = ''
-          iterator.next.string = ''
-          iterator = iterator.next
-        iterator = iterator.next
-
-      # Create a new flag object with updated type info.
-      token.attached_object = javascriptstatetracker.JsDocFlag(token)
-      self._AddFix(token)
+      self._FixJsDocPipeNull(token.attached_object.jstype)
 
     elif code == errors.JSDOC_MISSING_OPTIONAL_TYPE:
       iterator = token.attached_object.type_end_token
