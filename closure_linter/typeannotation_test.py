@@ -55,7 +55,7 @@ class TypeParserTest(googletest.TestCase):
 
   def assertNullable(self, type_str, nullable=True):
     parsed_type = self.assertProperReconstruction(type_str)
-    self.assertEquals(nullable, parsed_type.IsNullable(),
+    self.assertEquals(nullable, parsed_type.GetNullability(),
                       '"%s" should %sbe nullable' %
                       (type_str, 'not ' if nullable else ''))
 
@@ -76,10 +76,14 @@ class TypeParserTest(googletest.TestCase):
     self.assertProperReconstruction('Object.<number,string>')
     self.assertProperReconstruction('function(new:Object)')
     self.assertProperReconstruction('function(new:Object):number')
+    self.assertProperReconstruction('function(new:Object,Element):number')
     self.assertProperReconstruction('function(this:T,...)')
     self.assertProperReconstruction('{a:?number}')
     self.assertProperReconstruction('{a:?number,b:(number|string)}')
     self.assertProperReconstruction('{c:{nested_element:*}|undefined}')
+    self.assertProperReconstruction('{handleEvent:function(?):?}')
+    self.assertProperReconstruction('function():?|null')
+    self.assertProperReconstruction('null|function():?|bar')
 
   def testOptargs(self):
     self.assertProperReconstruction('number=')
@@ -103,9 +107,40 @@ class TypeParserTest(googletest.TestCase):
     self.assertEquals('Object.', func2.sub_types[0].sub_types[0].identifier)
 
   def testIterIdentifiers(self):
-    nested_identifiers = self._ParseType('(a|{b:(c|function(new:d):e)')
+    nested_identifiers = self._ParseType('(a|{b:(c|function(new:d):e)})')
     for identifier in ('a', 'b', 'c', 'd', 'e'):
       self.assertIn(identifier, nested_identifiers.IterIdentifiers())
+
+  def testIsEmpty(self):
+    self.assertTrue(self._ParseType('').IsEmpty())
+    self.assertFalse(self._ParseType('?').IsEmpty())
+    self.assertFalse(self._ParseType('!').IsEmpty())
+    self.assertFalse(self._ParseType('<?>').IsEmpty())
+
+  def testIsUnknownType(self):
+    self.assertTrue(self._ParseType('?').IsUnknownType())
+    self.assertTrue(self._ParseType('Foo.<?>').sub_types[0].IsUnknownType())
+    self.assertFalse(self._ParseType('?|!').IsUnknownType())
+    self.assertTrue(self._ParseType('?|!').sub_types[0].IsUnknownType())
+    self.assertFalse(self._ParseType('!').IsUnknownType())
+
+    long_type = 'function():?|{handleEvent:function(?=):?,sample:?}|?='
+    record = self._ParseType(long_type)
+    # First check that there's not just one type with 3 return types, but three
+    # top-level types.
+    self.assertEquals(3, len(record.sub_types))
+
+    # Now extract all unknown type instances and verify that they really are.
+    handle_event, sample = record.sub_types[1].sub_types
+    for i, sub_type in enumerate([
+        record.sub_types[0].return_type,
+        handle_event.return_type,
+        handle_event.sub_types[0],
+        sample,
+        record.sub_types[2]]):
+      self.assertTrue(sub_type.IsUnknownType(),
+                      'Type %d should be the unknown type: %s\n%s' % (
+                          i, sub_type.tokens, record.Dump()))
 
   def testTypedefNames(self):
     easy = self._ParseType('{a}')
@@ -141,7 +176,7 @@ class TypeParserTest(googletest.TestCase):
     self.assertNullable('?(boolean)')
 
     self.assertNullable('(boolean|Object)')
-    self.assertNullable('(boolean|(string|{a:}))')
+    self.assertNotNullable('(boolean|(string|{a:}))')
 
   def testSpaces(self):
     """Tests that spaces don't change the outcome."""
