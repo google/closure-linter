@@ -289,6 +289,43 @@ class ErrorFixer(errorhandler.ErrorHandler):
 
       self._AddFix(fixed_tokens)
 
+    elif code == errors.LINE_STARTS_WITH_OPERATOR:
+      # Remove whitespace following the operator so the line starts clean.
+      self._StripSpace(token, before=False)
+
+      # Remove the operator.
+      tokenutil.DeleteToken(token)
+      self._AddFix(token)
+
+      insertion_point = tokenutil.GetPreviousCodeToken(token)
+
+      # Insert a space between the previous token and the new operator.
+      space = Token(' ', Type.WHITESPACE, insertion_point.line,
+                    insertion_point.line_number)
+      tokenutil.InsertTokenAfter(space, insertion_point)
+
+      # Insert the operator on the end of the previous line.
+      new_token = Token(token.string, token.type, insertion_point.line,
+                        insertion_point.line_number)
+      tokenutil.InsertTokenAfter(new_token, space)
+      self._AddFix(new_token)
+
+    elif code == errors.LINE_ENDS_WITH_DOT:
+      # Remove whitespace preceding the operator to remove trailing whitespace.
+      self._StripSpace(token, before=True)
+
+      # Remove the dot.
+      tokenutil.DeleteToken(token)
+      self._AddFix(token)
+
+      insertion_point = tokenutil.GetNextCodeToken(token)
+
+      # Insert the dot at the beginning of the next line of code.
+      new_token = Token(token.string, token.type, insertion_point.line,
+                        insertion_point.line_number)
+      tokenutil.InsertTokenBefore(new_token, insertion_point)
+      self._AddFix(new_token)
+
     elif code == errors.GOOG_REQUIRES_NOT_ALPHABETIZED:
       require_start_token = error.fix_data
       sorter = requireprovidesorter.RequireProvideSorter()
@@ -419,6 +456,12 @@ class ErrorFixer(errorhandler.ErrorHandler):
         tokenutil.InsertBlankLineAfter(insert_location)
 
       tokenutil.DeleteToken(dummy_first_token)
+
+  def _StripSpace(self, token, before):
+    token = token.previous if before else token.next
+    while token and token.type == Type.WHITESPACE:
+      tokenutil.DeleteToken(token)
+      token = token.previous if before else token.next
 
   def _GetNewRequireOrProvideTokens(self, is_provide, namespace, line_number):
     """Returns a list of tokens to create a goog.require/provide statement.

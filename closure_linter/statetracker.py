@@ -1139,8 +1139,7 @@ class StateTracker(object):
         # my.function.foo.
         #   bar = function() ...
         identifier = tokenutil.Search(last_code, Type.SIMPLE_LVALUE, None, True)
-        while identifier and identifier.type in (
-            Type.IDENTIFIER, Type.SIMPLE_LVALUE):
+        while identifier and tokenutil.IsIdentifierOrDot(identifier):
           name = identifier.string + name
           # Traverse behind us, skipping whitespace and comments.
           while True:

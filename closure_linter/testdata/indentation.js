@@ -67,8 +67,8 @@ callAFunction('abc' +
               'def' +
               'ghi');
 
-x.reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongName.
-    someMember = 10;
+x.reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongName
+    .someMember = 10;
 
 
 /**
@@ -147,8 +147,8 @@ switch (x) {
     }
     break;
 
-  case SadThatYouSwitch.
-      onSomethingLikeThis:
+  case SadThatYouSwitch
+      .onSomethingLikeThis:
     z = 10;
 
   case 40:

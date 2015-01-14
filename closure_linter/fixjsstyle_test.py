@@ -35,12 +35,20 @@ flags.FLAGS.closurized_namespaces = ('goog', 'dummy')
 class FixJsStyleTest(googletest.TestCase):
   """Test case to for gjslint auto-fixing."""
 
+  def setUp(self):
+    flags.FLAGS.dot_on_next_line = True
+
+  def tearDown(self):
+    flags.FLAGS.dot_on_next_line = False
+
   def testFixJsStyle(self):
     test_cases = [
         ['fixjsstyle.in.js', 'fixjsstyle.out.js'],
         ['indentation.js', 'fixjsstyle.indentation.out.js'],
-        ['fixjsstyle.html.in.html', 'fixjsstyle.html.out.html']]
+        ['fixjsstyle.html.in.html', 'fixjsstyle.html.out.html'],
+        ['fixjsstyle.oplineend.in.js', 'fixjsstyle.oplineend.out.js']]
     for [running_input_file, running_output_file] in test_cases:
+      print 'Checking %s vs %s' % (running_input_file, running_output_file)
       input_filename = None
       golden_filename = None
       current_filename = None
@@ -69,6 +77,11 @@ class FixJsStyleTest(googletest.TestCase):
       # Now compare the files.
       actual.seek(0)
       expected = open(golden_filename, 'r')
+
+      # Uncomment to generate new golden files:
+      # print actual.read()
+      # sys.stdout.flush()
+      # actual.seek(0)
 
       self.assertEqual(actual.readlines(), expected.readlines())
 

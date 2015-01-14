@@ -494,6 +494,7 @@ class JavaScriptLintRules(ecmalintrules.EcmaScriptLintRules):
       if (not token.metadata.IsUnaryOperator() and not last_in_line
           and not token.next.IsComment()
           and not token.next.IsOperator(',')
+          and not tokenutil.IsDot(token)
           and token.next.type not in (Type.WHITESPACE, Type.END_PAREN,
                                       Type.END_BRACKET, Type.SEMICOLON,
                                       Type.START_BRACKET)):
