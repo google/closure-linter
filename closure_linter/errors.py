@@ -96,6 +96,7 @@ JSDOC_MISSING_OPTIONAL_TYPE = 232
 JSDOC_MISSING_OPTIONAL_PREFIX = 233
 JSDOC_MISSING_VAR_ARGS_TYPE = 234
 JSDOC_MISSING_VAR_ARGS_NAME = 235
+JSDOC_DOES_NOT_PARSE = 236
 # TODO(robbyw): Split this in to more specific syntax problems.
 INCORRECT_SUPPRESS_SYNTAX = 250
 INVALID_SUPPRESS_TYPE = 251
@@ -143,5 +144,6 @@ NEW_ERRORS = frozenset([
     # Errors added after 2.3.9:
     JSDOC_MISSING_VAR_ARGS_TYPE,
     JSDOC_MISSING_VAR_ARGS_NAME,
-    # Errors added after 2.3.13:
+    # Errors added after 2.3.15:
+    JSDOC_DOES_NOT_PARSE,
     ])

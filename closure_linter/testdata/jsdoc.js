@@ -942,7 +942,7 @@ bar.foo = null;
 
 /**
  * @extends Object} //MISSING_BRACES_AROUND_TYPE
- */
+ */ // JSDOC_DOES_NOT_PARSE
 bar.baz = x;
 
 

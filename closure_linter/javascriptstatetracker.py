@@ -53,14 +53,6 @@ class JsDocFlag(statetracker.DocFlag):
 
   LEGAL_DOC = EXTENDED_DOC | statetracker.DocFlag.LEGAL_DOC
 
-  def __init__(self, flag_token):
-    """Creates the JsDocFlag object and attaches it to the given start token.
-
-    Args:
-      flag_token: The starting token of the flag.
-    """
-    statetracker.DocFlag.__init__(self, flag_token)
-
 
 class JavaScriptStateTracker(statetracker.StateTracker):
   """JavaScript state tracker.

@@ -7,9 +7,18 @@
 import unittest as googletest
 
 from closure_linter import testutil
+from closure_linter.common import erroraccumulator
 
 CRAZY_TYPE = ('Array.<!function(new:X,{a:null},...(c|d)):'
               'function(...(Object.<string>))>')
+
+
+class TypeErrorException(Exception):
+  """Exception for TypeErrors."""
+
+  def __init__(self, errors):
+    super(TypeErrorException, self).__init__()
+    self.errors = errors
 
 
 class TypeParserTest(googletest.TestCase):
@@ -17,7 +26,10 @@ class TypeParserTest(googletest.TestCase):
 
   def _ParseComment(self, script):
     """Parse a script that contains one comment and return it."""
-    _, comments = testutil.ParseFunctionsAndComments(script)
+    accumulator = erroraccumulator.ErrorAccumulator()
+    _, comments = testutil.ParseFunctionsAndComments(script, accumulator)
+    if accumulator.GetErrors():
+      raise TypeErrorException(accumulator.GetErrors())
     self.assertEquals(1, len(comments))
     return comments[0]
 
@@ -148,6 +160,25 @@ class TypeParserTest(googletest.TestCase):
     easy = self.assertProperReconstruction('{a:b}').sub_types[0]
     self.assertEquals('a', easy.key_type.identifier)
     self.assertEquals('b', easy.identifier)
+
+  def assertTypeError(self, type_str):
+    """Asserts that parsing the given type raises a linter error."""
+    self.assertRaises(TypeErrorException, self._ParseType, type_str)
+
+  def testParseBadTypes(self):
+    """Tests that several errors in types don't break the parser."""
+    self.assertTypeError('<')
+    self.assertTypeError('>')
+    self.assertTypeError('Foo.<Bar')
+    self.assertTypeError('Foo.Bar>=')
+    self.assertTypeError('Foo.<Bar>>=')
+    self.assertTypeError('(')
+    self.assertTypeError(')')
+    self.assertTypeError('Foo.<Bar)>')
+    self._ParseType(':')
+    self._ParseType(':foo')
+    self.assertTypeError(':)foo')
+    self.assertTypeError('(a|{b:(c|function(new:d):e')
 
   def testNullable(self):
     self.assertNullable('null')

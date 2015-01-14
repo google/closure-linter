@@ -211,11 +211,13 @@ class DocFlag(object):
   EMPTY_COMMENT_LINE = re.compile(r'^\s*\*?\s*$')
   EMPTY_STRING = re.compile(r'^\s*$')
 
-  def __init__(self, flag_token):
+  def __init__(self, flag_token, error_handler=None):
     """Creates the DocFlag object and attaches it to the given start token.
 
     Args:
       flag_token: The starting token of the flag.
+      error_handler: An optional error handler for errors occurring while
+        parsing the doctype.
     """
     self.flag_token = flag_token
     self.flag_type = flag_token.string.strip().lstrip('@')
@@ -232,7 +234,7 @@ class DocFlag(object):
         end_token, contents = _GetMatchingEndBraceAndContents(brace)
         self.type = contents
         self.jstype = typeannotation.Parse(brace, end_token,
-                                           error_handler=None)
+                                           error_handler)
         self.type_start_token = brace
         self.type_end_token = end_token
       elif (self.flag_type in self.TYPE_ONLY and
@@ -247,7 +249,7 @@ class DocFlag(object):
         if self.type is not None:
           self.type = self.type.strip()
           self.jstype = typeannotation.Parse(flag_token, self.type_end_token,
-                                             error_handler=None)
+                                             error_handler)
 
     # Extract name, if applicable.
     self.name_token = None
@@ -770,6 +772,23 @@ class StateTracker(object):
     self._first_token = None
     self._documented_identifiers = set()
     self._variables_in_scope = []
+
+  def DocFlagPass(self, start_token, error_handler):
+    """Parses doc flags.
+
+    This pass needs to be executed before the aliaspass and we don't want to do
+    a full-blown statetracker dry run for these.
+
+    Args:
+      start_token: The token at which to start iterating
+      error_handler: An error handler for error reporting.
+    """
+    if not start_token:
+      return
+    doc_flag_types = (Type.DOC_FLAG, Type.DOC_INLINE_FLAG)
+    for token in start_token:
+      if token.type in doc_flag_types:
+        token.attached_object = self._doc_flag(token, error_handler)
 
   def InFunction(self):
     """Returns true if the current token is within a function.
