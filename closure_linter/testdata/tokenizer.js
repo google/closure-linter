@@ -73,3 +73,6 @@ x = {x: /./};
 
 // Regression test for regex as last array element not matching.
 x = [/./];
+
+// Syntax tests for ES6:
+x = x => x;
