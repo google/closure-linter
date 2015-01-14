@@ -70,7 +70,9 @@ class TypeAnnotation(object):
 
   def IsVarArgsType(self):
     """Determines if the type is a var_args type, i.e. starts with '...'."""
-    return self.identifier.startswith('...')
+    return self.identifier.startswith('...') or (
+        self.type_group == TypeAnnotation.IMPLICIT_TYPE_GROUP and
+        self.sub_types[0].identifier.startswith('...'))
 
   def IsEmpty(self):
     """Returns True if the type is empty."""

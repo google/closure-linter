@@ -129,6 +129,13 @@ class TypeParserTest(googletest.TestCase):
     self.assertFalse(self._ParseType('Array.<number>').IsConstructor())
     self.assertTrue(self._ParseType('function(new:T)').IsConstructor())
 
+  def testIsVarArgsType(self):
+    self.assertTrue(self._ParseType('...number').IsVarArgsType())
+    self.assertTrue(self._ParseType('...Object|Array').IsVarArgsType())
+    self.assertTrue(self._ParseType('...(Object|Array)').IsVarArgsType())
+    self.assertFalse(self._ParseType('Object|...Array').IsVarArgsType())
+    self.assertFalse(self._ParseType('(...Object|Array)').IsVarArgsType())
+
   def testIsUnknownType(self):
     self.assertTrue(self._ParseType('?').IsUnknownType())
     self.assertTrue(self._ParseType('Foo.<?>').sub_types[0].IsUnknownType())
