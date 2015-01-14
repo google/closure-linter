@@ -423,4 +423,22 @@ switch (foo) {
     break;
 }
 
+
+/** @private Some text is allowed after tag */
+x.y_ = function() {
+};
+
+
+/** @private Some text is allowed after tag but not the long oneeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.*/ // LINE_TOO_LONG
+x.y_ = function() {
+};
+
+
+/** @private {number} Some text is allowed after tag */
+x.z_ = 200;
+
+
+/** @private {number} Some text is allowed after tag but not the long oneeeeeeeeeeeeeeee. */ // LINE_TOO_LONG
+x.z_ = 200;
+
 /* comment not closed  // FILE_MISSING_NEWLINE, FILE_IN_BLOCK
