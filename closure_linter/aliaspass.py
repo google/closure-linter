@@ -56,6 +56,20 @@ def _GetAliasForIdentifier(identifier, alias_map):
     return aliased_symbol + identifier[len(ns):]
 
 
+def _SetTypeAlias(js_type, alias_map):
+  """Updates the alias for identifiers in a type.
+
+  Args:
+    js_type: A typeannotation.TypeAnnotation instance.
+    alias_map: A dictionary mapping a symbol to an alias.
+  """
+  aliased_symbol = _GetAliasForIdentifier(js_type.identifier, alias_map)
+  if aliased_symbol:
+    js_type.alias = aliased_symbol
+  for sub_type in js_type.IterTypes():
+    _SetTypeAlias(sub_type, alias_map)
+
+
 class AliasPass(object):
   """Pass to identify goog.scope() usages.
 
@@ -225,5 +239,10 @@ class AliasPass(object):
           aliased_symbol = _GetAliasForIdentifier(identifier, alias_map)
           if aliased_symbol:
             token.metadata.aliased_symbol = aliased_symbol
+
+      elif token.type == javascripttokens.JavaScriptTokenType.DOC_FLAG:
+        flag = token.attached_object
+        if flag and flag.HasType() and flag.jstype:
+          _SetTypeAlias(flag.jstype, alias_map)
 
       token = token.next  # Get next token

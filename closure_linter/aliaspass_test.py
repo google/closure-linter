@@ -24,6 +24,7 @@ import unittest as googletest
 
 from closure_linter import aliaspass
 from closure_linter import errors
+from closure_linter import javascriptstatetracker
 from closure_linter import testutil
 from closure_linter.common import erroraccumulator
 
@@ -75,9 +76,23 @@ class AliasPassTest(googletest.TestCase):
         start_token, 'NonClosurizedClass', 18)
     self.assertIsNone(non_closurized_token.metadata.aliased_symbol)
 
-    long_start_token = _GetTokenByLineAndString(start_token, 'Event.', 21)
+    long_start_token = _GetTokenByLineAndString(start_token, 'Event.', 24)
     self.assertEquals('goog.events.Event.MultilineIdentifier.someMethod',
                       long_start_token.metadata.aliased_symbol)
+
+  def testAliasedDoctypes(self):
+    """Tests that aliases are correctly expanded within type annotations."""
+    start_token = testutil.TokenizeSourceAndRunEcmaPass(_TEST_ALIAS_SCRIPT)
+    tracker = javascriptstatetracker.JavaScriptStateTracker()
+    tracker.DocFlagPass(start_token, error_handler=None)
+
+    alias_pass = aliaspass.AliasPass(set(['goog', 'myproject']))
+    alias_pass.Process(start_token)
+
+    flag_token = _GetTokenByLineAndString(start_token, '@type', 22)
+    self.assertEquals(
+        'goog.events.Event.<goog.ui.Component,Array<myproject.foo.MyClass>>',
+        repr(flag_token.attached_object.jstype))
 
   def testModuleAlias(self):
     start_token = testutil.TokenizeSourceAndRunEcmaPass("""
@@ -137,7 +152,10 @@ var NonClosurizedClass = aaa.bbb.NonClosurizedClass;
 var component = new Component(Event.Something);
 var nonClosurized = NonClosurizedClass();
 
-// A created namespace with a really long identifier.
+/**
+ * A created namespace with a really long identifier.
+ * @type {events.Event.<Component,Array<MyClass>}
+ */
 Event.
     MultilineIdentifier.
         someMethod = function() {};

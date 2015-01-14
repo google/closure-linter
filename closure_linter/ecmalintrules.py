@@ -564,7 +564,7 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
         else:
           self._CheckForMissingSpaceBeforeToken(flag.description_start_token)
 
-      if flag.flag_type in state.GetDocFlag().HAS_TYPE:
+      if flag.HasType():
         if flag.type_start_token is not None:
           self._CheckForMissingSpaceBeforeToken(
               token.attached_object.type_start_token)

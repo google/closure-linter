@@ -291,6 +291,10 @@ class DocFlag(object):
         self.description_end_token, self.description = (
             _GetEndTokenAndContents(interesting_token))
 
+  def HasType(self):
+    """Returns whether this flag should have a type annotation."""
+    return self.flag_type in self.HAS_TYPE
+
   def __repr__(self):
     return '<Flag: %s, type:%s>' % (self.flag_type, repr(self.jstype))
 
