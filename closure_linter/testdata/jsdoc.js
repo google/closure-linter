@@ -1434,6 +1434,10 @@ Foo.prototype = {
 var Bar;
 
 
+/** @export {goog.events.Event<string, number>} */
+var Bar;
+
+
 
 /**
  * @constructor

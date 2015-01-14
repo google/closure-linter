@@ -167,6 +167,7 @@ class DocFlag(object):
       'const',
       'define',
       'enum',
+      'export',
       'extends',
       'final',
       'implements',
@@ -186,6 +187,7 @@ class DocFlag(object):
   CAN_OMIT_TYPE = frozenset([
       'const',
       'enum',
+      'export',
       'final',
       'package',
       'private',
