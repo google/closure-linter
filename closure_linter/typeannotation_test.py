@@ -1,0 +1,159 @@
+#!/usr/bin/env python
+"""Unit tests for the typeannotation module."""
+
+
+
+
+import unittest as googletest
+
+from closure_linter import statetracker
+from closure_linter import testutil
+from closure_linter import typeannotation
+
+CRAZY_TYPE = ('Array.<!function(new:X,{a:null},...(c|d)):'
+              'function(...(Object.<string>))>')
+
+
+class TypeParserTest(googletest.TestCase):
+  """Tests for typeannotation parsing."""
+
+  def _ParseComment(self, script):
+    """Parse a script that contains one comment and return it."""
+    _, comments = testutil.ParseFunctionsAndComments(script)
+    self.assertEquals(1, len(comments))
+    return comments[0]
+
+  def _ParseType(self, type_str):
+    """Creates a comment to parse and returns the parsed type."""
+    comment = self._ParseComment('/** @type {%s} **/' % type_str)
+    flag = comment.GetDocFlags()[0]
+    brace = flag.flag_token.next.next
+    end_token, _ = statetracker._GetMatchingEndBraceAndContents(brace)
+    return typeannotation.Parse(brace, end_token, None)
+
+  def assertProperReconstruction(self, type_str, matching_str=None):
+    """Parses the type and asserts the its repr matches the type.
+
+    If matching_str is specified, it will assert that the repr matches this
+    string instead.
+
+    Args:
+      type_str: The type string to parse.
+      matching_str: A string the __repr__ of the parsed type should match.
+    Returns:
+      The parsed js_type.
+    """
+    parsed_type = self._ParseType(type_str)
+    # Use listEqual assertion to more easily identify the difference
+    self.assertListEqual(list(matching_str or type_str),
+                         list(repr(parsed_type)))
+    self.assertEquals(matching_str or type_str, repr(parsed_type))
+
+    # Newlines will be inserted by the file writer.
+    self.assertEquals(type_str.replace('\n', ''), parsed_type.ToString())
+    return parsed_type
+
+  def assertNullable(self, type_str, nullable=True):
+    parsed_type = self.assertProperReconstruction(type_str)
+    self.assertEquals(nullable, parsed_type.IsNullable(),
+                      '"%s" should %sbe nullable' %
+                      (type_str, 'not ' if nullable else ''))
+
+  def assertNotNullable(self, type_str):
+    return self.assertNullable(type_str, nullable=False)
+
+  def testReconstruction(self):
+    self.assertProperReconstruction('*')
+    self.assertProperReconstruction('number')
+    self.assertProperReconstruction('(((number)))')
+    self.assertProperReconstruction('!number')
+    self.assertProperReconstruction('?!number')
+    self.assertProperReconstruction('number=')
+    self.assertProperReconstruction('number=!?', '?!number=')
+    self.assertProperReconstruction('number|?string')
+    self.assertProperReconstruction('(number|string)')
+    self.assertProperReconstruction('?(number|string)')
+    self.assertProperReconstruction('Object.<number,string>')
+    self.assertProperReconstruction('function(new:Object)')
+    self.assertProperReconstruction('function(new:Object):number')
+    self.assertProperReconstruction('function(this:T,...)')
+    self.assertProperReconstruction('{a:?number}')
+    self.assertProperReconstruction('{a:?number,b:(number|string)}')
+    self.assertProperReconstruction('{c:{nested_element:*}|undefined}')
+
+  def testOptargs(self):
+    self.assertProperReconstruction('number=')
+    self.assertProperReconstruction('number|string=')
+    self.assertProperReconstruction('(number|string)=')
+    self.assertProperReconstruction('(number|string=)')
+    self.assertProperReconstruction('(number=|string)')
+    self.assertProperReconstruction('function(...):number=')
+
+  def testIndepth(self):
+    # Do an deeper check of the crazy identifier
+    crazy = self.assertProperReconstruction(CRAZY_TYPE)
+    self.assertEquals('Array.', crazy.identifier)
+    self.assertEquals(1, len(crazy.sub_types))
+    func1 = crazy.sub_types[0]
+    func2 = func1.return_type
+    self.assertEquals('function', func1.identifier)
+    self.assertEquals('function', func2.identifier)
+    self.assertEquals(3, len(func1.sub_types))
+    self.assertEquals(1, len(func2.sub_types))
+    self.assertEquals('Object.', func2.sub_types[0].sub_types[0].identifier)
+
+  def testIterIdentifiers(self):
+    nested_identifiers = self._ParseType('(a|{b:(c|function(new:d):e)')
+    for identifier in ('a', 'b', 'c', 'd', 'e'):
+      self.assertIn(identifier, nested_identifiers.IterIdentifiers())
+
+  def testTypedefNames(self):
+    easy = self._ParseType('{a}')
+    self.assertTrue(easy.record_type)
+
+    easy = self.assertProperReconstruction('{a}', '{a:}').sub_types[0]
+    self.assertEquals('a', easy.key_type.identifier)
+    self.assertEquals('', easy.identifier)
+
+    easy = self.assertProperReconstruction('{a:b}').sub_types[0]
+    self.assertEquals('a', easy.key_type.identifier)
+    self.assertEquals('b', easy.identifier)
+
+  def testNullable(self):
+    self.assertNullable('null')
+    self.assertNullable('Object')
+    self.assertNullable('?string')
+    self.assertNullable('?number')
+
+    self.assertNotNullable('string')
+    self.assertNotNullable('number')
+    self.assertNotNullable('boolean')
+    self.assertNotNullable('function(Object)')
+    self.assertNotNullable('function(Object):Object')
+    self.assertNotNullable('function(?Object):?Object')
+    self.assertNotNullable('!Object')
+
+    self.assertNotNullable('boolean|string')
+    self.assertNotNullable('(boolean|string)')
+
+    self.assertNullable('(boolean|string|null)')
+    self.assertNullable('(?boolean)')
+    self.assertNullable('?(boolean)')
+
+    self.assertNullable('(boolean|Object)')
+    self.assertNullable('(boolean|(string|{a:}))')
+
+  def testSpaces(self):
+    """Tests that spaces don't change the outcome."""
+    type_str = (' A < b | ( c | ? ! d e f ) > | '
+                'function ( x : . . . ) : { y : z = } ')
+    two_spaces = type_str.replace(' ', '  ')
+    no_spaces = type_str.replace(' ', '')
+    newlines = type_str.replace(' ', '\n * ')
+    self.assertProperReconstruction(no_spaces)
+    self.assertProperReconstruction(type_str, no_spaces)
+    self.assertProperReconstruction(two_spaces, no_spaces)
+    self.assertProperReconstruction(newlines, no_spaces)
+
+if __name__ == '__main__':
+  googletest.main()

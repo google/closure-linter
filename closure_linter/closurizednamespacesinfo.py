@@ -388,12 +388,12 @@ class ClosurizedNamespacesInfo(object):
 
     elif token.type == TokenType.DOC_FLAG:
       flag_type = token.attached_object.flag_type
-      is_interface = state_tracker.GetDocComment().HasFlag('interface')
+      doc_comment = state_tracker.GetDocComment()
+      is_interface = doc_comment.HasFlag('interface')
       if flag_type == 'implements' or (flag_type == 'extends' and is_interface):
         # Interfaces should be goog.require'd.
-        doc_start = tokenutil.Search(token, TokenType.DOC_START_BRACE)
-        interface = tokenutil.Search(doc_start, TokenType.COMMENT)
-        self._AddUsedNamespace(state_tracker, interface.string,
+        doc_flag = doc_comment.GetFlag(flag_type)
+        self._AddUsedNamespace(state_tracker, doc_flag.type,
                                token.line_number)
 
   def _AddCreatedNamespace(self, state_tracker, identifier, line_number,

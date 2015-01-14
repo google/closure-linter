@@ -114,8 +114,12 @@ class ErrorFixer(errorhandler.ErrorHandler):
 
       # Cover the no outer brace case where the end token is part of the type.
       while iterator and iterator != token.attached_object.type_end_token.next:
-        iterator.string = iterator.string.replace(
-            'null|', '').replace('|null', '')
+        if iterator.next and (
+            (iterator.string == '|' and iterator.next.string == 'null') or
+            (iterator.string == 'null' and iterator.next.string == '|')):
+          iterator.string = ''
+          iterator.next.string = ''
+          iterator = iterator.next
         iterator = iterator.next
 
       # Create a new flag object with updated type info.

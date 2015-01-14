@@ -92,6 +92,9 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
   # like in email addresses in the @author tag.
   DOC_COMMENT_TEXT = re.compile(r'([^*{}\s]@|[^*{}@]|\*(?!/))+')
   DOC_COMMENT_NO_SPACES_TEXT = re.compile(r'([^*{}\s]@|[^*{}@\s]|\*(?!/))+')
+  # Match anything that is allowed in a type definition, except for tokens
+  # needed to parse it (and the lookahead assertion for "*/").
+  DOC_COMMENT_TYPE_TEXT = re.compile(r'([^*|!?=<>(){}:,\s]|\*(?!/))+')
 
   # Match the prefix ' * ' that starts every line of jsdoc. Want to include
   # spaces after the '*', but nothing else that occurs after a '*', and don't
@@ -177,12 +180,18 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
   # beginning of the line, after whitespace, or after a '{'.  The look-behind
   # check is necessary to not match someone@google.com as a flag.
   DOC_FLAG = re.compile(r'(^|(?<=\s))@(?P<name>[a-zA-Z]+)')
-  # To properly parse parameter names, we need to tokenize whitespace into a
-  # token.
-  DOC_FLAG_LEX_SPACES = re.compile(r'(^|(?<=\s))@(?P<name>%s)\b' %
-                                     '|'.join(['param']))
+  # To properly parse parameter names and complex doctypes containing
+  # whitespace, we need to tokenize whitespace into a token after certain
+  # doctags.
+  DOC_FLAG_LEX_SPACES = re.compile(
+      r'(^|(?<=\s))@(?P<name>%s)\b' %
+      '|'.join(['param', 'typedef', 'private', 'protected', 'type']))
 
   DOC_INLINE_FLAG = re.compile(r'(?<={)@(?P<name>[a-zA-Z]+)')
+
+  DOC_TYPE_BLOCK_START = re.compile(r'[<(]')
+  DOC_TYPE_BLOCK_END = re.compile(r'[>)]')
+  DOC_TYPE_MODIFIERS = re.compile(r'[!?|,:=]')
 
   # Star followed by non-slash, i.e a star that does not end a comment.
   # This is used for TYPE_GROUP below.
@@ -204,6 +213,14 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
       # Tokenize braces so we can find types.
       Matcher(START_BLOCK, Type.DOC_START_BRACE),
       Matcher(END_BLOCK, Type.DOC_END_BRACE),
+
+      # And some more to parse types.
+      Matcher(DOC_TYPE_BLOCK_START, Type.DOC_TYPE_START_BLOCK),
+      Matcher(DOC_TYPE_BLOCK_END, Type.DOC_TYPE_END_BLOCK),
+
+      Matcher(DOC_TYPE_MODIFIERS, Type.DOC_TYPE_MODIFIER),
+      Matcher(DOC_COMMENT_TYPE_TEXT, Type.COMMENT),
+
       Matcher(DOC_PREFIX, Type.DOC_PREFIX, None, True)]
 
   # When text is not matched, it is given this default type based on mode.
