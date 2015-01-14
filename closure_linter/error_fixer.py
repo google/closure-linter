@@ -379,41 +379,46 @@ class ErrorFixer(errorhandler.ErrorHandler):
 
     elif code in [errors.EXTRA_GOOG_PROVIDE, errors.EXTRA_GOOG_REQUIRE]:
       tokens_in_line = tokenutil.GetAllTokensInSameLine(token)
-      self._DeleteTokens(tokens_in_line[0], len(tokens_in_line))
+      num_delete_tokens = len(tokens_in_line)
+      # If line being deleted is preceded and succeed with blank lines then
+      # delete one blank line also.
+      if (tokens_in_line[0].previous and tokens_in_line[-1].next
+          and tokens_in_line[0].previous.type == Type.BLANK_LINE
+          and tokens_in_line[-1].next.type == Type.BLANK_LINE):
+        num_delete_tokens += 1
+      self._DeleteTokens(tokens_in_line[0], num_delete_tokens)
       self._AddFix(tokens_in_line)
 
     elif code in [errors.MISSING_GOOG_PROVIDE, errors.MISSING_GOOG_REQUIRE]:
-      is_provide = code == errors.MISSING_GOOG_PROVIDE
-      is_require = code == errors.MISSING_GOOG_REQUIRE
-
       missing_namespaces = error.fix_data[0]
-      need_blank_line = error.fix_data[1]
+      need_blank_line = error.fix_data[1] or (not token.previous)
 
-      if need_blank_line is None:
-        # TODO(user): This happens when there are no existing
-        # goog.provide or goog.require statements to position new statements
-        # relative to. Consider handling this case with a heuristic.
-        return
+      insert_location = Token('', Type.NORMAL, '', token.line_number - 1)
+      dummy_first_token = insert_location
+      tokenutil.InsertTokenBefore(insert_location, token)
 
-      insert_location = token.previous
-
-      # If inserting a missing require with no existing requires, insert a
-      # blank line first.
-      if need_blank_line and is_require:
+      # If inserting a blank line check blank line does not exist before
+      # token to avoid extra blank lines.
+      if (need_blank_line and insert_location.previous
+          and insert_location.previous.type != Type.BLANK_LINE):
         tokenutil.InsertBlankLineAfter(insert_location)
         insert_location = insert_location.next
 
       for missing_namespace in missing_namespaces:
         new_tokens = self._GetNewRequireOrProvideTokens(
-            is_provide, missing_namespace, insert_location.line_number + 1)
+            code == errors.MISSING_GOOG_PROVIDE,
+            missing_namespace, insert_location.line_number + 1)
         tokenutil.InsertLineAfter(insert_location, new_tokens)
         insert_location = new_tokens[-1]
         self._AddFix(new_tokens)
 
-      # If inserting a missing provide with no existing provides, insert a
-      # blank line after.
-      if need_blank_line and is_provide:
+      # If inserting a blank line check blank line does not exist after
+      # token to avoid extra blank lines.
+      if (need_blank_line and insert_location.next
+          and insert_location.next.type != Type.BLANK_LINE):
         tokenutil.InsertBlankLineAfter(insert_location)
+
+      tokenutil.DeleteToken(dummy_first_token)
 
   def _GetNewRequireOrProvideTokens(self, is_provide, namespace, line_number):
     """Returns a list of tokens to create a goog.require/provide statement.
