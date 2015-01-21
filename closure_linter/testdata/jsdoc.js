@@ -1438,6 +1438,10 @@ var Bar;
 var Bar;
 
 
+/** @package {goog.events.Event<string, number>} */
+var Bar;
+
+
 
 /**
  * @constructor

@@ -252,6 +252,7 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
           'extends',
           'final',
           'implements',
+          'package',
           'param',
           'private',
           'protected',
