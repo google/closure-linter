@@ -230,3 +230,4 @@ class TypeParserTest(googletest.TestCase):
 
 if __name__ == '__main__':
   googletest.main()
+

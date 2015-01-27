@@ -33,9 +33,13 @@ class TypeAnnotation(object):
 
   NULLABILITY_UNKNOWN = 2
 
+  FUNCTION_TYPE = 'function'
+  NULL_TYPE = 'null'
+  VAR_ARGS_TYPE = '...'
+
   # Frequently used known non-nullable types.
   NON_NULLABLE = frozenset([
-      'boolean', 'function', 'number', 'string', 'undefined'])
+      'boolean', FUNCTION_TYPE, 'number', 'string', 'undefined'])
   # Frequently used known nullable types.
   NULLABLE_TYPE_WHITELIST = frozenset([
       'Array', 'Document', 'Element', 'Function', 'Node', 'NodeList',
@@ -56,7 +60,7 @@ class TypeAnnotation(object):
 
   def IsFunction(self):
     """Determines whether this is a function definition."""
-    return self.identifier == 'function'
+    return self.identifier == TypeAnnotation.FUNCTION_TYPE
 
   def IsConstructor(self):
     """Determines whether this is a function definition for a constructor."""
@@ -66,13 +70,13 @@ class TypeAnnotation(object):
   def IsRecordType(self):
     """Returns True if this type is a record type."""
     return (self.record_type or
-            bool([t for t in self.sub_types if t.IsRecordType()]))
+            any(t.IsRecordType() for t in self.sub_types))
 
   def IsVarArgsType(self):
     """Determines if the type is a var_args type, i.e. starts with '...'."""
-    return self.identifier.startswith('...') or (
+    return self.identifier.startswith(TypeAnnotation.VAR_ARGS_TYPE) or (
         self.type_group == TypeAnnotation.IMPLICIT_TYPE_GROUP and
-        self.sub_types[0].identifier.startswith('...'))
+        self.sub_types[0].identifier.startswith(TypeAnnotation.VAR_ARGS_TYPE))
 
   def IsEmpty(self):
     """Returns True if the type is empty."""
@@ -99,13 +103,13 @@ class TypeAnnotation(object):
     append = ''
     if self.sub_types:
       separator = (',' if not self.type_group else '|')
-      if self.identifier == 'function':
+      if self.IsFunction():
         surround = '(%s)'
       else:
         surround = {False: '{%s}' if self.record_type else '<%s>',
                     True: '(%s)',
-                    self.IMPLICIT_TYPE_GROUP: '%s'}[self.type_group]
-      append = surround % separator.join([repr(t) for t in self.sub_types])
+                    TypeAnnotation.IMPLICIT_TYPE_GROUP: '%s'}[self.type_group]
+      append = surround % separator.join(repr(t) for t in self.sub_types)
     if self.return_type:
       append += ':%s' % repr(self.return_type)
     append += '=' if self.opt_arg else ''
@@ -181,12 +185,13 @@ class TypeAnnotation(object):
     """
 
     # Explicitly marked nullable types or 'null' are nullable.
-    if (modifiers and self.or_null) or self.identifier == 'null':
+    if ((modifiers and self.or_null) or
+        self.identifier == TypeAnnotation.NULL_TYPE):
       return True
 
     # Explicitly marked non-nullable types or non-nullable base types:
     if ((modifiers and self.not_null) or self.record_type
-        or self.identifier in self.NON_NULLABLE):
+        or self.identifier in TypeAnnotation.NON_NULLABLE):
       return False
 
     # A type group is nullable if any of its elements are nullable.
@@ -201,12 +206,12 @@ class TypeAnnotation(object):
       return maybe_nullable
 
     # Whitelisted types are nullable.
-    if self.identifier.rstrip('.') in self.NULLABLE_TYPE_WHITELIST:
+    if self.identifier.rstrip('.') in TypeAnnotation.NULLABLE_TYPE_WHITELIST:
       return True
 
     # All other types are unknown (most should be nullable, but
     # enums are not and typedefs might not be).
-    return self.NULLABILITY_UNKNOWN
+    return TypeAnnotation.NULLABILITY_UNKNOWN
 
   def WillAlwaysBeNullable(self):
     """Computes whether the ! flag is illegal for this type.
@@ -217,11 +222,11 @@ class TypeAnnotation(object):
     Returns:
       True if the ! flag would be illegal.
     """
-    if self.or_null or self.identifier == 'null':
+    if self.or_null or self.identifier == TypeAnnotation.NULL_TYPE:
       return True
 
     if self.type_group:
-      return bool([t for t in self.sub_types if t.WillAlwaysBeNullable()])
+      return any(t.WillAlwaysBeNullable() for t in self.sub_types)
 
     return False
 
@@ -230,7 +235,8 @@ class TypeAnnotation(object):
 
     # Normalize functions whose definition ended up in the key type because
     # they defined a return type after a colon.
-    if self.key_type and self.key_type.identifier == 'function':
+    if (self.key_type and
+        self.key_type.identifier == TypeAnnotation.FUNCTION_TYPE):
       current = self.key_type
       current.return_type = self
       self.key_type = None
@@ -276,11 +282,12 @@ class TypeAnnotationParser(object):
     while token and token != token_end:
       if token.type in (TYPE.DOC_TYPE_START_BLOCK, TYPE.DOC_START_BRACE):
         if token.string == '(':
-          if (current.identifier and
-              current.identifier not in ['function', '...']):
+          if current.identifier and current.identifier not in [
+              TypeAnnotation.FUNCTION_TYPE, TypeAnnotation.VAR_ARGS_TYPE]:
             self.Error(token,
                        'Invalid identifier for (): "%s"' % current.identifier)
-          current.type_group = current.identifier != 'function'
+          current.type_group = (
+              current.identifier != TypeAnnotation.FUNCTION_TYPE)
         elif token.string == '{':
           current.record_type = True
         current.tokens.append(token)
@@ -325,12 +332,13 @@ class TypeAnnotationParser(object):
           except IndexError:
             self.ClosingError(token)
         elif token.string == '|':
-          # If a type group has explicitly been opened do a normal append.
+          # If a type group has explicitly been opened, do a normal append.
           # Otherwise we have to open the type group and move the current
           # type into it, before appending
           if not self._stack[-1].type_group:
             type_group = TypeAnnotation()
-            if current.key_type and current.key_type.identifier != 'function':
+            if (current.key_type and
+                current.key_type.identifier != TypeAnnotation.FUNCTION_TYPE):
               type_group.key_type = current.key_type
               current.key_type = None
             type_group.type_group = TypeAnnotation.IMPLICIT_TYPE_GROUP
@@ -399,3 +407,4 @@ class TypeAnnotationParser(object):
           errors.JSDOC_DOES_NOT_PARSE,
           'Error parsing jsdoc type at token "%s" (column: %d): %s' %
           (token.string, token.start_index, message), token))
+
