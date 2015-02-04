@@ -130,6 +130,7 @@ class ErrorFixer(errorhandler.ErrorHandler):
       tokenutil.InsertTokenBefore(question_mark, first_token)
       js_type.tokens.insert(0, question_mark)
       js_type.tokens.remove(sub_type)
+      js_type.sub_types.remove(sub_type)
       js_type.or_null = True
 
       # Now also remove the separator, which is in the parent's token list,
@@ -138,6 +139,7 @@ class ErrorFixer(errorhandler.ErrorHandler):
         if (token and isinstance(token, Token) and
             token.type == Type.DOC_TYPE_MODIFIER and token.string == '|'):
           tokenutil.DeleteToken(token)
+          js_type.tokens.remove(token)
           self._AddFix(token)
           break
 
