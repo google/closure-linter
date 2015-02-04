@@ -665,14 +665,14 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
 
           # These flags are only legal on localizable message definitions;
           # such variables always begin with the prefix MSG_.
-          for f in ('desc', 'hidden', 'meaning'):
-            if (jsdoc.HasFlag(f)
-                and not identifier.startswith('MSG_')
-                and identifier.find('.MSG_') == -1):
-              self._HandleError(
-                  errors.INVALID_USE_OF_DESC_TAG,
-                  'Member "%s" should not have @%s JsDoc' % (identifier, f),
-                  token)
+          if not identifier.startswith('MSG_') and '.MSG_' not in identifier:
+            for f in ('desc', 'hidden', 'meaning'):
+              if jsdoc.HasFlag(f):
+                self._HandleError(
+                    errors.INVALID_USE_OF_DESC_TAG,
+                    'Member "%s" does not start with MSG_ and thus '
+                    'should not have @%s JsDoc' % (identifier, f),
+                    token)
 
       # Check for illegaly assigning live objects as prototype property values.
       index = identifier.find('.prototype.')
