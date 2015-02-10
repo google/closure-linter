@@ -83,6 +83,7 @@ _TEST_FILES = [
     'require_provide_missing.js',
     'require_provide_ok.js',
     'semicolon_missing.js',
+    'semicolon_missing2.js',
     'simple.html',
     'spaces.js',
     'tokenizer.js',

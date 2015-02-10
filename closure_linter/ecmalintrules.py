@@ -360,8 +360,9 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
         if (state.InAssignedFunction() and token.next
             and token.next.type != Type.SEMICOLON):
           next_token = tokenutil.GetNextCodeToken(token)
-          is_immediately_used = (next_token.type == Type.START_PAREN or
-                                 tokenutil.IsDot(next_token))
+          is_immediately_used = next_token and (
+              next_token.type == Type.START_PAREN or
+              tokenutil.IsDot(next_token))
           if not is_immediately_used:
             self._HandleError(
                 errors.MISSING_SEMICOLON_AFTER_FUNCTION,
