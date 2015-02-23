@@ -17,6 +17,7 @@
  *
  */
 goog.module('goog.super.long.DependencyNameThatForcesMethodDefinitionToSpanMultipleLinesFooBar');
+goog.forwardDeclare('goog.super.long.DependencyNameThatForcesMethodDefinitionToSpanMultipleLines');
 goog.provide('goog.something');
 goog.provide('goog.something.Else');
 goog.provide('goog.something.Else.Enum');
