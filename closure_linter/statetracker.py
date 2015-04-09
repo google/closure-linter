@@ -135,6 +135,7 @@ class DocFlag(object):
       'missingRequire',
       'missingReturn',
       'nonStandardJsDocs',
+      'reportUnknownTypes',
       'strictModuleDepCheck',
       'suspiciousCode',
       'tweakValidation',
