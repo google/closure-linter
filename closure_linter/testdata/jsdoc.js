@@ -56,6 +56,7 @@ goog.require('goog.math.Vec2');
  * @defines // INVALID_JSDOC_TAG
  * @nginject // INVALID_JSDOC_TAG
  * @wizAction // INVALID_JSDOC_TAG
+ * @polymerbehavior // INVALID_JSDOC_TAG
  */
 function badTags() {
 }
@@ -88,6 +89,18 @@ function goodTags() {
  */
 function good(object) {
 }
+
+
+/**
+ * Some documentation goes here.
+ *
+ * @polymerBehavior
+ */
+var goodPolymerBehavior = {
+  properties: {
+    foo: String,
+  },
+};
 
 
 /**

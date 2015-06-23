@@ -82,6 +82,7 @@ class DocFlag(object):
       'owner',
       'package',
       'param',
+      'polymerBehavior',  # This annotation is specific to Polymer.
       'preserve',
       'private',
       'protected',
