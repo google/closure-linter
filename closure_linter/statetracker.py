@@ -80,6 +80,7 @@ class DocFlag(object):
       'nosideeffects',
       'override',
       'owner',
+      'nocollapse',
       'package',
       'param',
       'polymerBehavior',  # This annotation is specific to Polymer.
