@@ -71,6 +71,6 @@ goog.something.staticFunction = function() {
  */
 goog.something.Else = function() {
   // Bug 1801608: Provide goog.otherThing.Class.Enum isn't missing.
-  var enum = goog.otherThing.Class.Enum;
-  goog.otherThing.Class.Enum = enum;
+  var Enum = goog.otherThing.Class.Enum;
+  goog.otherThing.Class.Enum = Enum;
 };
