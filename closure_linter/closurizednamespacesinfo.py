@@ -517,6 +517,7 @@ class ClosurizedNamespacesInfo(object):
     if self._HasSuppression(state_tracker, 'missingRequire'):
       return
 
+    identifier = self._GetUsedIdentifier(identifier)
     namespace = self.GetClosurizedNamespace(identifier)
     # b/5362203 If its a variable in scope then its not a required namespace.
     if namespace and not state_tracker.IsVariableInScope(namespace):
@@ -527,6 +528,13 @@ class ClosurizedNamespacesInfo(object):
   def _HasSuppression(self, state_tracker, suppression):
     jsdoc = state_tracker.GetDocComment()
     return jsdoc and suppression in jsdoc.suppressions
+
+  def _GetUsedIdentifier(self, identifier):
+    """Strips apply/call/inherit calls from the identifier."""
+    for suffix in ('.apply', '.call', '.inherit'):
+      if identifier.endswith(suffix):
+        return identifier[:-len(suffix)]
+    return identifier
 
   def GetClosurizedNamespace(self, identifier):
     """Given an identifier, returns the namespace that identifier is from.

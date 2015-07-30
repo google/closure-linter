@@ -38,6 +38,7 @@ goog.require('goog.package.ClassName');
 goog.require('goog.package.OtherClassName');
 /** @suppress {extraRequire} Legacy dependency on enum */
 goog.require('goog.package.OuterClassName.InnerClassName');
+goog.require('goog.string.format');
 goog.require('goog.super.long.DependencyNameThatForcesMethodDefinitionToSpanMultipleLinesFooBar');
 goog.require('goog.super.long.DependencyNameThatForcesTheLineToBeOverEightyCharacters2');
 goog.require('goog.super.long.DependencyNameThatForcesTheLineToBeOverEightyCharacters3');
@@ -117,6 +118,10 @@ goog.something.usePrivateVariables = function() {
     x
   ];
 };
+
+
+/** Calling .apply should not break the require rule. */
+goog.string.format.apply('', []);
 
 
 
