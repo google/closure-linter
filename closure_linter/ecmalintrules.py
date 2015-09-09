@@ -46,6 +46,9 @@ flags.DEFINE_list('custom_jsdoc_tags', '', 'Extra jsdoc tags to allow')
 flags.DEFINE_boolean('dot_on_next_line', False, 'Require dots to be'
                      'placed on the next line for wrapped expressions')
 
+flags.DEFINE_boolean('check_trailing_comma', False, 'Check trailing commas'
+                     ' (ES3, not needed from ES5 onwards)')
+
 # TODO(robbyw): Check for extra parens on return statements
 # TODO(robbyw): Check for 0px in strings
 # TODO(robbyw): Ensure inline jsDoc is in {}
@@ -344,6 +347,14 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
 
     elif token_type == Type.END_BLOCK:
       last_code = token.metadata.last_code
+
+      if FLAGS.check_trailing_comma:
+        if last_code.IsOperator(','):
+          self._HandleError(
+              errors.COMMA_AT_END_OF_LITERAL,
+              'Illegal comma at end of object literal', last_code,
+              position=Position.All(last_code.string))
+
       if state.InFunction() and state.IsFunctionClose():
         if state.InTopLevelFunction():
           # A semicolons should not be included at the end of a function
@@ -449,6 +460,15 @@ class EcmaScriptLintRules(checkerbase.LintRulesBase):
       # Ensure there is no space before closing parentheses, except when
       # it's in a for statement with an omitted section, or when it's at the
       # beginning of a line.
+
+      last_code = token.metadata.last_code
+      if FLAGS.check_trailing_comma and token_type == Type.END_BRACKET:
+        if last_code.IsOperator(','):
+          self._HandleError(
+              errors.COMMA_AT_END_OF_LITERAL,
+              'Illegal comma at end of array literal', last_code,
+              position=Position.All(last_code.string))
+
       if (token.previous and token.previous.type == Type.WHITESPACE and
           not token.previous.IsFirstInLine() and
           not (last_non_space_token and last_non_space_token.line_number ==
