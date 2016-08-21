@@ -1265,7 +1265,8 @@ class StateTracker(object):
     if type == Type.SEMICOLON or type == Type.END_PAREN or (
         type == Type.END_BRACKET and
         self._last_non_space_token.type not in (
-            Type.SINGLE_QUOTE_STRING_END, Type.DOUBLE_QUOTE_STRING_END)):
+            Type.SINGLE_QUOTE_STRING_END, Type.DOUBLE_QUOTE_STRING_END,
+            Type.TEMPLATE_STRING_END)):
       # We end on any numeric array index, but keep going for string based
       # array indices so that we pick up manually exported identifiers.
       self._doc_comment = None

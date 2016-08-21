@@ -678,7 +678,8 @@ def GetStringAfterToken(token):
   """
   string_token = SearchUntil(token, JavaScriptTokenType.STRING_TEXT,
                              [JavaScriptTokenType.SINGLE_QUOTE_STRING_END,
-                              JavaScriptTokenType.DOUBLE_QUOTE_STRING_END])
+                              JavaScriptTokenType.DOUBLE_QUOTE_STRING_END,
+                              JavaScriptTokenType.TEMPLATE_STRING_END])
   if string_token:
     return string_token.string
   else:

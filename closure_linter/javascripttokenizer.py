@@ -36,6 +36,7 @@ class JavaScriptModes(object):
   TEXT_MODE = 'text'
   SINGLE_QUOTE_STRING_MODE = 'single_quote_string'
   DOUBLE_QUOTE_STRING_MODE = 'double_quote_string'
+  TEMPLATE_STRING_MODE = 'template_string'
   BLOCK_COMMENT_MODE = 'block_comment'
   DOC_COMMENT_MODE = 'doc_comment'
   DOC_COMMENT_LEX_SPACES_MODE = 'doc_comment_spaces'
@@ -75,6 +76,10 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
   SINGLE_QUOTE_TEXT = re.compile(r"([^'\\]|\\(.|$))+")
   DOUBLE_QUOTE = re.compile(r'"')
   DOUBLE_QUOTE_TEXT = re.compile(r'([^"\\]|\\(.|$))+')
+  # Template strings are different from normal strings in that they do not
+  # require escaping of end of lines in order to be multi-line.
+  TEMPLATE_QUOTE = re.compile(r'`')
+  TEMPLATE_QUOTE_TEXT = re.compile(r'([^`]|$)+')
 
   START_SINGLE_LINE_COMMENT = re.compile(r'//')
   END_OF_LINE_SINGLE_LINE_COMMENT = re.compile(r'//$')
@@ -342,6 +347,8 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
                     JavaScriptModes.SINGLE_QUOTE_STRING_MODE),
             Matcher(cls.DOUBLE_QUOTE, Type.DOUBLE_QUOTE_STRING_START,
                     JavaScriptModes.DOUBLE_QUOTE_STRING_MODE),
+            Matcher(cls.TEMPLATE_QUOTE, Type.TEMPLATE_STRING_START,
+                    JavaScriptModes.TEMPLATE_STRING_MODE),
             Matcher(cls.REGEX, Type.REGEX),
 
             # Next we check for start blocks appearing outside any of the items
@@ -389,6 +396,12 @@ class JavaScriptTokenizer(tokenizer.Tokenizer):
         JavaScriptModes.DOUBLE_QUOTE_STRING_MODE: [
             Matcher(cls.DOUBLE_QUOTE_TEXT, Type.STRING_TEXT),
             Matcher(cls.DOUBLE_QUOTE, Type.DOUBLE_QUOTE_STRING_END,
+                    JavaScriptModes.TEXT_MODE)],
+
+        # Matchers for template strings.
+        JavaScriptModes.TEMPLATE_STRING_MODE: [
+            Matcher(cls.TEMPLATE_QUOTE_TEXT, Type.STRING_TEXT),
+            Matcher(cls.TEMPLATE_QUOTE, Type.TEMPLATE_STRING_END,
                     JavaScriptModes.TEXT_MODE)],
 
         # Matchers for block comments.
