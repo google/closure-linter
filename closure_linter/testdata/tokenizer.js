@@ -18,6 +18,12 @@
  * @author robbyw@google.com (Robby Walker)
  */
 
+// Regression test: if we do not recognize template strings, this will fail.
+var templateString = String.raw`
+  easy
+  multiline,
+  too!`;
+
 // Regression test: if regular expressions parse incorrectly this will emit an
 // error such as: Missing space after '/'
 x = /[^\']/;  // and all the other chars
