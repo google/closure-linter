@@ -502,7 +502,8 @@ class EcmaMetaDataPass(object):
       is_end_of_block = (
           token.type == TokenType.END_BLOCK and
           token.metadata.context.type != EcmaContext.OBJECT_LITERAL)
-      is_multiline_string = token.type == TokenType.STRING_TEXT
+      is_multiline_string = (token.type == TokenType.STRING_TEXT or
+                             token.type == TokenType.TEMPLATE_STRING_START)
       is_continued_var_decl = (token.IsKeyword('var') and
                                next_code and
                                (next_code.type in [TokenType.IDENTIFIER,
