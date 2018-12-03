@@ -1,4 +1,4 @@
-# Closure Linter - a style checker for ES5 JavaScript
+# DEPRECATED: Closure Linter - a style checker for ES5 JavaScript
 
 Please note that the **closure linter is deprecated**. Esp. if you use ES6
 features, the tool will not work for you.
